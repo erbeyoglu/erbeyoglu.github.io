@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 5 — Quadratic Programming (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<style>
+  table.tableau {
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.92rem;
+    margin-top: 10px;
+  }
+  table.tableau th, table.tableau td {
+    border: 1px solid var(--grid);
+    padding: 5px 10px;
+    text-align: right;
+    min-width: 46px;
+  }
+  table.tableau th { color: var(--ink-2); }
+  table.tableau thead th.pickable { cursor: pointer; color: var(--s1); text-decoration: underline; }
+  table.tableau thead th.blocked { color: var(--critical); text-decoration: line-through; cursor: not-allowed; }
+  table.tableau td.pivot { background: var(--region-fill); font-weight: 700; }
+  table.tableau td:first-child, table.tableau th:first-child { text-align: left; font-weight: 600; }
+  .tableau-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 5: Quadratic Programming</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#geometry">1 · A QPP in pictures</a>
+    <a href="#notation">2 · Spot Q and c</a>
+    <a href="#simplex">3 · Modified simplex machine</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : QPP GEOMETRY ================= -->
+<section class="widget" id="geometry">
+  <h2>A QPP in pictures <span class="chip">Slide 3</span></h2>
+  <p class="howto">
+    The opening example: max f = 15x₁ + 30x₂ + 4x₁x₂ − 2x₁² − 4x₂² s.t. x₁ + 2x₂ ≤ 30, x ≥ 0.
+    <b>Drag the point</b> and hunt the max. Quadratic objective + linear constraints — where can the
+    optimum sit this time?
+  </p>
+  <div class="controls">
+    <span class="readout">f = <b id="qg-val">—</b></span>
+    <span class="readout">your best: <b id="qg-best">—</b></span>
+    <button id="qg-reveal" class="primary">Reveal optimum ★</button>
+  </div>
+  <canvas class="viz" id="c-qg"></canvas>
+  <p class="status info" id="qg-status">Drag the violet point.</p>
+  <p class="note">
+    The unconstrained peak (15, 11.25) is <em>outside</em> the region, so the optimum slides down to the
+    boundary: (12, 9) with f = 270, where ∇f = (3, 6) = 3·(1, 2) — parallel to the constraint normal,
+    with multiplier u = 3.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : SPOT Q AND C ================= -->
+<section class="widget" id="notation">
+  <h2>Spot Q and c <span class="chip">Slides 4–7</span></h2>
+  <p class="howto">
+    Write the objective as f(x) = cᵀx − ½ xᵀQx (with Q symmetric). Fill in the entries and check —
+    the −½ and the cross-term split are where everyone slips.
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="qn-pA">15x₁ + 30x₂ + 4x₁x₂ − 2x₁² − 4x₂²</button>
+      <button class="seg" id="qn-pB">5x₁ − x₁² + 7x₂ − x₂²</button>
+    </span>
+  </div>
+  <div class="controls" style="align-items:center">
+    <span style="font-size:1.05rem">c =</span>
+    <span class="matrix" style="grid-template-columns:auto">
+      <input type="number" id="qn-c1" step="any" style="width:70px;font:inherit;text-align:center">
+      <input type="number" id="qn-c2" step="any" style="width:70px;font:inherit;text-align:center">
+    </span>
+    <span style="font-size:1.05rem">&nbsp;Q =</span>
+    <span class="matrix">
+      <input type="number" id="qn-q11" step="any" style="width:70px;font:inherit;text-align:center">
+      <input type="number" id="qn-q12" step="any" style="width:70px;font:inherit;text-align:center">
+      <input type="number" id="qn-q21" step="any" style="width:70px;font:inherit;text-align:center">
+      <input type="number" id="qn-q22" step="any" style="width:70px;font:inherit;text-align:center">
+    </span>
+    <button id="qn-check" class="primary">Check</button>
+    <button id="qn-show">Show answer</button>
+  </div>
+  <p class="status info" id="qn-status"></p>
+  <p class="note">
+    Slide 7’s recipe: qⱼⱼ = −2 × (coefficient of xⱼ²) and qᵢⱼ = qⱼᵢ = −(coefficient of xᵢxⱼ), because the
+    ½ halves the diagonal and the symmetric pair qᵢⱼ + qⱼᵢ shares the cross term. Q positive semidefinite
+    ⇔ f concave ⇔ KKT is necessary AND sufficient (slide 9).
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : MODIFIED SIMPLEX MACHINE ================= -->
+<section class="widget" id="simplex">
+  <h2>The modified simplex machine <span class="chip">Slides 14–38</span></h2>
+  <p class="howto">
+    The slides’ example: max 5x₁ − x₁² + 7x₂ − x₂² s.t. 4x₁ + x₂ ≤ 20, x₁ + 4x₂ ≤ 20, x ≥ 0, rewritten
+    through its KKT system with artificials z₁, z₂ (slide 31). <b>Click a column header to choose the
+    entering variable</b> — but respect the restricted-entry rule: a variable whose complementary partner
+    is basic is off-limits. The map on the right shows (x₁, x₂) after every pivot.
+  </p>
+  <div class="controls">
+    <button id="ms-auto" class="primary">Let the algorithm choose</button>
+    <button id="ms-reset">Reset to iteration 0</button>
+    <span class="readout">current (x₁, x₂) = <b id="ms-xy">—</b></span>
+    <span class="readout">Z<sub>QPP</sub> = <b id="ms-z">—</b></span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
+    <div class="tableau-wrap" style="flex:1 1 560px;min-width:420px">
+      <table class="tableau" id="ms-table"></table>
+    </div>
+    <canvas class="viz short" id="c-ms" style="flex:1 1 320px;min-width:300px;height:320px"></canvas>
+  </div>
+  <p class="status info" id="ms-status"></p>
+  <p class="note">
+    Complementary pairs: (x₁, y₁), (x₂, y₂), (u₁, v₁), (u₂, v₂). The restricted-entry rule (slide 21)
+    keeps xᵀy + uᵀv = 0 at every step, so plain phase-1 simplex quietly solves a <em>nonlinear</em>
+    program. When both artificials hit zero, the tableau’s x is the QPP optimum: (2.5, 3.5), Z = 18.5
+    (slide 38) — an interior optimum, so u₁ = u₂ = 0.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 5.
+  Figures follow the examples used in the Week 5 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+function quadContours(p, t, Q, cx, cy, levels, color) {
+  const { ctx, X, Y } = p;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(p.padL, p.padT, p.w - p.padL - p.padR, p.h - p.padT - p.padB);
+  ctx.clip();
+  ctx.strokeStyle = color || t.s1;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 1.5;
+  levels.forEach(k => {
+    if (k <= 0) return;
+    ctx.beginPath();
+    for (let i = 0; i <= 180; i++) {
+      const phi = 2 * Math.PI * i / 180;
+      const u = Math.cos(phi), v = Math.sin(phi);
+      const q = Q[0][0] * u * u + 2 * Q[0][1] * u * v + Q[1][1] * v * v;
+      const r = Math.sqrt(k / q);
+      i === 0 ? ctx.moveTo(X(cx + r * u), Y(cy + r * v)) : ctx.lineTo(X(cx + r * u), Y(cy + r * v));
+    }
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+/* ============================================================
+   WIDGET 1 — QPP geometry (slide 3)
+   f = 15x1 + 30x2 + 4x1x2 - 2x1^2 - 4x2^2, s.t. x1 + 2x2 <= 30.
+   Unconstrained peak (15, 11.25); constrained optimum (12, 9), f = 270.
+   ============================================================ */
+(() => {
+  const canvas = el('c-qg');
+  const view = { x0: -1.5, x1: 33, y0: -1, y1: 17.5 };
+  const f = (x, y) => 15 * x + 30 * y + 4 * x * y - 2 * x * x - 4 * y * y;
+  const C = [15, 11.25];
+  const Q2 = [[2, -2], [-2, 4]]; // f = f(C) - (v-C)^T Q2 (v-C)
+  let pt = { x: 5, y: 4 }, best = null, revealed = false, dragging = false, lastPlot = null;
+
+  const feasible = (x, y) => x >= -1e-9 && y >= -1e-9 && x + 2 * y <= 30 + 1e-9;
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    lastPlot = p;
+    VIZ.axes(p, t, { xticks: [0, 5, 10, 15, 20, 25, 30], yticks: [0, 5, 10, 15], xlabel: 'x₁', ylabel: 'x₂' });
+    const { ctx, X, Y } = p;
+
+    // feasible region triangle (0,0)-(30,0)-(0,15)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(30), Y(0)); ctx.lineTo(X(0), Y(15));
+    ctx.closePath();
+    ctx.fillStyle = t.region;
+    ctx.fill();
+    ctx.strokeStyle = t.axis;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, 'x₁ + 2x₂ ≤ 30', 17, 7.6, t.ink2, { size: 13 });
+
+    const corners = [[view.x0, view.y0], [view.x0, view.y1], [view.x1, view.y0], [view.x1, view.y1]];
+    const kmax = Math.max(...corners.map(([a, b]) => {
+      const dx = a - C[0], dy = b - C[1];
+      return Q2[0][0] * dx * dx + 2 * Q2[0][1] * dx * dy + Q2[1][1] * dy * dy;
+    }));
+    quadContours(p, t, Q2, C[0], C[1], [1, 2, 3, 4, 5, 6].map(i => kmax * (i / 6) ** 2));
+
+    // unconstrained peak, shown hollow
+    ctx.save();
+    ctx.beginPath(); ctx.arc(X(C[0]), Y(C[1]), 6, 0, 2 * Math.PI);
+    ctx.strokeStyle = t.s1; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, 'unconstrained peak — infeasible!', C[0], C[1], t.s1, { dx: 10, dy: -8, size: 13 });
+
+    if (revealed) {
+      VIZ.star(p, 12, 9, t.s2, 11);
+      VIZ.label(p, '(12, 9), f = 270', 12, 9, t.s2, { dx: 12, dy: 18, bold: true, baseline: 'top' });
+    }
+
+    const ok = feasible(pt.x, pt.y);
+    VIZ.dot(p, pt.x, pt.y, ok ? t.s5 : t.bad, 8, true);
+    const v = f(pt.x, pt.y);
+    if (ok && (best === null || v > best)) best = v;
+    el('qg-val').textContent = fmt(v, 1) + (ok ? '' : ' (infeasible)');
+    el('qg-best').textContent = best === null ? '—' : fmt(best, 1);
+
+    const st = el('qg-status');
+    if (revealed) {
+      st.className = 'status info';
+      st.textContent = 'The optimum is ON the boundary but NOT at a corner — the QP analogue of Week 1’s lesson. The contour is tangent to the constraint line at (12, 9).';
+    } else if (ok && v > 269) {
+      st.className = 'status ok';
+      st.textContent = 'f ≥ 269 — you are hugging the optimum.';
+    } else {
+      st.className = 'status info';
+      st.textContent = ok ? 'Drag the violet point.' : 'You left the feasible region!';
+    }
+  }
+
+  function setFromPointer(ev) {
+    const { px, py } = VIZ.pointer(canvas, ev);
+    pt = { x: lastPlot.invX(px), y: lastPlot.invY(py) };
+    draw();
+  }
+  canvas.addEventListener('pointerdown', ev => { dragging = true; canvas.setPointerCapture(ev.pointerId); setFromPointer(ev); });
+  canvas.addEventListener('pointermove', ev => { if (dragging) setFromPointer(ev); });
+  canvas.addEventListener('pointerup', () => dragging = false);
+  el('qg-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — spot Q and c (slides 4-7)
+   ============================================================ */
+(() => {
+  const PRESETS = {
+    A: { c: [15, 30], Q: [[4, -4], [-4, 8]] },
+    B: { c: [5, 7], Q: [[2, 0], [0, 2]] },
+  };
+  let cur = 'A';
+
+  const read = () => ({
+    c: [+el('qn-c1').value, +el('qn-c2').value],
+    Q: [[+el('qn-q11').value, +el('qn-q12').value], [+el('qn-q21').value, +el('qn-q22').value]],
+  });
+
+  function clearInputs() {
+    ['qn-c1', 'qn-c2', 'qn-q11', 'qn-q12', 'qn-q21', 'qn-q22'].forEach(id => el(id).value = '');
+    el('qn-status').textContent = '';
+    el('qn-status').className = 'status info';
+  }
+
+  function check() {
+    const ans = PRESETS[cur];
+    const got = read();
+    const st = el('qn-status');
+    const eq = (a, b) => Math.abs(a - b) < 1e-9;
+    const okC = eq(got.c[0], ans.c[0]) && eq(got.c[1], ans.c[1]);
+    const okQ = eq(got.Q[0][0], ans.Q[0][0]) && eq(got.Q[0][1], ans.Q[0][1]) && eq(got.Q[1][0], ans.Q[1][0]) && eq(got.Q[1][1], ans.Q[1][1]);
+    if (okC && okQ) {
+      st.className = 'status ok';
+      st.textContent = '✓ Correct! And since x'.concat('ᵀQx ≥ 0 (positive semidefinite), f is concave — KKT will be necessary and sufficient.');
+      return;
+    }
+    st.className = 'status bad';
+    const hints = [];
+    if (!okC) hints.push('c holds the LINEAR coefficients only.');
+    if (!eq(got.Q[0][1], got.Q[1][0])) hints.push('Q must be symmetric: q₁₂ = q₂₁.');
+    if (eq(got.Q[0][0], ans.Q[0][0] / 2) || eq(got.Q[1][1], ans.Q[1][1] / 2)) hints.push('Diagonal: remember the −½ — qⱼⱼ is −2× the coefficient of xⱼ².');
+    if (!eq(got.Q[0][1], ans.Q[0][1]) && eq(got.Q[0][1], ans.Q[0][1] * 2)) hints.push('Cross term: q₁₂ + q₂₁ together absorb it — each gets half the doubled value.');
+    if (got.Q[0][1] * ans.Q[0][1] < 0) hints.push('Sign of the cross entries: f has −½xᵀQx, so a POSITIVE x₁x₂ term needs NEGATIVE q₁₂.');
+    st.textContent = '✗ Not yet. ' + (hints.length ? hints.join(' ') : 'Re-derive each entry from f = cᵀx − ½xᵀQx.');
+  }
+
+  function show() {
+    const ans = PRESETS[cur];
+    el('qn-c1').value = ans.c[0]; el('qn-c2').value = ans.c[1];
+    el('qn-q11').value = ans.Q[0][0]; el('qn-q12').value = ans.Q[0][1];
+    el('qn-q21').value = ans.Q[1][0]; el('qn-q22').value = ans.Q[1][1];
+    const st = el('qn-status');
+    st.className = 'status info';
+    st.textContent = 'c = (' + ans.c + '), Q = [[' + ans.Q[0] + '], [' + ans.Q[1] + ']] — check each entry against the recipe below.';
+  }
+
+  el('qn-pA').addEventListener('click', () => { cur = 'A'; el('qn-pA').classList.add('active'); el('qn-pB').classList.remove('active'); clearInputs(); });
+  el('qn-pB').addEventListener('click', () => { cur = 'B'; el('qn-pB').classList.add('active'); el('qn-pA').classList.remove('active'); clearInputs(); });
+  el('qn-check').addEventListener('click', check);
+  el('qn-show').addEventListener('click', show);
+})();
+
+/* ============================================================
+   WIDGET 3 — modified simplex machine (slides 23-38)
+   Phase-1 tableau with the restricted-entry rule; generic pivoting so
+   the class can explore alternative entering choices.
+   ============================================================ */
+(() => {
+  const canvas = el('c-ms');
+  const NAMES = ['x₁', 'x₂', 'u₁', 'u₂', 'y₁', 'y₂', 'v₁', 'v₂', 'z₁', 'z₂'];
+  const COMPL = { 0: 4, 4: 0, 1: 5, 5: 1, 2: 6, 6: 2, 3: 7, 7: 3 };
+  let T, basics, done, pivotCell = null;
+
+  function reset() {
+    // slide 35, iteration 0
+    T = {
+      obj: [-2, -2, -5, -5, 1, 1, 0, 0, 0, 0], objRhs: -12,
+      rows: [
+        [2, 0, 4, 1, -1, 0, 0, 0, 1, 0], // z1 = 5
+        [0, 2, 1, 4, 0, -1, 0, 0, 0, 1], // z2 = 7
+        [4, 1, 0, 0, 0, 0, 1, 0, 0, 0],  // v1 = 20
+        [1, 4, 0, 0, 0, 0, 0, 1, 0, 0],  // v2 = 20
+      ],
+      rhs: [5, 7, 20, 20],
+    };
+    basics = [8, 9, 6, 7]; // z1, z2, v1, v2
+    done = false;
+    pivotCell = null;
+    el('ms-status').className = 'status info';
+    el('ms-status').textContent = 'Iteration 0 (slide 35). Basic: z₁, z₂, v₁, v₂. u₁ and u₂ look tempting (−5) — may they enter?';
+    render();
+  }
+
+  const value = j => {
+    const i = basics.indexOf(j);
+    return i >= 0 ? T.rhs[i] : 0;
+  };
+  const fqpp = (x, y) => 5 * x - x * x + 7 * y - y * y;
+
+  function allowed(j) {
+    if (T.obj[j] >= -1e-9) return { ok: false, why: NAMES[j] + ' does not improve the objective (coefficient ' + fmt(T.obj[j], 2) + ' ≥ 0).' };
+    const c = COMPL[j];
+    if (c !== undefined && basics.includes(c)) return { ok: false, why: 'BLOCKED by the restricted-entry rule: ' + NAMES[j] + '’s partner ' + NAMES[c] + ' is basic — letting ' + NAMES[j] + ' in would break complementarity.' };
+    return { ok: true };
+  }
+
+  function enter(j) {
+    if (done) return;
+    const a = allowed(j);
+    const st = el('ms-status');
+    if (!a.ok) { st.className = 'status bad'; st.textContent = '✗ ' + a.why; return; }
+    // ratio test
+    let leave = -1, best = Infinity;
+    T.rows.forEach((row, i) => {
+      if (row[j] > 1e-9) {
+        const r = T.rhs[i] / row[j];
+        if (r < best - 1e-12) { best = r; leave = i; }
+      }
+    });
+    if (leave < 0) { st.className = 'status bad'; st.textContent = 'Unbounded direction — cannot happen here.'; return; }
+    const leavingName = NAMES[basics[leave]];
+    // pivot
+    const piv = T.rows[leave][j];
+    T.rows[leave] = T.rows[leave].map(v => v / piv);
+    T.rhs[leave] /= piv;
+    T.rows.forEach((row, i) => {
+      if (i === leave) return;
+      const k = row[j];
+      if (Math.abs(k) < 1e-12) return;
+      T.rows[i] = row.map((v, q) => v - k * T.rows[leave][q]);
+      T.rhs[i] -= k * T.rhs[leave];
+    });
+    const k0 = T.obj[j];
+    T.obj = T.obj.map((v, q) => v - k0 * T.rows[leave][q]);
+    T.objRhs -= k0 * T.rhs[leave];
+    basics[leave] = j;
+    pivotCell = { i: leave, j };
+
+    // termination check
+    const anyAllowed = T.obj.some((v, q) => allowed(q).ok);
+    if (!anyAllowed) {
+      done = true;
+      const x1 = value(0), x2 = value(1);
+      st.className = 'status ok';
+      st.textContent = 'OPTIMAL (slide 37): both artificials are out, x₁ = ' + fmt(x1, 2) + ', x₂ = ' + fmt(x2, 2) +
+        ', Z = ' + fmt(fqpp(x1, x2), 2) + '. Complementarity held at every step — phase 2 is not needed.';
+    } else {
+      st.className = 'status info';
+      st.textContent = NAMES[j] + ' entered, ' + leavingName + ' left (min-ratio ' + fmt(best, 2) + '). Choose the next entering variable.';
+    }
+    render();
+  }
+
+  function autoStep() {
+    if (done) return;
+    let bestJ = -1, bestV = -1e-9;
+    T.obj.forEach((v, j) => { if (v < bestV && allowed(j).ok) { bestV = v; bestJ = j; } });
+    if (bestJ >= 0) enter(bestJ);
+  }
+
+  function render() {
+    const table = el('ms-table');
+    let html = '<thead><tr><th>basic</th>';
+    NAMES.forEach((n, j) => {
+      const a = done ? { ok: false } : allowed(j);
+      html += '<th class="' + (a.ok ? 'pickable' : (COMPL[j] !== undefined && basics.includes(COMPL[j]) && T.obj[j] < -1e-9 ? 'blocked' : '')) + '" data-j="' + j + '">' + n + '</th>';
+    });
+    html += '<th>RHS</th></tr></thead><tbody>';
+    html += '<tr><td>Z</td>' + T.obj.map(v => '<td>' + fmt(v, 2) + '</td>').join('') + '<td>' + fmt(T.objRhs, 2) + '</td></tr>';
+    T.rows.forEach((row, i) => {
+      html += '<tr><td>' + NAMES[basics[i]] + '</td>' + row.map((v, j) =>
+        '<td class="' + (pivotCell && pivotCell.i === i && pivotCell.j === j ? 'pivot' : '') + '">' + fmt(v, 2) + '</td>').join('') +
+        '<td>' + fmt(T.rhs[i], 2) + '</td></tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+    table.querySelectorAll('thead th[data-j]').forEach(th => {
+      th.addEventListener('click', () => enter(+th.dataset.j));
+    });
+    el('ms-xy').textContent = '(' + fmt(value(0), 2) + ', ' + fmt(value(1), 2) + ')';
+    el('ms-z').textContent = fmt(fqpp(value(0), value(1)), 2);
+    drawMap();
+  }
+
+  function drawMap() {
+    const view = { x0: -0.5, x1: 6.2, y0: -0.4, y1: 5.9 };
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [0, 1, 2, 3, 4, 5, 6], yticks: [0, 1, 2, 3, 4, 5], xlabel: 'x₁', ylabel: 'x₂' });
+    const { ctx, X, Y } = p;
+    // region: 4x1+x2<=20, x1+4x2<=20, x>=0 — vertices (0,0),(5,0),(4,4),(0,5)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(5), Y(0)); ctx.lineTo(X(4), Y(4)); ctx.lineTo(X(0), Y(5));
+    ctx.closePath();
+    ctx.fillStyle = t.region; ctx.fill();
+    ctx.strokeStyle = t.axis; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+    // circular contours around (2.5, 3.5)
+    quadContours(p, t, [[1, 0], [0, 1]], 2.5, 3.5, [0.5, 1.5, 3, 5.5, 9]);
+    if (done) {
+      VIZ.star(p, 2.5, 3.5, t.s2, 10);
+      VIZ.label(p, '(2.5, 3.5), Z = 18.5', 2.5, 3.5, t.s2, { dx: 12, dy: -8, bold: true });
+    }
+    VIZ.dot(p, value(0), value(1), t.s5, 8, true);
+    VIZ.label(p, 'tableau point', value(0), value(1), t.s5, { dx: 10, dy: 16, size: 13, bold: true, baseline: 'top' });
+  }
+
+  el('ms-auto').addEventListener('click', autoStep);
+  el('ms-reset').addEventListener('click', reset);
+  reset();
+  VIZ.register(canvas, drawMap);
+})();
+</script>
+</body>
+</html>
