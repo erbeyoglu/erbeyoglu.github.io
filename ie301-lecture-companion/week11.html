@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 11 — Discrete-Time Markov Chains, Part 1 (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<style>
+  table.dp { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; margin: 8px 0 14px; }
+  table.dp th, table.dp td { border: 1px solid var(--grid); padding: 4px 10px; text-align: right; }
+  table.dp th { color: var(--ink-2); }
+  table.dp input { width: 58px; font: inherit; text-align: right; border: 1px solid var(--border); border-radius: 5px; background: var(--page); color: var(--ink); }
+  .pathlist { font-variant-numeric: tabular-nums; font-size: 0.95rem; line-height: 1.9; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 11: DTMC (Part 1)</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#weather">1 · Weather chain</a>
+    <a href="#gambler">2 · Gambler’s ruin</a>
+    <a href="#paths">3 · n-step paths</a>
+    <a href="#classify">4 · Classify the states</a>
+    <a href="#insurance">5 · Build the matrix</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : WEATHER CHAIN ================= -->
+<section class="widget" id="weather">
+  <h2>Centerville weather: watching memory fade <span class="chip">Slides 7, 16, 28</span></h2>
+  <p class="howto">
+    Dry stays dry with 0.8; rain turns dry with 0.6. <b>Simulate</b> days and watch the long-run dry
+    fraction; then raise n and watch the rows of Pⁿ forget where they started.
+  </p>
+  <div class="controls">
+    <button id="wt-step" class="primary">Simulate 1 day</button>
+    <button id="wt-run">Simulate 365 days</button>
+    <button id="wt-reset">Reset</button>
+    <span class="readout">days: <b id="wt-n">0</b></span>
+    <span class="readout">dry fraction: <b id="wt-frac">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-wt" style="height:170px"></canvas>
+  <div class="controls">
+    <div class="group">
+      <label for="wt-pow">n for Pⁿ</label>
+      <input type="range" id="wt-pow" min="1" max="10" step="1" value="1">
+      <span class="readout">n = <b id="wt-powv">1</b></span>
+    </div>
+    <span class="readout" id="wt-matrix" style="font-family:inherit"></span>
+  </div>
+  <p class="status info" id="wt-status"></p>
+  <p class="note">
+    Slide 28: by n = 5 both rows of Pⁿ are (0.75, 0.25) — the probability of rain five days ahead no
+    longer depends on today. The Markov property (slide 10) only ever looks one step back; iterating it
+    washes out even that.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : GAMBLER'S RUIN ================= -->
+<section class="widget" id="gambler">
+  <h2>Gambler’s ruin <span class="chip">Slides 8, 17, 42–45</span></h2>
+  <p class="howto">
+    Start with $2, bet $1 each round with win probability p, stop at $0 (ruin) or $4 (quit rich).
+    Play once, then let 1000 gamblers play. Where do the trajectories end — and which states get
+    visited only finitely often?
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="gb-p">win probability p</label>
+      <input type="range" id="gb-p" min="0.30" max="0.70" step="0.05" value="0.5">
+      <span class="readout"><b id="gb-pv">0.50</b></span>
+    </div>
+    <button id="gb-one" class="primary">Play one gambler 🎲</button>
+    <button id="gb-1000">Play 1000</button>
+    <span class="readout">ruined: <b id="gb-ruin">—</b></span>
+    <span class="readout">reached $4: <b id="gb-rich">—</b></span>
+    <span class="readout">theory ruin: <b id="gb-th">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-gb"></canvas>
+  <p class="status info" id="gb-status"></p>
+  <p class="note">
+    States $0 and $4 are <em>absorbing</em> (p₀₀ = p₄₄ = 1, slide 45); $1–$3 are <em>transient</em>
+    (slide 42) — every simulated path visits them a few times and never comes back. Three classes:
+    {0}, {1, 2, 3}, {4} (slide 40).
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : N-STEP PATHS ================= -->
+<section class="widget" id="paths">
+  <h2>Where does P² come from? <span class="chip">Slides 22–33</span></h2>
+  <p class="howto">
+    Chapman-Kolmogorov is just “sum over every stopover”. Pick a start, a destination, and the number
+    of steps — every path is listed with its probability product, and their sum is exactly the Pⁿ entry.
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="pt-beer">Beer brands (slide 22)</button>
+      <button class="seg" id="pt-cola">Cola example (slide 29)</button>
+    </span>
+    <div class="group">
+      <label>from</label>
+      <select id="pt-from" style="font:inherit;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--page);color:var(--ink)"></select>
+    </div>
+    <div class="group">
+      <label>to</label>
+      <select id="pt-to" style="font:inherit;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--page);color:var(--ink)"></select>
+    </div>
+    <div class="group">
+      <label for="pt-n">steps</label>
+      <input type="range" id="pt-n" min="2" max="3" step="1" value="2">
+      <span class="readout"><b id="pt-nv">2</b></span>
+    </div>
+  </div>
+  <div class="pathlist" id="pt-list"></div>
+  <p class="status info" id="pt-status"></p>
+  <p class="note">
+    Slide 23 in action: P(X₃ = A | X₁ = B) = Σₖ p(B→k)·p(k→A) = 0.14 — the (B, A) entry of P².
+    Matrix multiplication IS path enumeration; that is all Chapman-Kolmogorov says.
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : CLASSIFY THE STATES ================= -->
+<section class="widget" id="classify">
+  <h2>Transient, recurrent or absorbing? <span class="chip">Slides 35–51</span></h2>
+  <p class="howto">
+    <b>Click a state</b> in the diagram, then give it a label. Classify every state, then check.
+    The last preset asks a different question — what is the period?
+  </p>
+  <div class="controls">
+    <span class="segwrap" id="cl-presets">
+      <button class="seg active" data-k="A">Gambler’s ruin</button>
+      <button class="seg" data-k="B">Slide 37 chain</button>
+      <button class="seg" data-k="C">Slide 47 chain</button>
+      <button class="seg" data-k="D">The cycle (slide 49)</button>
+    </span>
+  </div>
+  <div class="controls" id="cl-labels">
+    <span style="color:var(--ink-2)">Label the selected state:</span>
+    <button data-l="T">Transient</button>
+    <button data-l="R">Recurrent</button>
+    <button data-l="A">Absorbing</button>
+    <button id="cl-check" class="primary">Check answers</button>
+  </div>
+  <div class="controls" id="cl-period" style="display:none">
+    <span style="color:var(--ink-2)">These states have period:</span>
+    <button data-p="1">1 (aperiodic)</button>
+    <button data-p="2">2</button>
+    <button data-p="3">3</button>
+  </div>
+  <canvas class="viz short" id="c-cl"></canvas>
+  <p class="status info" id="cl-status">Click a state to select it.</p>
+  <p class="note">
+    Transient: some escape route never comes back (slide 42). Recurrent: return is certain (slide 43).
+    Absorbing: pᵢᵢ = 1 — recurrent with no exit at all (slide 45). These are <em>class</em> properties:
+    states that communicate share their fate (slide 46). Recurrent + aperiodic = ergodic (slide 50).
+  </p>
+</section>
+
+<!-- ================= WIDGET 5 : INSURANCE MATRIX BUILDER ================= -->
+<section class="widget" id="insurance">
+  <h2>Build the insurance company’s matrix <span class="chip">Slide 52</span></h2>
+  <p class="howto">
+    Premiums depend on the last TWO years, so the state must remember both: (year before, last year)
+    with N = no accident, Y = accident. Accident probability this year: 10% if there was one last year,
+    3% otherwise. <b>Fill in all 16 entries.</b>
+  </p>
+  <table class="dp" id="in-table">
+    <thead><tr><th>from \\ to</th><th>NN</th><th>NY</th><th>YN</th><th>YY</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div class="controls">
+    <button id="in-check" class="primary">Check</button>
+    <button id="in-show">Show answer</button>
+  </div>
+  <p class="status info" id="in-status"></p>
+  <p class="note">
+    The trick: next year’s state is (last year, this year) — the oldest year falls off. From NN you can
+    only reach NN or NY; a row like NN→YY must be 0 because the “year before” of the next state is
+    forced. Premiums (250/400/800) attach to states — the long-run average premium is Week 13’s
+    steady-state story.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 11.
+  Figures follow the examples used in the Week 11 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+const matMul = (A, B) => A.map((row, i) => B[0].map((_, j) => row.reduce((s, a, k) => s + a * B[k][j], 0)));
+const matPow = (P, n) => { let R = P; for (let k = 1; k < n; k++) R = matMul(R, P); return R; };
+
+/* ============================================================
+   WIDGET 1 — weather chain (slides 7, 16, 28)
+   ============================================================ */
+(() => {
+  const canvas = el('c-wt');
+  const P = [[0.8, 0.2], [0.6, 0.4]];
+  let days = [0]; // 0 dry, 1 rain
+
+  function step() {
+    const cur = days[days.length - 1];
+    days.push(Math.random() < P[cur][0] ? 0 : 1);
+  }
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const show = days.slice(-90);
+    const bw = (w - 30) / 90;
+    show.forEach((d, i) => {
+      ctx.fillStyle = d === 0 ? '#eda100' : t.s1;
+      ctx.fillRect(15 + i * bw, 40, Math.max(1, bw - 1), h - 80);
+    });
+    ctx.save();
+    ctx.fillStyle = t.ink2;
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.fillText('last ' + show.length + ' days — yellow = dry, blue = rain', 15, 24);
+    ctx.restore();
+    el('wt-n').textContent = days.length - 1;
+    const frac = days.filter(d => d === 0).length / days.length;
+    el('wt-frac').textContent = fmt(frac, 3) + ' (→ 0.75)';
+  }
+
+  function showPower() {
+    const n = +el('wt-pow').value;
+    el('wt-powv').textContent = n;
+    const M = matPow(P, n);
+    el('wt-matrix').innerHTML = 'Pⁿ = [ ' + fmt(M[0][0], 3) + '&nbsp; ' + fmt(M[0][1], 3) + ' / ' + fmt(M[1][0], 3) + '&nbsp; ' + fmt(M[1][1], 3) + ' ]';
+    const st = el('wt-status');
+    st.className = 'status info';
+    st.textContent = Math.abs(M[0][0] - M[1][0]) < 0.005
+      ? 'The rows are (essentially) identical: after ' + n + ' days it no longer matters whether today was dry or rainy.'
+      : 'Row 1 (start dry) and row 2 (start rainy) still differ by ' + fmt(Math.abs(M[0][0] - M[1][0]), 3) + ' — memory not fully faded yet.';
+  }
+
+  el('wt-step').addEventListener('click', () => { step(); draw(); });
+  el('wt-run').addEventListener('click', () => { for (let i = 0; i < 365; i++) step(); draw(); });
+  el('wt-reset').addEventListener('click', () => { days = [0]; draw(); });
+  el('wt-pow').addEventListener('input', showPower);
+  showPower();
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — gambler's ruin (slides 8, 17, 42-45)
+   ============================================================ */
+(() => {
+  const canvas = el('c-gb');
+  let lastPath = [2];
+  let played = 0, ruined = 0, rich = 0;
+
+  const theoryRuin = p => {
+    if (Math.abs(p - 0.5) < 1e-9) return 1 - 2 / 4;
+    const r = (1 - p) / p;
+    return (Math.pow(r, 2) - Math.pow(r, 4)) / (1 - Math.pow(r, 4));
+  };
+
+  function play() {
+    const p = +el('gb-p').value;
+    let c = 2;
+    const path = [2];
+    let guard = 0;
+    while (c > 0 && c < 4 && guard++ < 500) {
+      c += Math.random() < p ? 1 : -1;
+      path.push(c);
+    }
+    played++;
+    if (c === 0) ruined++; else rich++;
+    return path;
+  }
+
+  function refresh() {
+    const p = +el('gb-p').value;
+    el('gb-pv').textContent = fmt(p, 2);
+    el('gb-th').textContent = fmt(theoryRuin(p), 3);
+    el('gb-ruin').textContent = played ? fmt(ruined / played, 3) + ' (' + ruined + ')' : '—';
+    el('gb-rich').textContent = played ? fmt(rich / played, 3) + ' (' + rich + ')' : '—';
+  }
+
+  function draw() {
+    const view = { x0: -0.5, x1: Math.max(12, lastPath.length + 0.5), y0: -0.4, y1: 4.5 };
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [], yticks: [0, 1, 2, 3, 4], xlabel: 'bet #', ylabel: 'capital $' });
+    const { ctx, X, Y } = p;
+    // absorbing bands
+    ctx.save();
+    ctx.fillStyle = t.bad; ctx.globalAlpha = 0.12;
+    ctx.fillRect(p.padL, Y(0.15), p.w - p.padL - p.padR, Y(-0.15) - Y(0.15));
+    ctx.fillStyle = t.good;
+    ctx.fillRect(p.padL, Y(4.15), p.w - p.padL - p.padR, Y(3.85) - Y(4.15));
+    ctx.restore();
+    VIZ.label(p, 'ruin — absorbing', view.x1 - 0.4, 0.18, t.bad, { align: 'right', size: 13, bold: true });
+    VIZ.label(p, '$4 — absorbing', view.x1 - 0.4, 4.18, t.good, { align: 'right', size: 13, bold: true });
+    ctx.save();
+    ctx.strokeStyle = t.s5;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    lastPath.forEach((c, i) => i === 0 ? ctx.moveTo(X(i), Y(c)) : ctx.lineTo(X(i), Y(c)));
+    ctx.stroke();
+    ctx.restore();
+    lastPath.forEach((c, i) => VIZ.dot(p, i, c, t.s5, 4));
+  }
+
+  el('gb-p').addEventListener('input', () => { played = ruined = rich = 0; refresh(); });
+  el('gb-one').addEventListener('click', () => {
+    lastPath = play();
+    refresh(); draw();
+    const st = el('gb-status');
+    const end = lastPath[lastPath.length - 1];
+    st.className = end === 0 ? 'status bad' : 'status ok';
+    st.textContent = (end === 0 ? '💸 Ruined' : '🤑 Reached $4') + ' after ' + (lastPath.length - 1) + ' bets. States 1–3 were visited, then abandoned forever — transient.';
+  });
+  el('gb-1000').addEventListener('click', () => {
+    for (let i = 0; i < 1000; i++) lastPath = play();
+    refresh(); draw();
+    const st = el('gb-status');
+    st.className = 'status info';
+    st.textContent = 'Empirical ruin ' + fmt(ruined / played, 3) + ' vs theory ' + el('gb-th').textContent + '. Every single path ended absorbed — nothing wanders forever in a finite chain.';
+  });
+  refresh();
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 3 — n-step paths (slides 22-33)
+   ============================================================ */
+(() => {
+  const MODELS = {
+    beer: { names: ['A', 'B', 'C'], P: [[0.1, 0.2, 0.7], [0.2, 0.4, 0.4], [0.1, 0.3, 0.6]] },
+    cola: { names: ['Cola 1', 'Cola 2'], P: [[0.9, 0.1], [0.2, 0.8]] },
+  };
+  let model = 'beer';
+
+  function fillSelects() {
+    const m = MODELS[model];
+    ['pt-from', 'pt-to'].forEach(id => {
+      const sel = el(id);
+      sel.innerHTML = '';
+      m.names.forEach((n, i) => {
+        const o = document.createElement('option');
+        o.value = i; o.textContent = n;
+        sel.appendChild(o);
+      });
+    });
+    el('pt-from').value = model === 'beer' ? 1 : 1;
+    el('pt-to').value = 0;
+  }
+
+  function update() {
+    const m = MODELS[model];
+    const from = +el('pt-from').value, to = +el('pt-to').value, n = +el('pt-n').value;
+    el('pt-nv').textContent = n;
+    // enumerate paths
+    let paths = [[from]];
+    for (let s = 0; s < n; s++) {
+      const nxt = [];
+      paths.forEach(pa => m.names.forEach((_, j) => nxt.push([...pa, j])));
+      paths = nxt;
+    }
+    paths = paths.filter(pa => pa[pa.length - 1] === to);
+    let total = 0;
+    const lines = paths.map(pa => {
+      let pr = 1, seg = [];
+      for (let s = 0; s < pa.length - 1; s++) {
+        pr *= m.P[pa[s]][pa[s + 1]];
+        seg.push(fmt(m.P[pa[s]][pa[s + 1]], 2));
+      }
+      total += pr;
+      return pa.map(i => m.names[i]).join(' → ') + ' :  ' + seg.join(' × ') + ' = ' + fmt(pr, 4);
+    });
+    const Pn = matPow(m.P, n);
+    el('pt-list').innerHTML = lines.join('<br>') +
+      '<br><b>sum = ' + fmt(total, 4) + '</b>';
+    const st = el('pt-status');
+    st.className = 'status ok';
+    st.textContent = '(P' + (n === 2 ? '²' : '³') + ')' + '[' + m.names[from] + ', ' + m.names[to] + '] = ' + fmt(Pn[from][to], 4) + ' — identical to the path sum, as Chapman-Kolmogorov promises.';
+  }
+
+  el('pt-beer').addEventListener('click', () => { model = 'beer'; el('pt-beer').classList.add('active'); el('pt-cola').classList.remove('active'); fillSelects(); update(); });
+  el('pt-cola').addEventListener('click', () => { model = 'cola'; el('pt-cola').classList.add('active'); el('pt-beer').classList.remove('active'); fillSelects(); update(); });
+  ['pt-from', 'pt-to'].forEach(id => el(id).addEventListener('change', update));
+  el('pt-n').addEventListener('input', update);
+  fillSelects();
+  update();
+})();
+
+/* ============================================================
+   WIDGET 4 — classify the states (slides 35-51)
+   ============================================================ */
+(() => {
+  const canvas = el('c-cl');
+  const PRESETS = {
+    A: {
+      names: ['$0', '$1', '$2', '$3', '$4'],
+      P: [[1, 0, 0, 0, 0], [0.5, 0, 0.5, 0, 0], [0, 0.5, 0, 0.5, 0], [0, 0, 0.5, 0, 0.5], [0, 0, 0, 0, 1]],
+      truth: ['A', 'T', 'T', 'T', 'A'],
+      explain: 'Classes {0}, {1,2,3}, {4} (slide 40): $0 and $4 absorb; $1–$3 leak out and never return — transient.',
+    },
+    B: {
+      names: ['1', '2', '3', '4', '5'],
+      P: [[0.4, 0.6, 0, 0, 0], [0.5, 0.5, 0, 0, 0], [0, 0, 0.3, 0.7, 0], [0, 0, 0.5, 0.4, 0.1], [0, 0, 0, 0.8, 0.2]],
+      truth: ['R', 'R', 'R', 'R', 'R'],
+      explain: 'Two closed classes {1,2} and {3,4,5} (slide 41) — neither leaks, so ALL states are recurrent (slide 47). The chain is not irreducible though.',
+    },
+    C: {
+      names: ['1', '2', '3', '4', '5'],
+      P: [[0.25, 0.75, 0, 0, 0], [0.5, 0.5, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 1 / 3, 2 / 3, 0], [1, 0, 0, 0, 0]],
+      truth: ['R', 'R', 'A', 'T', 'T'],
+      explain: 'Slide 47: {1,2} recurrent; 3 absorbing; 4 drains into 3 and 5 drains into {1,2} — both transient.',
+    },
+    D: {
+      names: ['1', '2', '3'],
+      P: [[0, 1, 0], [0, 0, 1], [1, 0, 0]],
+      truth: null, period: 3,
+      explain: 'Returns to any state are possible only at times 3, 6, 9, … — period 3 (slide 49). Recurrent but periodic ⇒ NOT ergodic (slide 50).',
+    },
+  };
+  let key = 'A', sel = null, labels = {}, checked = false;
+
+  function nodePos(i, n, w, h) {
+    if (key === 'A') return { x: 60 + (w - 120) * i / (n - 1), y: h / 2 };
+    const a = -Math.PI / 2 + 2 * Math.PI * i / n;
+    return { x: w / 2 + Math.min(w, h) * 0.34 * Math.cos(a), y: h / 2 + Math.min(h, h) * 0.33 * Math.sin(a) };
+  }
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const m = PRESETS[key];
+    const n = m.names.length;
+    const pos = m.names.map((_, i) => nodePos(i, n, w, h));
+
+    // edges
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      if (m.P[i][j] <= 0) continue;
+      const a = pos[i], b = pos[j];
+      ctx.save();
+      ctx.strokeStyle = t.axis;
+      ctx.fillStyle = t.axis;
+      ctx.lineWidth = 1.5;
+      if (i === j) {
+        ctx.beginPath();
+        ctx.arc(a.x, a.y - 34, 14, 0.6 * Math.PI, 2.6 * Math.PI);
+        ctx.stroke();
+        ctx.fillStyle = t.muted;
+        ctx.font = '11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(fmt(m.P[i][j], 2), a.x, a.y - 56);
+      } else {
+        const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
+        const ux = dx / L, uy = dy / L;
+        // offset curve for two-way edges
+        const twoWay = m.P[j][i] > 0;
+        const off = twoWay ? 10 : 0;
+        const nx = -uy * off, ny = ux * off;
+        const sx = a.x + ux * 20 + nx, sy = a.y + uy * 20 + ny;
+        const ex = b.x - ux * 22 + nx, ey = b.y - uy * 22 + ny;
+        const mx = (sx + ex) / 2 + nx, my = (sy + ey) / 2 + ny;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.quadraticCurveTo(mx, my, ex, ey);
+        ctx.stroke();
+        const ang = Math.atan2(ey - my, ex - mx);
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex - 9 * Math.cos(ang - 0.4), ey - 9 * Math.sin(ang - 0.4));
+        ctx.lineTo(ex - 9 * Math.cos(ang + 0.4), ey - 9 * Math.sin(ang + 0.4));
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = t.muted;
+        ctx.font = '11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(fmt(m.P[i][j], 2), mx, my - 4);
+      }
+      ctx.restore();
+    }
+
+    // nodes
+    m.names.forEach((nm, i) => {
+      const q = pos[i];
+      const lab = labels[i];
+      let ring = t.s1;
+      if (checked && m.truth) ring = lab === m.truth[i] || (m.truth[i] === 'A' && lab === 'A') ? t.good : t.bad;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(q.x, q.y, 20, 0, 2 * Math.PI);
+      ctx.fillStyle = t.region;
+      ctx.fill();
+      ctx.lineWidth = sel === i ? 4 : 2;
+      ctx.strokeStyle = sel === i ? t.s5 : ring;
+      ctx.stroke();
+      ctx.fillStyle = t.ink;
+      ctx.font = '700 14px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(nm, q.x, q.y);
+      if (lab) {
+        ctx.fillStyle = t.s5;
+        ctx.font = '700 13px system-ui, sans-serif';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(lab, q.x + 26, q.y + 24);
+      }
+      ctx.restore();
+    });
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    const { px, py } = VIZ.pointer(canvas, ev);
+    const m = PRESETS[key];
+    const n = m.names.length;
+    sel = null;
+    m.names.forEach((_, i) => {
+      const q = nodePos(i, n, canvas.clientWidth, canvas.clientHeight);
+      if (Math.hypot(px - q.x, py - q.y) < 26) sel = i;
+    });
+    if (sel !== null && m.truth) {
+      el('cl-status').className = 'status info';
+      el('cl-status').textContent = 'State ' + m.names[sel] + ' selected — choose a label.';
+    }
+    draw();
+  });
+
+  document.querySelectorAll('#cl-labels button[data-l]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (sel === null) return;
+      labels[sel] = btn.dataset.l;
+      checked = false;
+      draw();
+    });
+  });
+
+  el('cl-check').addEventListener('click', () => {
+    const m = PRESETS[key];
+    if (!m.truth) return;
+    checked = true;
+    let ok = 0;
+    m.truth.forEach((tr, i) => {
+      if (labels[i] === tr) ok++;
+    });
+    const st = el('cl-status');
+    st.className = ok === m.truth.length ? 'status ok' : 'status info';
+    st.textContent = ok + '/' + m.truth.length + ' correct. ' + m.explain +
+      (m.truth.includes('A') ? ' (Absorbing states are also recurrent — but the tighter label wins here.)' : '');
+    draw();
+  });
+
+  document.querySelectorAll('#cl-period button[data-p]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const st = el('cl-status');
+      const ok = +btn.dataset.p === PRESETS.D.period;
+      st.className = ok ? 'status ok' : 'status bad';
+      st.textContent = (ok ? '✓ Correct — ' : '✗ Not quite — the period is 3. ') + PRESETS.D.explain;
+    });
+  });
+
+  document.querySelectorAll('#cl-presets button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      key = btn.dataset.k;
+      sel = null; labels = {}; checked = false;
+      document.querySelectorAll('#cl-presets button').forEach(b => b.classList.toggle('active', b === btn));
+      el('cl-labels').style.display = key === 'D' ? 'none' : '';
+      el('cl-period').style.display = key === 'D' ? '' : 'none';
+      el('cl-status').className = 'status info';
+      el('cl-status').textContent = key === 'D' ? 'This chain marches 1 → 2 → 3 → 1 forever. What is its period?' : 'Click a state to select it.';
+      draw();
+    });
+  });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 5 — insurance matrix builder (slide 52)
+   ============================================================ */
+(() => {
+  const NAMES = ['NN', 'NY', 'YN', 'YY'];
+  // next state = (last year, this year); accident prob depends on last year only
+  const TRUTH = [
+    [0.97, 0.03, 0, 0],    // NN: last year N -> 3%
+    [0, 0, 0.90, 0.10],    // NY: last year Y -> 10%; next = (Y, .)
+    [0.97, 0.03, 0, 0],    // YN: last year N -> 3%
+    [0, 0, 0.90, 0.10],    // YY: last year Y -> 10%
+  ];
+
+  const body = el('in-table').querySelector('tbody');
+  NAMES.forEach((nm, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<th>' + nm + '</th>' + NAMES.map((_, j) =>
+      '<td><input type="number" step="0.01" min="0" max="1" id="in-' + i + j + '" value=""></td>').join('');
+    body.appendChild(tr);
+  });
+
+  el('in-check').addEventListener('click', () => {
+    let wrong = [], sumsBad = [];
+    for (let i = 0; i < 4; i++) {
+      let rs = 0;
+      for (let j = 0; j < 4; j++) {
+        const v = +el('in-' + i + j).value || 0;
+        rs += v;
+        if (Math.abs(v - TRUTH[i][j]) > 0.005) wrong.push(NAMES[i] + '→' + NAMES[j]);
+      }
+      if (Math.abs(rs - 1) > 0.005) sumsBad.push(NAMES[i]);
+    }
+    const st = el('in-status');
+    if (!wrong.length) {
+      st.className = 'status ok';
+      st.textContent = '✓ Perfect. Note the structure: rows NN and YN are identical (last year N), rows NY and YY are identical (last year Y) — only LAST year drives the accident probability; the state just needs to remember two years for the premium.';
+    } else {
+      st.className = 'status bad';
+      st.textContent = '✗ ' + wrong.length + ' entr' + (wrong.length === 1 ? 'y' : 'ies') + ' off (' + wrong.slice(0, 4).join(', ') + (wrong.length > 4 ? ', …' : '') + ').' +
+        (sumsBad.length ? ' Rows not summing to 1: ' + sumsBad.join(', ') + '.' : '') +
+        ' Remember: from (a, b) you can only reach (b, N) or (b, Y).';
+    }
+  });
+
+  el('in-show').addEventListener('click', () => {
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) el('in-' + i + j).value = TRUTH[i][j];
+    const st = el('in-status');
+    st.className = 'status info';
+    st.textContent = 'Each row: the old year drops off, the new year is Y with 3% (if last year N) or 10% (if last year Y).';
+  });
+})();
+</script>
+</body>
+</html>
