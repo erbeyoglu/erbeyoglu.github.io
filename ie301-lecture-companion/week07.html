@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 7 — Deterministic Dynamic Programming, Part 1 (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<style>
+  table.dp {
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+    margin: 8px 0 14px;
+  }
+  table.dp th, table.dp td { border: 1px solid var(--grid); padding: 4px 10px; text-align: right; }
+  table.dp th { color: var(--ink-2); }
+  table.dp tr.best td { color: var(--good); font-weight: 700; }
+  .dp-month { margin-top: 10px; }
+  .dp-month h4 { margin: 12px 0 2px; font-size: 1rem; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 7: Deterministic DP (Part 1)</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#matches">1 · The match puzzle</a>
+    <a href="#network">2 · NYC → LA network</a>
+    <a href="#efficiency">3 · Why DP wins</a>
+    <a href="#inventory">4 · Inventory planner</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : MATCH PUZZLE ================= -->
+<section class="widget" id="matches">
+  <h2>Beat me if you can: the match puzzle <span class="chip">Slides 4–7</span></h2>
+  <p class="howto">
+    30 matches. On each turn take 1, 2 or 3 — whoever takes the <b>last match loses</b>. You move first.
+    The computer plays the DP strategy. Can anyone in class beat it? (There is exactly one way.)
+  </p>
+  <div class="controls">
+    <span class="readout">matches left: <b id="mt-left">30</b></span>
+    <button class="primary" id="mt-t1">Take 1</button>
+    <button class="primary" id="mt-t2">Take 2</button>
+    <button class="primary" id="mt-t3">Take 3</button>
+    <button id="mt-new">New game</button>
+    <button id="mt-hint">Show the strategy</button>
+  </div>
+  <canvas class="viz short" id="c-mt" style="height:180px"></canvas>
+  <p class="status info" id="mt-status">Your move. Think backwards: which counts would you hate to face?</p>
+  <p class="note">
+    Working backwards (slides 6–7): facing 1 match you lose; facing 2–4 you win; facing 5 you lose…
+    the losing counts are 1, 5, 9, 13, 17, 21, 25, 29 — every 4k+1. From 30, taking 1 leaves 29 and you
+    can then mirror every opponent move to keep leaving 4k+1. That backward sweep IS dynamic programming.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : NYC-LA NETWORK ================= -->
+<section class="widget" id="network">
+  <h2>Joe’s trip: NYC → LA <span class="chip">Slides 8–18</span></h2>
+  <p class="howto">
+    <b>Build a route</b>: click a city in the next stage to travel; try to beat the class’s best mileage.
+    Then switch to <b>backward recursion</b> and step the DP from Los Angeles back to New York —
+    watch every city learn its shortest distance-to-go.
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="nw-mRoute">Build a route</button>
+      <button class="seg" id="nw-mDP">Backward recursion</button>
+    </span>
+    <span class="readout" id="nw-info">miles so far: <b id="nw-miles">0</b></span>
+    <span class="readout">best route: <b id="nw-best">—</b></span>
+    <button class="primary" id="nw-step" style="display:none">Step backward</button>
+    <button id="nw-reset">Reset</button>
+  </div>
+  <canvas class="viz" id="c-nw"></canvas>
+  <p class="status info" id="nw-status"></p>
+  <div id="nw-work" style="font-size:0.92rem;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:pre-line"></div>
+  <p class="note">
+    Recursion (slide 25): fₙ(i) = minⱼ { c(i, j) + fₙ₊₁(j) } — the cost of the next leg plus the
+    already-computed best from there. The optimal path 1–2–5–8–10 (2870 miles) never has to look at
+    all 18 routes.
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : EFFICIENCY ================= -->
+<section class="widget" id="efficiency">
+  <h2>Why DP wins: count the additions <span class="chip">Slides 19–22</span></h2>
+  <p class="howto">
+    A layered network: 1 source, m middle stages with k cities each, 1 destination. Scale it up and
+    compare brute-force enumeration against DP.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="ef-m">middle stages m</label>
+      <input type="range" id="ef-m" min="1" max="10" step="1" value="5">
+      <span class="readout"><b id="ef-mv">5</b></span>
+    </div>
+    <div class="group">
+      <label for="ef-k">cities per stage k</label>
+      <input type="range" id="ef-k" min="2" max="10" step="1" value="5">
+      <span class="readout"><b id="ef-kv">5</b></span>
+    </div>
+  </div>
+  <div class="controls">
+    <span class="readout">paths: <b id="ef-paths">—</b></span>
+    <span class="readout">enumeration additions: <b id="ef-enum">—</b></span>
+    <span class="readout">DP additions: <b id="ef-dp">—</b></span>
+    <span class="readout">DP is <b id="ef-ratio">—</b>× cheaper</span>
+  </div>
+  <p class="status info" id="ef-status"></p>
+  <p class="note">
+    Slide 22’s numbers appear at m = 5, k = 5: 3125 paths → 15 625 additions by enumeration, but only
+    (m − 1)k² + k = 105 by DP. Enumeration grows exponentially (kᵐ); DP grows linearly in the number of
+    stages. That gap is the entire case for the method.
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : INVENTORY PLANNER ================= -->
+<section class="widget" id="inventory">
+  <h2>Beat $20: the production plan <span class="chip">Slides 31–44</span></h2>
+  <p class="howto">
+    Demands 1, 3, 2, 4. Setup $3 + $1/unit when you produce; holding $0.50/unit on month-end inventory;
+    capacity 5/month; warehouse limit 4. <b>Set the four production quantities</b> and meet every demand —
+    cheapest feasible plan in class wins. Then reveal the DP tables.
+  </p>
+  <div class="controls" id="iv-inputs">
+    <div class="group"><label>Month 1 (d=1)</label><input type="number" id="iv-x1" min="0" max="5" value="1" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Month 2 (d=3)</label><input type="number" id="iv-x2" min="0" max="5" value="3" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Month 3 (d=2)</label><input type="number" id="iv-x3" min="0" max="5" value="2" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Month 4 (d=4)</label><input type="number" id="iv-x4" min="0" max="5" value="4" style="width:64px;font:inherit"></div>
+    <span class="readout">total cost: <b id="iv-cost">—</b></span>
+    <button id="iv-reveal" class="primary">Reveal the DP solution</button>
+  </div>
+  <table class="dp" id="iv-plan"></table>
+  <p class="status info" id="iv-status"></p>
+  <div id="iv-tables"></div>
+  <p class="note">
+    State = starting inventory, stage = month, decision = production (slide 35). The DP answer: produce
+    1, 5, 0, 4 for $20 — it over-produces in month 2 to buy its way out of month 3’s setup cost. Greedy
+    “produce exactly the demand” pays $22.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 7.
+  Figures follow the examples used in the Week 7 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* ============================================================
+   WIDGET 1 — match puzzle (slides 4-7)
+   Losing counts (for the player to move): 1, 5, 9, ... (4k+1).
+   ============================================================ */
+(() => {
+  const canvas = el('c-mt');
+  let left = 30, over = false, showHint = false;
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const cols = 30, gap = Math.min(24, (w - 40) / cols);
+    const x0 = (w - gap * (cols - 1)) / 2, y0 = h / 2;
+    for (let i = 0; i < 30; i++) {
+      const alive = i < left;
+      const isLosing = showHint && (i + 1) % 4 === 1;
+      ctx.save();
+      ctx.strokeStyle = alive ? (isLosing ? t.bad : t.s1) : t.grid;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x0 + i * gap, y0 + 28);
+      ctx.lineTo(x0 + i * gap, y0 - 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x0 + i * gap, y0 - 26, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = alive ? (isLosing ? t.bad : t.s3 || '#eda100') : t.grid;
+      ctx.fill();
+      ctx.restore();
+      if (showHint && isLosing && alive) {
+        ctx.save();
+        ctx.fillStyle = t.bad;
+        ctx.font = '600 11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(i + 1), x0 + i * gap, y0 + 44);
+        ctx.restore();
+      }
+    }
+    el('mt-left').textContent = left;
+  }
+
+  function endIfOver(byYou) {
+    if (left > 0) return false;
+    over = true;
+    const st = el('mt-status');
+    if (byYou) { st.className = 'status bad'; st.textContent = 'You took the last match — you LOSE. Where did you first hand me a 4k+1 count?'; }
+    else { st.className = 'status ok'; st.textContent = 'I took the last match — YOU WIN! You held the 4k+1 ladder all the way down.'; }
+    return true;
+  }
+
+  function computerMove() {
+    // leave 4k+1 if possible, else take 1
+    let take = (left - 1) % 4;
+    if (take === 0) take = 1;
+    take = Math.min(take, 3, left);
+    left -= take;
+    const st = el('mt-status');
+    if (!endIfOver(false)) {
+      st.className = 'status info';
+      st.textContent = 'I take ' + take + ' → ' + left + ' left. Your move.' + ((left % 4 === 1) ? ' (I feel good about this…)' : '');
+    }
+    draw();
+  }
+
+  function playerMove(k) {
+    if (over || k > left) return;
+    left -= k;
+    draw();
+    if (endIfOver(true)) return;
+    setTimeout(computerMove, 450);
+  }
+
+  [1, 2, 3].forEach(k => el('mt-t' + k).addEventListener('click', () => playerMove(k)));
+  el('mt-new').addEventListener('click', () => {
+    left = 30; over = false;
+    el('mt-status').className = 'status info';
+    el('mt-status').textContent = 'Your move. Think backwards: which counts would you hate to face?';
+    draw();
+  });
+  el('mt-hint').addEventListener('click', () => {
+    showHint = !showHint;
+    el('mt-hint').textContent = showHint ? 'Hide the strategy' : 'Show the strategy';
+    if (showHint) {
+      el('mt-status').className = 'status info';
+      el('mt-status').textContent = 'Red matches mark the LOSING counts 1, 5, 9, … — whoever must move at one of them loses against perfect play.';
+    }
+    draw();
+  });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — NYC-LA network (slides 8-18)
+   ============================================================ */
+(() => {
+  const canvas = el('c-nw');
+  const NODES = {
+    1: { x: 0, y: 2, name: '1 · New York', stage: 1 },
+    2: { x: 1, y: 0.7, name: '2', stage: 2 }, 3: { x: 1, y: 2, name: '3', stage: 2 }, 4: { x: 1, y: 3.3, name: '4', stage: 2 },
+    5: { x: 2, y: 0.7, name: '5 · Kansas City', stage: 3 }, 6: { x: 2, y: 2, name: '6 · Omaha', stage: 3 }, 7: { x: 2, y: 3.3, name: '7 · Dallas', stage: 3 },
+    8: { x: 3, y: 1.2, name: '8 · Denver', stage: 4 }, 9: { x: 3, y: 2.8, name: '9 · San Antonio', stage: 4 },
+    10: { x: 4, y: 2, name: '10 · Los Angeles', stage: 5 },
+  };
+  const EDGES = {
+    '1-2': 550, '1-3': 900, '1-4': 770,
+    '2-5': 680, '2-6': 790, '2-7': 1050,
+    '3-5': 580, '3-6': 760, '3-7': 660,
+    '4-5': 510, '4-6': 700, '4-7': 830,
+    '5-8': 610, '5-9': 790,
+    '6-8': 540, '6-9': 940,
+    '7-8': 790, '7-9': 270,
+    '8-10': 1030, '9-10': 1390,
+  };
+  const succ = i => Object.keys(EDGES).filter(k => k.startsWith(i + '-')).map(k => +k.split('-')[1]);
+  const view = { x0: -0.35, x1: 4.55, y0: 0.1, y1: 4.0, padL: 14, padB: 10, padT: 10, padR: 14 };
+
+  // full backward DP (for the stepper and the optimum)
+  const F = {}, BESTNEXT = {};
+  F[10] = 0;
+  [4, 3, 2, 1].forEach(st => {
+    Object.keys(NODES).filter(i => NODES[i].stage === st).forEach(i => {
+      let best = Infinity, bj = null;
+      succ(i).forEach(j => {
+        const v = EDGES[i + '-' + j] + F[j];
+        if (v < best) { best = v; bj = j; }
+      });
+      F[i] = best; BESTNEXT[i] = bj;
+    });
+  });
+
+  let mode = 'route';
+  let path = [1], best = null;
+  let dpStage = 6; // nothing revealed; 5 -> f5, ... 1 -> f1; 0 -> trace path
+  let lastPlot = null;
+
+  const pathMiles = () => path.reduce((s, n, i) => i ? s + EDGES[path[i - 1] + '-' + n] : 0, 0);
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    lastPlot = p;
+    const { ctx, X, Y } = p;
+    ctx.clearRect(0, 0, p.w, p.h);
+
+    const onOptimal = (i, j) => dpStage === 0 && BESTNEXT[i] === j && [1, 2, 5, 8].includes(+i);
+
+    // edges
+    Object.entries(EDGES).forEach(([k, c]) => {
+      const [i, j] = k.split('-').map(Number);
+      const inPath = path.some((n, q) => q > 0 && path[q - 1] === i && n === j);
+      ctx.save();
+      ctx.strokeStyle = inPath ? t.s5 : (onOptimal(i, j) ? t.s2 : t.grid);
+      ctx.lineWidth = inPath || onOptimal(i, j) ? 3.5 : 1.5;
+      ctx.beginPath();
+      ctx.moveTo(X(NODES[i].x), Y(NODES[i].y));
+      ctx.lineTo(X(NODES[j].x), Y(NODES[j].y));
+      ctx.stroke();
+      ctx.restore();
+      const mx = (NODES[i].x * 0.55 + NODES[j].x * 0.45), my = (NODES[i].y * 0.55 + NODES[j].y * 0.45);
+      VIZ.label(p, String(c), mx, my, inPath ? t.s5 : t.muted, { size: 11, align: 'center', dy: -3 });
+    });
+
+    // nodes
+    Object.entries(NODES).forEach(([i, n]) => {
+      const cur = mode === 'route' && +i === path[path.length - 1];
+      const candidate = mode === 'route' && succ(path[path.length - 1]).includes(+i);
+      const revealed = mode === 'dp' && dpStage <= n.stage;
+      VIZ.dot(p, n.x, n.y, cur ? t.s5 : candidate ? t.s1 : t.axis, cur ? 10 : candidate ? 9 : 7, cur || candidate);
+      VIZ.label(p, n.name, n.x, n.y, t.ink2, { dy: -12, size: 12, bold: true, align: n.stage === 5 ? 'right' : n.stage === 1 ? 'left' : 'center' });
+      if (revealed && F[i] !== undefined && dpStage <= 5) {
+        VIZ.label(p, 'f = ' + F[i], n.x, n.y, t.s2, { dy: 26, size: 13, bold: true, align: 'center', baseline: 'top' });
+      }
+    });
+  }
+
+  function setMode(m) {
+    mode = m;
+    el('nw-mRoute').classList.toggle('active', m === 'route');
+    el('nw-mDP').classList.toggle('active', m === 'dp');
+    el('nw-step').style.display = m === 'dp' ? '' : 'none';
+    el('nw-info').style.display = m === 'route' ? '' : 'none';
+    el('nw-work').textContent = '';
+    if (m === 'dp') {
+      dpStage = 6;
+      el('nw-status').className = 'status info';
+      el('nw-status').textContent = 'Step backward from Los Angeles: stage 5 first (slide 11).';
+    } else {
+      path = [1]; dpStage = 6;
+      el('nw-status').className = 'status info';
+      el('nw-status').textContent = 'Click a highlighted city to travel.';
+    }
+    draw();
+    el('nw-miles').textContent = '0';
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    if (mode !== 'route') return;
+    const { px, py } = VIZ.pointer(canvas, ev);
+    const cur = path[path.length - 1];
+    let hit = null;
+    succ(cur).forEach(j => {
+      const n = NODES[j];
+      if (Math.hypot(px - lastPlot.X(n.x), py - lastPlot.Y(n.y)) < 22) hit = j;
+    });
+    if (hit === null) return;
+    path.push(hit);
+    el('nw-miles').textContent = pathMiles();
+    const st = el('nw-status');
+    if (hit === 10) {
+      const m = pathMiles();
+      if (best === null || m < best) best = m;
+      el('nw-best').textContent = best + ' mi';
+      if (m === 2870) { st.className = 'status ok'; st.textContent = 'Route ' + path.join('–') + ' = ' + m + ' miles — that IS the optimum!'; }
+      else { st.className = 'status info'; st.textContent = 'Route ' + path.join('–') + ' = ' + m + ' miles. The best possible is shorter… try again (Reset).'; }
+    } else {
+      st.className = 'status info';
+      st.textContent = 'In city ' + hit + ', ' + pathMiles() + ' miles so far.';
+    }
+    draw();
+  });
+
+  el('nw-step').addEventListener('click', () => {
+    if (dpStage > 5) dpStage = 5;
+    else if (dpStage > 1) dpStage--;
+    else if (dpStage === 1) dpStage = 0;
+    const st = el('nw-status');
+    const work = el('nw-work');
+    if (dpStage === 5) {
+      st.textContent = 'Stage 5: f₅(10) = 0 — being in LA costs nothing more.';
+      work.textContent = '';
+    } else if (dpStage >= 1) {
+      const nodes = Object.keys(NODES).filter(i => NODES[i].stage === dpStage);
+      st.className = 'status info';
+      st.textContent = 'Stage ' + dpStage + ': each city takes min over next-stage cities of {leg + f}.';
+      work.textContent = nodes.map(i =>
+        'f(' + i + ') = min { ' + succ(i).map(j => EDGES[i + '-' + j] + ' + ' + F[j] + ' = ' + (EDGES[i + '-' + j] + F[j]) + (BESTNEXT[i] === j ? ' *' : '')).join(' ;  ') + ' } = ' + F[i]
+      ).join('\n');
+    } else {
+      st.className = 'status ok';
+      st.textContent = 'Trace the stars forward: 1 → 2 → 5 → 8 → 10, total 2870 miles (slide 18).';
+      work.textContent = '';
+    }
+    draw();
+  });
+
+  el('nw-mRoute').addEventListener('click', () => setMode('route'));
+  el('nw-mDP').addEventListener('click', () => setMode('dp'));
+  el('nw-reset').addEventListener('click', () => setMode(mode));
+  setMode('route');
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 3 — efficiency (slides 19-22)
+   ============================================================ */
+(() => {
+  function update() {
+    const m = +el('ef-m').value, k = +el('ef-k').value;
+    el('ef-mv').textContent = m;
+    el('ef-kv').textContent = k;
+    const paths = Math.pow(k, m);
+    const enumAdds = paths * m; // m+1 legs per path => m additions
+    const dpAdds = (m - 1) * k * k + k;
+    el('ef-paths').textContent = paths.toLocaleString('en-US');
+    el('ef-enum').textContent = enumAdds.toLocaleString('en-US');
+    el('ef-dp').textContent = dpAdds.toLocaleString('en-US');
+    el('ef-ratio').textContent = (enumAdds / dpAdds).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    const st = el('ef-status');
+    st.className = 'status info';
+    st.textContent = m === 5 && k === 5 ? 'These are exactly slide 22’s numbers: 15 625 vs 105.' :
+      (enumAdds > 1e6 ? 'Enumeration is already in the millions — DP still finishes in ' + dpAdds.toLocaleString('en-US') + ' additions.' : '');
+  }
+  el('ef-m').addEventListener('input', update);
+  el('ef-k').addEventListener('input', update);
+  update();
+})();
+
+/* ============================================================
+   WIDGET 4 — inventory planner (slides 31-44)
+   ============================================================ */
+(() => {
+  const D = [1, 3, 2, 4];
+  const cProd = x => x > 0 ? 3 + x : 0;
+
+  function evaluate(xs) {
+    let inv = 0, cost = 0;
+    const rows = [];
+    for (let t = 0; t < 4; t++) {
+      const end = inv + xs[t] - D[t];
+      const ok = end >= 0 && end <= 4 && xs[t] >= 0 && xs[t] <= 5;
+      const c = cProd(xs[t]) + Math.max(0, end) * 0.5;
+      rows.push({ t: t + 1, start: inv, x: xs[t], end, ok, c });
+      if (!ok) return { rows, cost: null, failAt: t + 1, end };
+      cost += c;
+      inv = end;
+    }
+    return { rows, cost };
+  }
+
+  // full DP for the reveal
+  function solveDP() {
+    const f = [null, {}, {}, {}, {}], bestX = [null, {}, {}, {}, {}];
+    const F = (t, i) => t === 5 ? 0 : f[t][i];
+    for (let t = 4; t >= 1; t--) {
+      for (let i = 0; i <= 4; i++) {
+        let best = Infinity, bx = null;
+        for (let x = 0; x <= 5; x++) {
+          const end = i + x - D[t - 1];
+          if (end < 0 || end > 4) continue;
+          const v = cProd(x) + 0.5 * end + F(t + 1, end);
+          if (v < best - 1e-12) { best = v; bx = x; }
+        }
+        f[t][i] = best; bestX[t][i] = bx;
+      }
+    }
+    return { f, bestX };
+  }
+
+  function update() {
+    const xs = [1, 2, 3, 4].map(i => +el('iv-x' + i).value);
+    const r = evaluate(xs);
+    const table = el('iv-plan');
+    table.innerHTML = '<thead><tr><th>month</th><th>start inv</th><th>produce</th><th>demand</th><th>end inv</th><th>cost</th></tr></thead><tbody>' +
+      r.rows.map(q => '<tr' + (q.ok ? '' : ' class="infeasible" style="color:var(--critical)"') + '><td>' + q.t + '</td><td>' + q.start + '</td><td>' + q.x +
+        '</td><td>' + D[q.t - 1] + '</td><td>' + q.end + '</td><td>' + (q.ok ? '$' + fmt(q.c, 2) : '✗') + '</td></tr>').join('') + '</tbody>';
+    const st = el('iv-status');
+    if (r.cost === null) {
+      el('iv-cost').textContent = 'infeasible';
+      st.className = 'status bad';
+      st.textContent = 'Month ' + r.failAt + ' breaks the rules: ending inventory would be ' + r.end + ' (must be 0–4, production 0–5, demand met on time).';
+    } else {
+      el('iv-cost').textContent = '$' + fmt(r.cost, 2);
+      if (Math.abs(r.cost - 20) < 1e-9) { st.className = 'status ok'; st.textContent = '$20.00 — you matched the DP optimum!'; }
+      else { st.className = 'status info'; st.textContent = 'Feasible at $' + fmt(r.cost, 2) + '. The DP optimum is cheaper… where can a setup be skipped?'; }
+    }
+  }
+
+  el('iv-reveal').addEventListener('click', () => {
+    const { f, bestX } = solveDP();
+    // set inputs to the optimal plan
+    let inv = 0;
+    const plan = [];
+    for (let t = 1; t <= 4; t++) {
+      const x = bestX[t][inv];
+      plan.push(x);
+      inv = inv + x - D[t - 1];
+    }
+    plan.forEach((x, i) => el('iv-x' + (i + 1)).value = x);
+    update();
+    const host = el('iv-tables');
+    host.innerHTML = '';
+    for (let t = 4; t >= 1; t--) {
+      const div = document.createElement('div');
+      div.className = 'dp-month';
+      const states = t === 1 ? [0] : [0, 1, 2, 3, 4];
+      let html = '<h4>Month ' + t + ' (demand ' + D[t - 1] + ') — f' + t + '(i) and x' + t + '(i)</h4>' +
+        '<table class="dp"><thead><tr><th>i</th><th>x*</th><th>f' + t + '(i)</th></tr></thead><tbody>';
+      states.forEach(i => {
+        html += '<tr><td>' + i + '</td><td>' + bestX[t][i] + '</td><td>$' + fmt(f[t][i], 2) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      div.innerHTML = html;
+      host.appendChild(div);
+    }
+    const st = el('iv-status');
+    st.className = 'status ok';
+    st.textContent = 'DP optimum (slide 44): produce 1, 5, 0, 4 → $20.00. The tables below are slides 37–43 computed live, last month first.';
+  });
+
+  ['iv-x1', 'iv-x2', 'iv-x3', 'iv-x4'].forEach(id => el(id).addEventListener('input', update));
+  update();
+})();
+</script>
+</body>
+</html>
