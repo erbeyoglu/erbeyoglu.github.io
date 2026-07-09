@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 14 — Continuous-Time Markov Chains (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 14: CTMC</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#updown">1 · Up / down machine</a>
+    <a href="#balance">2 · Balance equation lab</a>
+    <a href="#barbersim">3 · Run the barbershop</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : UP/DOWN MACHINE ================= -->
+<section class="widget" id="updown">
+  <h2>A machine that lives in continuous time <span class="chip">Slides 3–12</span></h2>
+  <p class="howto">
+    No more “per day” steps: the machine stays UP an exponential time (failure rate q), then DOWN an
+    exponential time (repair rate μ). <b>Tune the rates and resimulate</b> — how does observed uptime
+    relate to the rates?
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="ud-q">failure rate q (per day)</label>
+      <input type="range" id="ud-q" min="0.2" max="3" step="0.1" value="1" style="width:170px">
+      <span class="readout"><b id="ud-qv">1.0</b></span>
+    </div>
+    <div class="group">
+      <label for="ud-m">repair rate μ (per day)</label>
+      <input type="range" id="ud-m" min="0.5" max="5" step="0.1" value="2" style="width:170px">
+      <span class="readout"><b id="ud-mv">2.0</b></span>
+    </div>
+    <button id="ud-sim" class="primary">Resimulate 30 days 🎲</button>
+    <span class="readout">observed uptime: <b id="ud-obs">—</b></span>
+    <span class="readout">theory π(up) = μ/(q+μ) = <b id="ud-th">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-ud" style="height:180px"></canvas>
+  <p class="status info" id="ud-status"></p>
+  <p class="note">
+    The time in a state must be exponential — it is the ONLY memoryless continuous distribution
+    (slides 8–10), and memorylessness is exactly the Markov property in continuous time. E[T_up] = 1/q,
+    E[T_down] = 1/μ, so the long-run share of up-time is (1/q)/(1/q + 1/μ) = μ/(q+μ).
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : BALANCE EQUATION LAB ================= -->
+<section class="widget" id="balance">
+  <h2>Rate in = rate out <span class="chip">Slides 17–26</span></h2>
+  <p class="howto">
+    <b>Click a state</b> to see its balance equation with live numbers. Slide the rates and watch the
+    steady-state probabilities rebalance. Two of the slides’ systems are preloaded.
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="bl-shop">Barbershop (slide 22)</button>
+      <button class="seg" id="bl-mach">2 machines, 1 repairman (slide 25)</button>
+    </span>
+    <div class="group">
+      <label for="bl-r1" id="bl-r1lab">arrival rate λ</label>
+      <input type="range" id="bl-r1" min="0.5" max="8" step="0.5" value="3" style="width:150px">
+      <span class="readout"><b id="bl-r1v">3.0</b>/hr</span>
+    </div>
+    <div class="group">
+      <label for="bl-r2" id="bl-r2lab">service rate μ</label>
+      <input type="range" id="bl-r2" min="0.5" max="8" step="0.5" value="4" style="width:150px">
+      <span class="readout"><b id="bl-r2v">4.0</b>/hr</span>
+    </div>
+  </div>
+  <div class="controls" id="bl-kpis"></div>
+  <canvas class="viz short" id="c-bl" style="height:300px"></canvas>
+  <p class="status info" id="bl-status">Click a state circle.</p>
+  <p class="note" id="bl-note">
+    Balance equations (slides 20–21): for every state, total probability flow out equals total flow in.
+    Barbershop at λ = 3, μ = 4: π = (16/37, 12/37, 9/37); expected customers 30/37 ≈ 0.81; fraction of
+    customers who can enter = π₀ + π₁ = 28/37 (slide 24).
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : BARBERSHOP SIMULATION ================= -->
+<section class="widget" id="barbersim">
+  <h2>Run the barbershop for a year <span class="chip">Slides 22–24</span></h2>
+  <p class="howto">
+    Simulate the actual continuous-time process: customers arrive Poisson(3/hr), the barber serves
+    exp(4/hr), and anyone who finds 2 people inside walks away. Compare the observed time-fractions and
+    the lost-customer share against π.
+  </p>
+  <div class="controls">
+    <button id="bs-run" class="primary">Simulate 2000 hours 🎲</button>
+    <span class="readout">customers arrived: <b id="bs-arr">—</b></span>
+    <span class="readout">turned away: <b id="bs-lost">—</b></span>
+    <span class="readout">theory π₂ = 9/37 = <b>0.243</b></span>
+  </div>
+  <canvas class="viz short" id="c-bs" style="height:280px"></canvas>
+  <p class="status info" id="bs-status"></p>
+  <p class="note">
+    The simulation never uses π — it only draws exponential clocks — yet the time it spends in each
+    state matches the balance-equation solution. Slide 24’s two questions read straight off:
+    E[customers] = π₁ + 2π₂ and P(enter) = π₀ + π₁.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 14.
+  Figures follow the examples used in the Week 14 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+const rexp = rate => -Math.log(1 - Math.random()) / rate;
+
+/* ============================================================
+   WIDGET 1 — up/down machine (slides 3-12)
+   ============================================================ */
+(() => {
+  const canvas = el('c-ud');
+  const HORIZON = 30;
+  let segs = [];
+
+  function simulate() {
+    const q = +el('ud-q').value, m = +el('ud-m').value;
+    segs = [];
+    let t = 0, up = true;
+    while (t < HORIZON) {
+      const d = rexp(up ? q : m);
+      segs.push({ t0: t, t1: Math.min(HORIZON, t + d), up });
+      t += d;
+      up = !up;
+    }
+    draw();
+  }
+
+  function draw() {
+    const q = +el('ud-q').value, m = +el('ud-m').value;
+    el('ud-qv').textContent = fmt(q, 1);
+    el('ud-mv').textContent = fmt(m, 1);
+    el('ud-th').textContent = fmt(m / (q + m), 3);
+
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const x0 = 30, x1 = w - 30, y0 = 50, bh = h - 110;
+    let upTime = 0;
+    segs.forEach(s => {
+      const a = x0 + (x1 - x0) * s.t0 / HORIZON;
+      const b = x0 + (x1 - x0) * s.t1 / HORIZON;
+      ctx.fillStyle = s.up ? t.s2 : t.bad;
+      ctx.globalAlpha = s.up ? 0.75 : 0.55;
+      ctx.fillRect(a, y0, b - a, bh);
+      ctx.globalAlpha = 1;
+      if (s.up) upTime += s.t1 - s.t0;
+    });
+    ctx.save();
+    ctx.fillStyle = t.ink2;
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.fillText('green = UP, red = DOWN · 30 days', x0, 24);
+    ctx.textAlign = 'center';
+    for (let d = 0; d <= 30; d += 5) {
+      const x = x0 + (x1 - x0) * d / 30;
+      ctx.fillText(d + 'd', x, y0 + bh + 22);
+    }
+    ctx.restore();
+    el('ud-obs').textContent = fmt(upTime / HORIZON, 3);
+    const st = el('ud-status');
+    st.className = 'status info';
+    st.textContent = 'This 30-day window shows ' + fmt(upTime / HORIZON, 3) + ' uptime vs the long-run ' + fmt(m / (q + m), 3) + ' — short windows fluctuate; the steady state is the infinite-horizon average.';
+  }
+
+  ['ud-q', 'ud-m'].forEach(id => el(id).addEventListener('input', simulate));
+  el('ud-sim').addEventListener('click', simulate);
+  simulate();
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — balance equation lab (slides 17-26)
+   Both presets are 3-state birth-death chains.
+   ============================================================ */
+(() => {
+  const canvas = el('c-bl');
+  let preset = 'shop', sel = null;
+
+  function config() {
+    const r1 = +el('bl-r1').value, r2 = +el('bl-r2').value;
+    if (preset === 'shop') {
+      return {
+        names: ['0 customers', '1 customer', '2 customers'],
+        up: [r1, r1],      // arrivals
+        down: [r2, r2],    // service
+        upLab: 'λ = ' + fmt(r1, 1), downLab: 'μ = ' + fmt(r2, 1),
+        kpis: piv => [
+          ['E[customers]', fmt(piv[1] + 2 * piv[2], 3)],
+          ['P(can enter) = π₀+π₁', fmt(piv[0] + piv[1], 3)],
+          ['P(turned away) = π₂', fmt(piv[2], 3)],
+        ],
+      };
+    }
+    return {
+      names: ['0 broken', '1 broken', '2 broken'],
+      up: [2 * r1, r1],   // breakdowns: 2 machines at risk, then 1
+      down: [r2, r2],     // single repairman
+      upLab: '2λ / λ', downLab: 'μ = ' + fmt(r2, 1),
+      kpis: piv => [
+        ['E[broken machines]', fmt(piv[1] + 2 * piv[2], 3)],
+        ['both machines down', fmt(piv[2], 3)],
+        ['full production time', fmt(piv[0], 3)],
+      ],
+    };
+  }
+
+  function solve(c) {
+    const w1 = c.up[0] / c.down[0];
+    const w2 = w1 * c.up[1] / c.down[1];
+    const z = 1 + w1 + w2;
+    return [1 / z, w1 / z, w2 / z];
+  }
+
+  function draw() {
+    el('bl-r1v').textContent = fmt(+el('bl-r1').value, 1);
+    el('bl-r2v').textContent = fmt(+el('bl-r2').value, 1);
+    const c = config();
+    const piv = solve(c);
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const y = h / 2 - 16;
+    const xs = [w * 0.2, w * 0.5, w * 0.8];
+
+    // arrows
+    for (let i = 0; i < 2; i++) {
+      const a = xs[i], b = xs[i + 1];
+      ctx.save();
+      ctx.strokeStyle = t.s1;
+      ctx.fillStyle = t.s1;
+      ctx.lineWidth = 2;
+      // up (left to right), above
+      ctx.beginPath(); ctx.moveTo(a + 34, y - 14); ctx.lineTo(b - 40, y - 14); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(b - 32, y - 14); ctx.lineTo(b - 44, y - 20); ctx.lineTo(b - 44, y - 8); ctx.closePath(); ctx.fill();
+      ctx.font = '600 13px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(fmt(c.up[i], 1), (a + b) / 2, y - 22);
+      // down (right to left), below
+      ctx.strokeStyle = t.s5;
+      ctx.fillStyle = t.s5;
+      ctx.beginPath(); ctx.moveTo(b - 34, y + 16); ctx.lineTo(a + 40, y + 16); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(a + 32, y + 16); ctx.lineTo(a + 44, y + 10); ctx.lineTo(a + 44, y + 22); ctx.closePath(); ctx.fill();
+      ctx.fillText(fmt(c.down[i], 1), (a + b) / 2, y + 34);
+      ctx.restore();
+    }
+
+    // nodes
+    xs.forEach((x, i) => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, 27, 0, 2 * Math.PI);
+      ctx.fillStyle = t.region;
+      ctx.fill();
+      ctx.lineWidth = sel === i ? 4 : 2;
+      ctx.strokeStyle = sel === i ? t.s5 : t.s1;
+      ctx.stroke();
+      ctx.fillStyle = t.ink;
+      ctx.font = '700 16px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i), x, y);
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 13px system-ui, sans-serif';
+      ctx.fillText(c.names[i], x, y + 54);
+      ctx.fillStyle = t.s2;
+      ctx.font = '700 15px system-ui, sans-serif';
+      ctx.fillText('π = ' + fmt(piv[i], 4), x, y + 76);
+      ctx.restore();
+    });
+
+    // KPIs
+    el('bl-kpis').innerHTML = c.kpis(piv).map(([k, v]) => '<span class="readout">' + k + ': <b>' + v + '</b></span>').join('');
+
+    if (sel !== null) {
+      const outR = (sel < 2 ? c.up[sel] : 0) + (sel > 0 ? c.down[sel - 1] : 0);
+      const inParts = [];
+      if (sel > 0) inParts.push(fmt(c.up[sel - 1], 1) + '·π' + (sel - 1));
+      if (sel < 2) inParts.push(fmt(c.down[sel], 1) + '·π' + (sel + 1));
+      const inVal = (sel > 0 ? c.up[sel - 1] * piv[sel - 1] : 0) + (sel < 2 ? c.down[sel] * piv[sel + 1] : 0);
+      const st = el('bl-status');
+      st.className = 'status ok';
+      st.textContent = 'State ' + sel + ':  rate OUT = ' + fmt(outR, 1) + '·π' + sel + ' = ' + fmt(outR * piv[sel], 4) +
+        '   |   rate IN = ' + inParts.join(' + ') + ' = ' + fmt(inVal, 4) + '  →  balanced ✓';
+    }
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    const { px, py } = VIZ.pointer(canvas, ev);
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    const y = h / 2 - 16;
+    sel = null;
+    [w * 0.2, w * 0.5, w * 0.8].forEach((x, i) => {
+      if (Math.hypot(px - x, py - y) < 34) sel = i;
+    });
+    draw();
+  });
+
+  function setPreset(k) {
+    preset = k;
+    sel = null;
+    el('bl-shop').classList.toggle('active', k === 'shop');
+    el('bl-mach').classList.toggle('active', k === 'mach');
+    if (k === 'shop') {
+      el('bl-r1lab').textContent = 'arrival rate λ';
+      el('bl-r2lab').textContent = 'service rate μ';
+      el('bl-r1').value = 3; el('bl-r2').value = 4;
+      el('bl-note').textContent = 'Balance equations (slides 20–23): 3π₀ = 4π₁; 7π₁ = 3π₀ + 4π₂; 4π₂ = 3π₁. Solution π = (16/37, 12/37, 9/37); E[customers] = 30/37; P(enter) = 28/37 (slide 24).';
+    } else {
+      el('bl-r1lab').textContent = 'breakdown rate λ (per machine)';
+      el('bl-r2lab').textContent = 'repair rate μ';
+      el('bl-r1').value = 1; el('bl-r2').value = 2;
+      el('bl-note').textContent = 'Slide 26: with both machines running, failures arrive at 2λ = 2; with one down, at λ = 1; the single repairman fixes at μ = 2. Balance gives π = (2/5, 2/5, 1/5) — the shop runs at full capacity only 40% of the time.';
+    }
+    el('bl-status').className = 'status info';
+    el('bl-status').textContent = 'Click a state circle.';
+    draw();
+  }
+
+  el('bl-shop').addEventListener('click', () => setPreset('shop'));
+  el('bl-mach').addEventListener('click', () => setPreset('mach'));
+  ['bl-r1', 'bl-r2'].forEach(id => el(id).addEventListener('input', draw));
+  setPreset('shop');
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 3 — barbershop simulation (slides 22-24)
+   ============================================================ */
+(() => {
+  const canvas = el('c-bs');
+  const LAM = 3, MU = 4;
+  const PI = [16 / 37, 12 / 37, 9 / 37];
+  let frac = null, arrived = 0, lost = 0;
+
+  function simulate() {
+    const T = 2000;
+    let t = 0, s = 0;
+    const timeIn = [0, 0, 0];
+    arrived = 0; lost = 0;
+    while (t < T) {
+      const total = LAM + (s > 0 ? MU : 0);
+      const dt = rexp(total);
+      timeIn[s] += Math.min(dt, T - t);
+      t += dt;
+      if (t >= T) break;
+      if (Math.random() < LAM / total) {
+        arrived++;
+        if (s === 2) lost++;
+        else s++;
+      } else {
+        s--;
+      }
+    }
+    frac = timeIn.map(v => v / T);
+    draw();
+    el('bs-arr').textContent = arrived;
+    el('bs-lost').textContent = lost + ' (' + fmt(lost / arrived, 3) + ')';
+    const st = el('bs-status');
+    st.className = 'status ok';
+    st.textContent = 'Observed time fractions (' + frac.map(v => fmt(v, 3)).join(', ') + ') vs π = (0.432, 0.324, 0.243). Lost customers: ' + fmt(lost / arrived, 3) + ' vs π₂ = 0.243 — the PASTA property in action: Poisson arrivals see time averages.';
+  }
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const data = frac || PI;
+    const bw = Math.min(140, (w - 160) / 3 - 24);
+    const x0 = (w - 3 * (bw + 24)) / 2 + 12, base = h - 50, maxH = h - 100;
+    data.forEach((v, i) => {
+      const bx = x0 + i * (bw + 24);
+      ctx.save();
+      ctx.fillStyle = t.region;
+      ctx.strokeStyle = t.s1;
+      ctx.lineWidth = 2;
+      const bh = v * maxH;
+      ctx.fillRect(bx, base - bh, bw, bh);
+      ctx.strokeRect(bx, base - bh, bw, bh);
+      // theory dashes
+      ctx.strokeStyle = t.s2;
+      ctx.setLineDash([7, 5]);
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(bx - 14, base - PI[i] * maxH);
+      ctx.lineTo(bx + bw + 14, base - PI[i] * maxH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(i + ' in shop', bx + bw / 2, base + 22);
+      ctx.fillText(fmt(v, 3), bx + bw / 2, base - bh - 8);
+      ctx.fillStyle = t.s2;
+      ctx.font = '600 12px system-ui, sans-serif';
+      ctx.fillText('π = ' + fmt(PI[i], 3), bx + bw / 2, base - PI[i] * maxH - 6);
+      ctx.restore();
+    });
+    ctx.save();
+    ctx.fillStyle = t.ink2;
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.fillText(frac ? 'fraction of TIME spent with 0 / 1 / 2 customers (simulated) vs π (dashed)' : 'theoretical π — press simulate', 20, 18);
+    ctx.restore();
+  }
+
+  el('bs-run').addEventListener('click', simulate);
+  VIZ.register(canvas, draw);
+})();
+</script>
+</body>
+</html>
