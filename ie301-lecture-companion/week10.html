@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 10 — Probability Review (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 10: Probability Review</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#bayes">1 · The disease test</a>
+    <a href="#voter">2 · Voter poll</a>
+    <a href="#memoryless">3 · Memorylessness</a>
+    <a href="#race">4 · Race of exponentials</a>
+    <a href="#poisson">5 · Poisson process</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : BAYES DISEASE TEST ================= -->
+<section class="widget" id="bayes">
+  <h2>You tested positive. How worried should you be? <span class="chip">Slide 12</span></h2>
+  <p class="howto">
+    Class vote first: with a 99%-accurate test, is P(sick | positive) above 90%, around 50%, or below 10%?
+    Then look at the whole population of 10 000 people below and see who the positives actually are.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="by-prev">prevalence</label>
+      <input type="range" id="by-prev" min="1" max="100" step="1" value="1" style="width:160px">
+      <span class="readout"><b id="by-prevv">0.1</b>%</span>
+    </div>
+    <div class="group">
+      <label for="by-sens">sensitivity P(+|sick)</label>
+      <input type="range" id="by-sens" min="80" max="99.9" step="0.1" value="99" style="width:160px">
+      <span class="readout"><b id="by-sensv">99.0</b>%</span>
+    </div>
+    <div class="group">
+      <label for="by-fp">false positive P(+|healthy)</label>
+      <input type="range" id="by-fp" min="0.1" max="10" step="0.1" value="1" style="width:160px">
+      <span class="readout"><b id="by-fpv">1.0</b>%</span>
+    </div>
+    <span class="readout" style="font-size:1.05rem">P(sick | positive) = <b id="by-post">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-by" style="height:300px"></canvas>
+  <p class="status info" id="by-status"></p>
+  <p class="note">
+    Bayes’ rule (slides 10–12): P(sick | +) = P(+|sick)P(sick) / [P(+|sick)P(sick) + P(+|healthy)P(healthy)].
+    At the slide’s numbers it is only 9.02% — the 1% false-positive rate applied to 9 990 healthy people
+    swamps the handful of true positives. Rare condition ⇒ the prior dominates.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : VOTER POLL ================= -->
+<section class="widget" id="voter">
+  <h2>Which state does the liberal voter live in? <span class="chip">Slide 13</span></h2>
+  <p class="howto">
+    State A: 40% of the population, 50% support. State B: 25%, 60%. State C: 35%, 35%. A random voter
+    supports the liberal candidate — vote first: A, B or C? Then reveal how the areas decide it.
+  </p>
+  <div class="controls">
+    <span style="color:var(--ink-2)">Your vote:</span>
+    <button class="vt-vote" data-s="0">State A</button>
+    <button class="vt-vote" data-s="1">State B</button>
+    <button class="vt-vote" data-s="2">State C</button>
+    <button id="vt-reveal" class="primary">Reveal posteriors</button>
+  </div>
+  <canvas class="viz short" id="c-vt" style="height:280px"></canvas>
+  <p class="status info" id="vt-status"></p>
+  <p class="note">
+    Bar width = population share P(Sᵢ); the filled part = supporters P(support | Sᵢ)·P(Sᵢ). Bayes just asks:
+    what fraction of the total filled area is in each state? The answer is A, not B — B has the highest
+    support <em>rate</em>, but A’s bigger population wins: P(A|support) = 0.423, P(B|support) = 0.317.
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : MEMORYLESSNESS ================= -->
+<section class="widget" id="memoryless">
+  <h2>The 10-year-old radio <span class="chip">Slides 27–29, 35</span></h2>
+  <p class="howto">
+    A radio’s lifetime is exponential with mean 10 years. John buys one that is already t years old.
+    <b>Slide its age</b> — what happens to the probability that it survives 10 MORE years? Compare with a
+    lifetime that wears out (uniform on [0, 30]).
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="ml-t">current age t</label>
+      <input type="range" id="ml-t" min="0" max="19" step="0.5" value="0" style="width:220px">
+      <span class="readout"><b id="ml-tv">0.0</b> years</span>
+    </div>
+    <span class="readout">exponential: P(10 more) = <b id="ml-exp">—</b></span>
+    <span class="readout">wear-out (uniform): P(10 more) = <b id="ml-uni">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-ml"></canvas>
+  <p class="status info" id="ml-status"></p>
+  <p class="note">
+    Memorylessness (slide 28): P(X &gt; t + h | X &gt; t) = P(X &gt; h) — the survival curve beyond t,
+    rescaled, is an exact copy of the original. For the radio, P = e⁻¹ ≈ 0.368 at ANY age. A uniform
+    lifetime has memory: the same 10-year question decays to zero. This one property powers everything
+    in the Markov weeks ahead.
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : RACE OF EXPONENTIALS ================= -->
+<section class="widget" id="race">
+  <h2>Norm vs Nat: who finishes first? <span class="chip">Slides 30–36</span></h2>
+  <p class="howto">
+    Nat’s haircut ~ exponential(mean 20 min), Norm’s shave ~ exponential(mean 15 min). Vote on
+    P(Nat first), then race them — once, and a thousand times.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="rc-m1">Nat’s mean</label>
+      <input type="range" id="rc-m1" min="5" max="40" step="1" value="20" style="width:150px">
+      <span class="readout"><b id="rc-m1v">20</b> min</span>
+    </div>
+    <div class="group">
+      <label for="rc-m2">Norm’s mean</label>
+      <input type="range" id="rc-m2" min="5" max="40" step="1" value="15" style="width:150px">
+      <span class="readout"><b id="rc-m2v">15</b> min</span>
+    </div>
+    <span class="readout">theory P(Nat first) = <b id="rc-th">—</b></span>
+    <span class="readout">E[min] = <b id="rc-emin">—</b> min</span>
+  </div>
+  <div class="controls">
+    <button id="rc-one" class="primary">Race once 🎲</button>
+    <button id="rc-1000">Race 1000×</button>
+    <span class="readout">races: <b id="rc-n">0</b></span>
+    <span class="readout">Nat won <b id="rc-freq">—</b></span>
+  </div>
+  <p class="status info" id="rc-status"></p>
+  <p class="note">
+    P(X₁ &lt; X₂) = λ₁/(λ₁ + λ₂) (slide 30) — rates compete in proportion. And min(X₁, X₂) is again
+    exponential with rate λ₁ + λ₂ (slide 31): the first-to-finish clock ticks at the combined rate.
+    At the slide’s numbers: (1/20)/(1/20 + 1/15) = 3/7 ≈ 0.4286.
+  </p>
+</section>
+
+<!-- ================= WIDGET 5 : POISSON PROCESS ================= -->
+<section class="widget" id="poisson">
+  <h2>Poisson arrivals, live <span class="chip">Slides 39–49</span></h2>
+  <p class="howto">
+    Arrivals with exponential inter-arrival times, rate λ per hour. <b>Resimulate</b> a day of arrivals;
+    the histogram collects the number of arrivals in each hour across 2000 simulated hours and lays the
+    Poisson pmf on top — the two-way street of slide 46.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="ps-lam">rate λ (per hour)</label>
+      <input type="range" id="ps-lam" min="1" max="12" step="1" value="5" style="width:180px">
+      <span class="readout"><b id="ps-lamv">5</b></span>
+    </div>
+    <button id="ps-sim" class="primary">Resimulate 🎲</button>
+    <span class="readout">E[N(1h)] = λ = <b id="ps-en">5</b></span>
+    <span class="readout">mean gap = 1/λ = <b id="ps-gap">12.0</b> min</span>
+  </div>
+  <canvas class="viz short" id="c-ps"></canvas>
+  <div class="controls" style="margin-top:16px">
+    <span style="color:var(--ink-2)"><b>Cross the highway</b> (slide 41): cars pass Poisson at 3/min; crossing takes</span>
+    <input type="range" id="ps-cross" min="4" max="30" step="1" value="10" style="width:140px">
+    <span class="readout"><b id="ps-crossv">10</b> s</span>
+    <span class="readout">P(no car while crossing) = <b id="ps-safe">—</b></span>
+    <button id="ps-try">Try to cross 🚸</button>
+  </div>
+  <p class="status info" id="ps-status"></p>
+  <p class="note">
+    N(t) ~ Poisson(λt) ⟺ gaps ~ exponential(λ) (slide 46). The highway answer is P(N = 0 in 10 s) =
+    e^(−3·10/60) = e^(−0.5) ≈ 0.61 — and because increments are independent, it does not matter when you
+    start crossing. The time of the n-th arrival is Erlang (slide 47).
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 10.
+  Figures follow the examples used in the Week 10 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* ============================================================
+   WIDGET 1 — Bayes disease test (slide 12): 10 000-person icon grid
+   ============================================================ */
+(() => {
+  const canvas = el('c-by');
+
+  function draw() {
+    const prev = +el('by-prev').value / 1000;   // slider in per-mille
+    const sens = +el('by-sens').value / 100;
+    const fp = +el('by-fp').value / 100;
+    el('by-prevv').textContent = fmt(prev * 100, 1);
+    el('by-sensv').textContent = fmt(sens * 100, 1);
+    el('by-fpv').textContent = fmt(fp * 100, 1);
+
+    const post = sens * prev / (sens * prev + fp * (1 - prev));
+    el('by-post').textContent = fmt(post * 100, 2) + '%';
+
+    // deterministic rounded counts on a 10k grid
+    const N = 10000;
+    const sick = Math.max(1, Math.round(N * prev));
+    const tp = Math.round(sick * sens);
+    const fpN = Math.round((N - sick) * fp);
+
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const cols = 125, rows = 80;
+    const cw = (w - 220) / cols, ch = (h - 20) / rows;
+    // cell categories laid out contiguously: sick-TP, sick-FN, healthy-FP, healthy-TN
+    for (let i = 0; i < N; i++) {
+      const col = i % cols, row = Math.floor(i / cols);
+      let color, alpha = 1;
+      if (i < tp) color = t.bad;                       // true positive (actually sick)
+      else if (i < sick) { color = t.ink2; alpha = 0.8; } // sick but missed
+      else if (i < sick + fpN) color = t.s3 || '#eda100'; // false positive
+      else { color = t.grid; alpha = 0.8; }            // healthy, negative
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.fillRect(10 + col * cw, 10 + row * ch, Math.max(1, cw - 1), Math.max(1, ch - 1));
+      ctx.restore();
+    }
+    // legend
+    const lx = w - 195;
+    const items = [
+      [t.bad, 'sick & positive: ' + tp],
+      [t.ink2, 'sick & missed: ' + (sick - tp)],
+      ['#eda100', 'healthy & positive: ' + fpN],
+      [t.grid, 'healthy & negative'],
+    ];
+    ctx.save();
+    ctx.font = '13px system-ui, sans-serif';
+    items.forEach(([c, txt], i) => {
+      ctx.fillStyle = c;
+      ctx.fillRect(lx, 24 + i * 26, 14, 14);
+      ctx.fillStyle = t.ink2;
+      ctx.fillText(txt, lx + 22, 36 + i * 26);
+    });
+    ctx.restore();
+
+    const st = el('by-status');
+    st.className = post < 0.5 ? 'status bad' : 'status ok';
+    st.textContent = 'Among ALL positives (' + (tp + fpN) + ' people), only ' + tp + ' are actually sick → ' + fmt(post * 100, 1) + '%.' +
+      (post < 0.2 ? ' The healthy false positives dominate — this is why screening rare diseases is hard.' : '');
+  }
+
+  ['by-prev', 'by-sens', 'by-fp'].forEach(id => el(id).addEventListener('input', draw));
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — voter poll (slide 13)
+   ============================================================ */
+(() => {
+  const canvas = el('c-vt');
+  const STATES = [
+    { name: 'A', pop: 0.40, sup: 0.50 },
+    { name: 'B', pop: 0.25, sup: 0.60 },
+    { name: 'C', pop: 0.35, sup: 0.35 },
+  ];
+  const joint = STATES.map(s => s.pop * s.sup);
+  const totalSup = joint.reduce((a, b) => a + b, 0);
+  let revealed = false;
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const x0 = 60, y0 = h - 60, maxH = h - 110, totW = w - 140;
+    let x = x0;
+    STATES.forEach((s, i) => {
+      const bw = s.pop * totW;
+      // population bar
+      ctx.save();
+      ctx.strokeStyle = t.axis;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y0 - maxH, bw, maxH);
+      // supporters fill
+      ctx.fillStyle = t.s1;
+      ctx.globalAlpha = 0.75;
+      ctx.fillRect(x, y0 - s.sup * maxH, bw, s.sup * maxH);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('State ' + s.name, x + bw / 2, y0 + 22);
+      ctx.font = '13px system-ui, sans-serif';
+      ctx.fillText('pop ' + (s.pop * 100) + '% · support ' + (s.sup * 100) + '%', x + bw / 2, y0 + 40);
+      if (revealed) {
+        ctx.fillStyle = t.s2;
+        ctx.font = '700 15px system-ui, sans-serif';
+        ctx.fillText('P(' + s.name + '|support) = ' + fmt(joint[i] / totalSup, 3), x + bw / 2, y0 - maxH - 10);
+      }
+      ctx.restore();
+      x += bw + 10;
+    });
+    ctx.save();
+    ctx.fillStyle = t.ink2;
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.fillText('filled area = supporters, P(support|state)·P(state)', x0, 18);
+    ctx.restore();
+  }
+
+  document.querySelectorAll('.vt-vote').forEach(btn => {
+    btn.addEventListener('click', () => {
+      revealed = true;
+      draw();
+      const i = +btn.dataset.s;
+      const st = el('vt-status');
+      const ok = i === 0;
+      st.className = ok ? 'status ok' : 'status bad';
+      st.textContent = (ok ? '✓ Correct: ' : '✗ It is State A. ') +
+        'Posteriors: A ' + fmt(joint[0] / totalSup, 3) + ', B ' + fmt(joint[1] / totalSup, 3) + ', C ' + fmt(joint[2] / totalSup, 3) +
+        '. B’s higher support RATE loses to A’s larger population — the filled AREAS decide.';
+    });
+  });
+  el('vt-reveal').addEventListener('click', () => {
+    revealed = true;
+    draw();
+    const st = el('vt-status');
+    st.className = 'status info';
+    st.textContent = 'P(B|support) = 0.6·0.25 / (0.5·0.4 + 0.6·0.25 + 0.35·0.35) = 0.15/0.4725 = 0.317 (slide 13). State A: 0.423, State C: 0.259.';
+  });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 3 — memorylessness (slides 27-29, 35)
+   ============================================================ */
+(() => {
+  const canvas = el('c-ml');
+  const MEAN = 10, UMAX = 30;
+  const view = { x0: -1, x1: 40, y0: -0.05, y1: 1.12 };
+
+  function draw() {
+    const tAge = +el('ml-t').value;
+    el('ml-tv').textContent = fmt(tAge, 1);
+    const pExp = Math.exp(-10 / MEAN); // constant!
+    const pUni = tAge + 10 >= UMAX ? 0 : (UMAX - tAge - 10) / (UMAX - tAge);
+    el('ml-exp').textContent = fmt(pExp, 3);
+    el('ml-uni').textContent = fmt(pUni, 3);
+
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [0, 5, 10, 15, 20, 25, 30, 35, 40], yticks: [0.25, 0.5, 0.75, 1], xlabel: 'years', ylabel: 'P(lifetime > x)' });
+
+    const sExp = x => Math.exp(-x / MEAN);
+    const sUni = x => Math.max(0, (UMAX - x) / UMAX);
+    VIZ.curve(p, sExp, t.s1, 2.5);
+    VIZ.label(p, 'exponential (mean 10)', 16, sExp(16), t.s1, { dx: 8, dy: -6, bold: true });
+    VIZ.curve(p, sUni, t.s5, 2);
+    VIZ.label(p, 'uniform wear-out [0, 30]', 22, sUni(22), t.s5, { dx: 8, dy: 16, bold: true, baseline: 'top' });
+
+    // conditional survival from age t, rescaled: exponential copy overlays the original exactly
+    const { ctx, X, Y } = p;
+    ctx.save();
+    ctx.setLineDash([6, 5]);
+    VIZ.curve(p, x => x < tAge ? NaN : sExp(x) / sExp(tAge), t.s2, 2.5);
+    ctx.restore();
+    VIZ.label(p, 'given: survived to t (rescaled)', Math.min(30, tAge + 9), Math.min(1.06, sExp(tAge + 9) / sExp(tAge) + 0.09), t.s2, { size: 13, bold: true });
+
+    // age marker
+    ctx.save();
+    ctx.strokeStyle = t.axis;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(tAge), Y(0)); ctx.lineTo(X(tAge), Y(1.05)); ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, 't = ' + fmt(tAge, 1), tAge, 1.08, t.ink2, { size: 13, align: 'center' });
+
+    const st = el('ml-status');
+    st.className = 'status info';
+    st.textContent = 'The dashed green curve (survival GIVEN age t, rescaled) is an exact copy of the blue curve shifted to t — the exponential forgets its age. The violet wear-out curve cannot do that: its 10-more-years chance is now ' + fmt(pUni, 3) + '.';
+  }
+
+  el('ml-t').addEventListener('input', draw);
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 4 — race of exponentials (slides 30-36)
+   ============================================================ */
+(() => {
+  let races = 0, natWins = 0;
+  const sample = mean => -mean * Math.log(1 - Math.random());
+
+  function refresh() {
+    const m1 = +el('rc-m1').value, m2 = +el('rc-m2').value;
+    el('rc-m1v').textContent = m1;
+    el('rc-m2v').textContent = m2;
+    const l1 = 1 / m1, l2 = 1 / m2;
+    el('rc-th').textContent = fmt(l1 / (l1 + l2), 4);
+    el('rc-emin').textContent = fmt(1 / (l1 + l2), 2);
+    el('rc-freq').textContent = races ? fmt(natWins / races, 4) + ' (' + natWins + '/' + races + ')' : '—';
+    el('rc-n').textContent = races;
+  }
+
+  function race(log) {
+    const m1 = +el('rc-m1').value, m2 = +el('rc-m2').value;
+    const t1 = sample(m1), t2 = sample(m2);
+    races++;
+    if (t1 < t2) natWins++;
+    if (log) {
+      const st = el('rc-status');
+      st.className = 'status info';
+      st.textContent = '🎲 Nat: ' + fmt(t1, 1) + ' min, Norm: ' + fmt(t2, 1) + ' min → ' + (t1 < t2 ? 'NAT first!' : 'NORM first!');
+    }
+  }
+
+  el('rc-m1').addEventListener('input', () => { races = 0; natWins = 0; refresh(); });
+  el('rc-m2').addEventListener('input', () => { races = 0; natWins = 0; refresh(); });
+  el('rc-one').addEventListener('click', () => { race(true); refresh(); });
+  el('rc-1000').addEventListener('click', () => {
+    for (let i = 0; i < 1000; i++) race(false);
+    refresh();
+    const st = el('rc-status');
+    st.className = 'status ok';
+    st.textContent = 'Empirical frequency ' + fmt(natWins / races, 4) + ' vs theory λ₁/(λ₁+λ₂) = ' + el('rc-th').textContent + '.';
+  });
+  refresh();
+})();
+
+/* ============================================================
+   WIDGET 5 — Poisson process (slides 39-49)
+   ============================================================ */
+(() => {
+  const canvas = el('c-ps');
+  let arrivals = [];
+
+  function simulate() {
+    const lam = +el('ps-lam').value;
+    arrivals = [];
+    let t = 0;
+    while (true) {
+      t += -Math.log(1 - Math.random()) / lam;
+      if (t > 10) break;
+      arrivals.push(t);
+    }
+  }
+
+  function draw() {
+    const lam = +el('ps-lam').value;
+    el('ps-lamv').textContent = lam;
+    el('ps-en').textContent = lam;
+    el('ps-gap').textContent = fmt(60 / lam, 1);
+
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+
+    // timeline over 10 hours (top strip)
+    const tlY = 54, tlX0 = 50, tlX1 = w - 20;
+    ctx.save();
+    ctx.strokeStyle = t.axis;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(tlX0, tlY); ctx.lineTo(tlX1, tlY); ctx.stroke();
+    ctx.fillStyle = t.ink2;
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let hh = 0; hh <= 10; hh++) {
+      const x = tlX0 + (tlX1 - tlX0) * hh / 10;
+      ctx.beginPath(); ctx.moveTo(x, tlY - 5); ctx.lineTo(x, tlY + 5); ctx.stroke();
+      ctx.fillText(hh + 'h', x, tlY + 20);
+    }
+    arrivals.forEach(a => {
+      const x = tlX0 + (tlX1 - tlX0) * a / 10;
+      ctx.strokeStyle = t.s1;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, tlY - 12); ctx.lineTo(x, tlY); ctx.stroke();
+    });
+    ctx.fillStyle = t.ink2;
+    ctx.textAlign = 'left';
+    ctx.fillText('one simulated day: ' + arrivals.length + ' arrivals in 10 h (exponential gaps)', tlX0, 16);
+    ctx.restore();
+
+    // histogram of counts per hour over 2000 hours vs pmf
+    const M = 2000;
+    const counts = {};
+    for (let k = 0; k < M; k++) {
+      // Poisson draw via exponential gaps
+      let tt = 0, n = 0;
+      while ((tt += -Math.log(1 - Math.random()) / lam) <= 1) n++;
+      counts[n] = (counts[n] || 0) + 1;
+    }
+    const kmax = Math.max(12, lam + 4 * Math.sqrt(lam));
+    const pmf = [];
+    let p0 = Math.exp(-lam);
+    for (let k = 0; k <= kmax; k++) { pmf[k] = p0; p0 *= lam / (k + 1); }
+    const areaY0 = h - 34, areaH = h - 34 - 92;
+    const bw2 = (w - 90) / (kmax + 1);
+    const maxP = Math.max(...pmf, ...Object.values(counts).map(v => v / M));
+    ctx.save();
+    for (let k = 0; k <= kmax; k++) {
+      const emp = (counts[k] || 0) / M;
+      const x = 50 + k * bw2;
+      ctx.fillStyle = t.region;
+      ctx.strokeStyle = t.s1;
+      ctx.lineWidth = 1;
+      const bh = emp / maxP * areaH;
+      ctx.fillRect(x + 1, areaY0 - bh, bw2 - 2, bh);
+      ctx.strokeRect(x + 1, areaY0 - bh, bw2 - 2, bh);
+      // pmf dot
+      ctx.beginPath();
+      ctx.arc(x + bw2 / 2, areaY0 - pmf[k] / maxP * areaH, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = t.s2;
+      ctx.fill();
+      ctx.fillStyle = t.muted;
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      if (k % 2 === 0) ctx.fillText(String(k), x + bw2 / 2, areaY0 + 14);
+    }
+    ctx.fillStyle = t.ink2;
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('arrivals per hour, 2000 simulated hours (bars) vs Poisson(λ) pmf (dots)', 50, 92);
+    ctx.restore();
+  }
+
+  function updateCross() {
+    const s = +el('ps-cross').value;
+    el('ps-crossv').textContent = s;
+    el('ps-safe').textContent = fmt(Math.exp(-3 * s / 60), 3);
+  }
+
+  el('ps-lam').addEventListener('input', () => { simulate(); draw(); });
+  el('ps-sim').addEventListener('click', () => { simulate(); draw(); });
+  el('ps-cross').addEventListener('input', updateCross);
+  el('ps-try').addEventListener('click', () => {
+    const s = +el('ps-cross').value;
+    const pSafe = Math.exp(-3 * s / 60);
+    const ok = Math.random() < pSafe;
+    const st = el('ps-status');
+    st.className = ok ? 'status ok' : 'status bad';
+    st.textContent = ok ? '🚸 You made it across! (P = ' + fmt(pSafe, 3) + ')' : '🚗 A car came — that crossing had only P = ' + fmt(pSafe, 3) + ' of being car-free. λ = 3·' + s + '/60 = ' + fmt(3 * s / 60, 2) + '.';
+  });
+  simulate();
+  updateCross();
+  VIZ.register(canvas, draw);
+})();
+</script>
+</body>
+</html>
