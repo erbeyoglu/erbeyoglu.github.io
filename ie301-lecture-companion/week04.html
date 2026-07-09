@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 4 — Nonlinear Optimization, KKT (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 4: Constrained Optimization &amp; KKT</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#cubic">1 · Warm-up cubic</a>
+    <a href="#utility">2 · Budget &amp; utility</a>
+    <a href="#adv">3 · Advertising tangency</a>
+    <a href="#chem">4 · Shadow prices</a>
+    <a href="#kkt">5 · KKT checker</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : WARM-UP CUBIC ================= -->
+<section class="widget" id="cubic">
+  <h2>Warm-up: does f(x) = 48x − 60x² + x³ have a global max? <span class="chip">Slide 3</span></h2>
+  <p class="howto">
+    Vote first: global max — yes or no? Then find both local extrema (you’ll need to zoom) and watch
+    what the tails do.
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="cu-far">Full picture</button>
+      <button class="seg" id="cu-near">Zoom to the small one</button>
+    </span>
+    <button id="cu-reveal" class="primary">Reveal extrema</button>
+  </div>
+  <canvas class="viz short" id="c-cu"></canvas>
+  <p class="status info" id="cu-status"></p>
+  <p class="note">
+    f′(x) = 48 − 120x + 3x² = 0 gives x ≈ 0.404 (f″ &lt; 0: local max, f ≈ 9.68) and x ≈ 39.60
+    (f″ &gt; 0: local min, f ≈ −32036). But x³ dominates: f → +∞ as x → +∞ and −∞ as x → −∞,
+    so there is <em>no</em> global max or min — local analysis alone can’t certify global optimality.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : BUDGET & UTILITY (LAGRANGE) ================= -->
+<section class="widget" id="utility">
+  <h2>Spend the budget: Lagrange in action <span class="chip">Slides 10–12</span></h2>
+  <p class="howto">
+    You have $10 and buy x₁, x₂ at prices c₁, c₂ to maximize utility a·ln x₁ + (1−a)·ln x₂ with the
+    budget spent exactly (equality constraint). <b>Slide along the budget line</b> to find the best mix —
+    then change a price and watch the slides’ surprising comparative statics.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="ut-s">position on budget line</label>
+      <input type="range" id="ut-s" min="0.03" max="0.97" step="0.005" value="0.3" style="width:230px">
+    </div>
+    <div class="group">
+      <label for="ut-c1">c₁</label>
+      <input type="range" id="ut-c1" min="1" max="5" step="0.25" value="2" style="width:110px">
+      <span class="readout"><b id="ut-c1v">2.00</b></span>
+    </div>
+    <div class="group">
+      <label for="ut-c2">c₂</label>
+      <input type="range" id="ut-c2" min="1" max="5" step="0.25" value="1" style="width:110px">
+      <span class="readout"><b id="ut-c2v">1.00</b></span>
+    </div>
+    <div class="group">
+      <label for="ut-a">a</label>
+      <input type="range" id="ut-a" min="0.2" max="0.8" step="0.05" value="0.5" style="width:110px">
+      <span class="readout"><b id="ut-av">0.50</b></span>
+    </div>
+  </div>
+  <div class="controls">
+    <span class="readout">x₁ = <b id="ut-x1">—</b>, x₂ = <b id="ut-x2">—</b></span>
+    <span class="readout">utility: <b id="ut-u">—</b></span>
+    <button id="ut-reveal" class="primary">Reveal optimum ★</button>
+  </div>
+  <canvas class="viz short" id="c-ut"></canvas>
+  <p class="status info" id="ut-status"></p>
+  <p class="note">
+    Lagrangian (slide 11): L = a·ln x₁ + (1−a)·ln x₂ + λ(d − c₁x₁ − c₂x₂); setting ∂L = 0 gives
+    x₁* = da/c₁ and x₂* = d(1−a)/c₂. So raising c₁ lowers x₁* — but leaves x₂* <em>completely
+    unchanged</em> (slide 12). Try it: move the c₁ slider after revealing.
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : ADVERTISING TANGENCY ================= -->
+<section class="widget" id="adv">
+  <h2>TV vs radio: the tangency picture <span class="chip">Slide 13</span></h2>
+  <p class="howto">
+    $10 000 of budget: TV costs $3000/min, radio $1000/min, so 3x + y = 10 (in minutes and $1000s).
+    Revenue is R(x, y) = −2x² − y² + xy + 8x + 3y. <b>Drag along the budget line</b>: where does the
+    line just kiss a revenue contour?
+  </p>
+  <div class="controls">
+    <span class="readout">TV x = <b id="ad-x">—</b> min</span>
+    <span class="readout">radio y = <b id="ad-y">—</b> min</span>
+    <span class="readout">revenue: <b id="ad-r">—</b> k$</span>
+    <button id="ad-reveal" class="primary">Reveal optimum ★</button>
+  </div>
+  <canvas class="viz" id="c-ad"></canvas>
+  <p class="status info" id="ad-status">Drag the violet point along the budget line.</p>
+  <p class="note">
+    At the optimum x ≈ 2.464, y ≈ 2.607 the budget line is tangent to a contour: ∇R is parallel to
+    ∇g there — exactly the Lagrange condition. The multiplier λ = 0.25 is the shadow price:
+    one more $1000 of budget buys ≈ $250 of extra revenue (slides 18–20).
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : SHADOW PRICES / CHEMICAL MONOPOLIST ================= -->
+<section class="widget" id="chem">
+  <h2>Shadow prices live: the chemical monopolist <span class="chip">Slides 28–32</span></h2>
+  <p class="howto">
+    The slides solve max x₁(30−x₁) + x₂(50−x₂) − 3x₁ − 5x₂ − 10x₃ s.t. x₁+x₂ ≤ x₃, x₃ ≤ b with
+    b = 17.25 by checking four λ-cases. Here, <b>slide the chemical capacity b</b> and watch the optimal
+    plan, the multipliers, and the profit curve respond. Where does λ₂ hit zero — and what happens there?
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="ch-b">capacity b</label>
+      <input type="range" id="ch-b" min="10" max="30" step="0.05" value="17.25" style="width:260px">
+      <span class="readout"><b id="ch-bv">17.25</b> oz</span>
+    </div>
+    <span class="readout">x₁* = <b id="ch-x1">—</b></span>
+    <span class="readout">x₂* = <b id="ch-x2">—</b></span>
+    <span class="readout">λ₁ = <b id="ch-l1">—</b></span>
+    <span class="readout">λ₂ = <b id="ch-l2">—</b></span>
+    <span class="readout">profit: <b id="ch-p">—</b> $</span>
+  </div>
+  <div class="controls">
+    <span style="color:var(--ink-2)">Slide 32’s four cases:</span>
+    <span class="segwrap" id="ch-cases">
+      <button class="seg" data-c="0">λ₁ = λ₂ = 0</button>
+      <button class="seg" data-c="1">λ₁ = 0, λ₂ &gt; 0</button>
+      <button class="seg" data-c="2">λ₁ &gt; 0, λ₂ = 0</button>
+      <button class="seg" data-c="3">λ₁ &gt; 0, λ₂ &gt; 0</button>
+    </span>
+  </div>
+  <canvas class="viz short" id="c-ch"></canvas>
+  <p class="status info" id="ch-status"></p>
+  <p class="note">
+    λ₂ is the marginal value of one more ounce of chemical capacity — the slope of the profit curve.
+    It shrinks as b grows and hits 0 at b = 26: beyond that the capacity constraint stops binding
+    (complementary slackness, slide 21) and buying rights to more chemical is worthless.
+  </p>
+</section>
+
+<!-- ================= WIDGET 5 : KKT CHECKER ================= -->
+<section class="widget" id="kkt">
+  <h2>Is this point optimal? Check KKT <span class="chip">Slides 33–36</span></h2>
+  <p class="howto">
+    max ln(x₁+1) + x₂ &nbsp;s.t.&nbsp; 2x₁ + x₂ ≤ 3, x ≥ 0. <b>Drag the candidate point</b>; the widget
+    hunts for a multiplier λ ≥ 0 and grades every KKT condition live. Find the one point where the
+    whole list turns green.
+  </p>
+  <div class="controls">
+    <span class="readout">candidate: <b id="kk-pt">—</b></span>
+    <span class="readout">f = <b id="kk-f">—</b></span>
+    <span class="readout">best λ = <b id="kk-lam">—</b></span>
+    <button id="kk-reveal">Reveal the KKT point ★</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
+    <canvas class="viz short" id="c-kk" style="flex:1 1 420px;min-width:300px"></canvas>
+    <ul id="kk-list" style="flex:1 1 320px;min-width:280px;list-style:none;padding:0;margin:0;font-size:0.95rem;line-height:2"></ul>
+  </div>
+  <p class="status info" id="kk-status"></p>
+  <p class="note">
+    Slide 36’s deduction chain: λ ≥ 1 &gt; 0 forces the constraint tight; 1/(x₁+1) − 2λ &lt; 0 forces
+    x₁ = 0; hence x₂ = 3 and λ = 1. Since f is concave and g linear, KKT is necessary AND sufficient
+    (slide 27) — so the green point is provably optimal.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 4.
+  Figures follow the examples used in the Week 4 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* Contours of (v-c)^T Q (v-c) = k, Q positive definite. */
+function quadContours(p, t, Q, cx, cy, levels) {
+  const { ctx, X, Y } = p;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(p.padL, p.padT, p.w - p.padL - p.padR, p.h - p.padT - p.padB);
+  ctx.clip();
+  ctx.strokeStyle = t.s1;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 1.5;
+  levels.forEach(k => {
+    if (k <= 0) return;
+    ctx.beginPath();
+    for (let i = 0; i <= 180; i++) {
+      const phi = 2 * Math.PI * i / 180;
+      const u = Math.cos(phi), v = Math.sin(phi);
+      const q = Q[0][0] * u * u + 2 * Q[0][1] * u * v + Q[1][1] * v * v;
+      const r = Math.sqrt(k / q);
+      i === 0 ? ctx.moveTo(X(cx + r * u), Y(cy + r * v)) : ctx.lineTo(X(cx + r * u), Y(cy + r * v));
+    }
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+/* ============================================================
+   WIDGET 1 — warm-up cubic (slide 3)
+   ============================================================ */
+(() => {
+  const canvas = el('c-cu');
+  const f = x => 48 * x - 60 * x * x + x ** 3;
+  const x1 = (120 - Math.sqrt(120 * 120 - 4 * 3 * 48)) / 6; // local max ~0.404
+  const x2 = (120 + Math.sqrt(120 * 120 - 4 * 3 * 48)) / 6; // local min ~39.6
+  const VIEWS = {
+    far: { x0: -12, x1: 52, y0: -36000, y1: 22000, xt: [-10, 0, 10, 20, 30, 40, 50], yt: [-30000, -20000, -10000, 10000, 20000] },
+    near: { x0: -0.6, x1: 2.2, y0: -70, y1: 60, xt: [-0.5, 0.5, 1, 1.5, 2], yt: [-60, -40, -20, 20, 40] },
+  };
+  let view = 'far', revealed = false;
+
+  function draw() {
+    const v = VIEWS[view];
+    const p = VIZ.plot(canvas, v);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: v.xt, yticks: v.yt, xlabel: 'x', ylabel: 'f(x)' });
+    VIZ.curve(p, f, t.s1, 2.5);
+    if (revealed) {
+      if (x1 > v.x0 && x1 < v.x1) {
+        VIZ.star(p, x1, f(x1), t.s2, 10);
+        VIZ.label(p, 'local max (0.40, 9.7)', x1, f(x1), t.s2, { dy: -12, bold: true });
+      }
+      if (x2 > v.x0 && x2 < v.x1) {
+        VIZ.star(p, x2, f(x2), t.bad, 10);
+        VIZ.label(p, 'local min (39.6, −32036)', x2, f(x2), t.bad, { dy: 20, bold: true, align: 'center', baseline: 'top' });
+      }
+    }
+  }
+
+  el('cu-far').addEventListener('click', () => { view = 'far'; el('cu-far').classList.add('active'); el('cu-near').classList.remove('active'); draw(); });
+  el('cu-near').addEventListener('click', () => { view = 'near'; el('cu-near').classList.add('active'); el('cu-far').classList.remove('active'); draw(); });
+  el('cu-reveal').addEventListener('click', () => {
+    revealed = true;
+    const st = el('cu-status');
+    st.className = 'status info';
+    st.textContent = 'Two local extrema — yet NO global max or min: the cubic term runs away to ±∞ in the tails.';
+    draw();
+  });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — budget & utility, Lagrange (slides 10-12)
+   max a ln x1 + (1-a) ln x2  s.t. c1 x1 + c2 x2 = d (= 10)
+   ============================================================ */
+(() => {
+  const canvas = el('c-ut');
+  const D = 10;
+  let c1 = 2, c2 = 1, a = 0.5, s = 0.3, revealed = false;
+  const view = { x0: -0.4, x1: 10.8, y0: -0.4, y1: 10.8 };
+
+  const u = (x, y) => a * Math.log(x) + (1 - a) * Math.log(y);
+  const curX1 = () => s * D / c1;
+  const curX2 = () => (D - c1 * curX1()) / c2;
+
+  function indiff(p, t, level, color, alpha, width) {
+    // x2 = exp((level - a ln x1) / (1-a))
+    const { ctx } = p;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    VIZ.curve(p, x => x <= 0.01 ? NaN : Math.exp((level - a * Math.log(x)) / (1 - a)), color, width);
+    ctx.restore();
+  }
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [0, 2, 4, 6, 8, 10], yticks: [0, 2, 4, 6, 8, 10], xlabel: 'x₁', ylabel: 'x₂' });
+
+    // budget line
+    const { ctx, X, Y } = p;
+    ctx.save();
+    ctx.strokeStyle = t.ink2;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(D / c2));
+    ctx.lineTo(X(D / c1), Y(0));
+    ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, 'budget: c₁x₁ + c₂x₂ = 10', Math.min(9.8, D / c1 * 0.62), Math.max(0.6, (D - c1 * Math.min(9.8, D / c1 * 0.62)) / c2), t.ink2, { dx: 8, size: 13 });
+
+    const x1 = curX1(), x2 = curX2();
+    const uc = u(x1, x2);
+    const x1s = D * a / c1, x2s = D * (1 - a) / c2;
+    const us = u(x1s, x2s);
+
+    // background indifference curves + the one through the current point
+    [us - 0.7, us - 0.35, us + 0.35].forEach(lv => indiff(p, t, lv, t.axis, 0.7, 1));
+    indiff(p, t, uc, t.s1, 1, 2.5);
+    VIZ.label(p, 'your indifference curve', 0.35, Math.min(10.2, Math.exp((uc - a * Math.log(0.35)) / (1 - a))), t.s1, { dy: -8, size: 13, bold: true });
+
+    if (revealed) {
+      indiff(p, t, us, t.s2, 1, 2);
+      VIZ.star(p, x1s, x2s, t.s2, 10);
+      VIZ.label(p, '(' + fmt(x1s, 2) + ', ' + fmt(x2s, 2) + ')', x1s, x2s, t.s2, { dx: 13, dy: -6, bold: true });
+    }
+
+    VIZ.dot(p, x1, x2, t.s5, 8, true);
+
+    el('ut-x1').textContent = fmt(x1, 2);
+    el('ut-x2').textContent = fmt(x2, 2);
+    el('ut-u').textContent = fmt(uc, 4);
+
+    const st = el('ut-status');
+    if (revealed) {
+      st.className = 'status info';
+      st.textContent = 'x₁* = da/c₁ = ' + fmt(x1s, 2) + ', x₂* = d(1−a)/c₂ = ' + fmt(x2s, 2) +
+        '. Now change c₁ — x₁* moves, x₂* stays put.';
+    } else if (Math.abs(uc - us) < 0.003) {
+      st.className = 'status ok';
+      st.textContent = 'That is essentially the tangency point — the indifference curve just touches the budget line.';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'Slide along the budget line: utility rises until your indifference curve is tangent to it.';
+    }
+  }
+
+  const upd = () => { el('ut-c1v').textContent = fmt(c1); el('ut-c2v').textContent = fmt(c2); el('ut-av').textContent = fmt(a); draw(); };
+  el('ut-s').addEventListener('input', e => { s = +e.target.value; draw(); });
+  el('ut-c1').addEventListener('input', e => { c1 = +e.target.value; upd(); });
+  el('ut-c2').addEventListener('input', e => { c2 = +e.target.value; upd(); });
+  el('ut-a').addEventListener('input', e => { a = +e.target.value; upd(); });
+  el('ut-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 3 — advertising tangency (slide 13)
+   max R = -2x^2 - y^2 + xy + 8x + 3y  s.t.  3x + y = 10
+   Unconstrained peak at (19/7, 20/7); constrained at (69/28, 73/28).
+   ============================================================ */
+(() => {
+  const canvas = el('c-ad');
+  const view = { x0: -0.4, x1: 4.8, y0: -0.6, y1: 11 };
+  const R = (x, y) => -2 * x * x - y * y + x * y + 8 * x + 3 * y;
+  const C = [19 / 7, 20 / 7];
+  const BASE = R(C[0], C[1]);
+  const Q = [[2, -0.5], [-0.5, 1]];
+  const XS = 69 / 28, YS = 10 - 3 * XS;
+  let x = 0.8, revealed = false, dragging = false, lastPlot = null;
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    lastPlot = p;
+    VIZ.axes(p, t, { xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6, 8, 10], xlabel: 'x (TV min)', ylabel: 'y (radio min)' });
+
+    const corners = [[view.x0, view.y0], [view.x0, view.y1], [view.x1, view.y0], [view.x1, view.y1]];
+    const kmax = Math.max(...corners.map(([a, b]) => {
+      const dx = a - C[0], dy = b - C[1];
+      return Q[0][0] * dx * dx + 2 * Q[0][1] * dx * dy + Q[1][1] * dy * dy;
+    }));
+    quadContours(p, t, Q, C[0], C[1], [1, 2, 3, 4, 5, 6].map(i => kmax * (i / 6) ** 2));
+    // contour through the current point
+    const y = 10 - 3 * x;
+    const dx0 = x - C[0], dy0 = y - C[1];
+    const kcur = Q[0][0] * dx0 * dx0 + 2 * Q[0][1] * dx0 * dy0 + Q[1][1] * dy0 * dy0;
+    const { ctx, X, Y } = p;
+    ctx.save();
+    ctx.lineWidth = 2.5;
+    quadContours(p, { ...t, s1: t.s5 }, Q, C[0], C[1], [kcur]);
+    ctx.restore();
+
+    // budget line
+    ctx.save();
+    ctx.strokeStyle = t.ink2;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(10));
+    ctx.lineTo(X(10 / 3), Y(0));
+    ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, '3x + y = 10', 0.35, 9.3, t.ink2, { size: 13, bold: true });
+
+    if (revealed) {
+      VIZ.star(p, XS, YS, t.s2, 10);
+      VIZ.label(p, '(' + fmt(XS, 3) + ', ' + fmt(YS, 3) + '), R = ' + fmt(R(XS, YS), 2), XS, YS, t.s2, { dx: 13, dy: -8, bold: true });
+    }
+
+    VIZ.dot(p, x, y, t.s5, 8, true);
+
+    el('ad-x').textContent = fmt(x, 3);
+    el('ad-y').textContent = fmt(y, 3);
+    el('ad-r').textContent = fmt(R(x, y), 3);
+
+    const st = el('ad-status');
+    if (revealed) {
+      st.className = 'status info';
+      st.textContent = 'Tangency: at the optimum the violet contour touches the budget line at a single point. λ = 0.25 — each extra $1000 of budget is worth ≈ $250 of revenue.';
+    } else if (Math.abs(x - XS) < 0.02) {
+      st.className = 'status ok';
+      st.textContent = 'The contour through your point is tangent to the budget line — you found the Lagrange point.';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'The violet contour through your point still CROSSES the line — you can slide along it and do better.';
+    }
+  }
+
+  function setFromPointer(ev) {
+    const { px } = VIZ.pointer(canvas, ev);
+    x = Math.max(0.02, Math.min(10 / 3 - 0.02, lastPlot.invX(px)));
+    draw();
+  }
+  canvas.addEventListener('pointerdown', ev => { dragging = true; canvas.setPointerCapture(ev.pointerId); setFromPointer(ev); });
+  canvas.addEventListener('pointermove', ev => { if (dragging) setFromPointer(ev); });
+  canvas.addEventListener('pointerup', () => dragging = false);
+  el('ad-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 4 — shadow prices, chemical monopolist (slides 28-32)
+   For capacity b: while both constraints bind (b < 26):
+   lambda1 = 36 - b, lambda2 = 26 - b, x1 = (b-9)/2, x2 = (b+9)/2.
+   Beyond b = 26 the capacity constraint goes slack.
+   ============================================================ */
+(() => {
+  const canvas = el('c-ch');
+  const view = { x0: 9.2, x1: 30.8, y0: 210, y1: 405 };
+  let b = 17.25;
+
+  function plan(bb) {
+    if (bb <= 26) {
+      const x1 = (bb - 9) / 2, x2 = (bb + 9) / 2;
+      return { x1, x2, x3: bb, l1: 36 - bb, l2: 26 - bb };
+    }
+    return { x1: 8.5, x2: 17.5, x3: 26, l1: 10, l2: 0 };
+  }
+  const profit = bb => {
+    const q = plan(bb);
+    return q.x1 * (30 - q.x1) + q.x2 * (50 - q.x2) - 3 * q.x1 - 5 * q.x2 - 10 * q.x3;
+  };
+
+  const CASES = [
+    'λ₁ = λ₂ = 0: then x₃’s condition −10 + λ₁ − λ₂ ≤ 0 with x₃ > 0 forces −10 = 0. Contradiction — impossible.',
+    'λ₁ = 0, λ₂ > 0: x₃ = 17.25 binding, and x₃’s stationarity gives λ₂ = −10 < 0. Violates λ ≥ 0 — impossible.',
+    'λ₁ > 0, λ₂ = 0: then λ₁ = 10, x₁ = 8.5, x₂ = 17.5 → needs x₃ = 26 > 17.25. Infeasible at b = 17.25 — BUT this is exactly the case that takes over once b ≥ 26.',
+    'λ₁ > 0, λ₂ > 0: both constraints tight → x₁ = 4.125, x₂ = 13.125, x₃ = 17.25, λ₁ = 18.75, λ₂ = 8.75. All conditions hold — OPTIMAL (slide 32).',
+  ];
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [10, 14, 18, 22, 26, 30], yticks: [220, 260, 300, 340, 380], xlabel: 'capacity b (oz)', ylabel: 'optimal profit', yAxisAt: 210, xAxisAt: 9.2 });
+
+    // kink marker at b = 26
+    const { ctx, X, Y } = p;
+    ctx.save();
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = t.axis;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(26), Y(view.y0)); ctx.lineTo(X(26), Y(view.y1)); ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, 'b = 26: constraint goes slack, λ₂ = 0', 26, view.y1 - 6, t.ink2, { dx: -6, size: 13, align: 'right', baseline: 'top' });
+
+    VIZ.curve(p, profit, t.s1, 2.5);
+    VIZ.label(p, 'profit(b)', 12, profit(12) + 10, t.s1, { bold: true });
+
+    // tangent segment at current b (slope = lambda2)
+    const q = plan(b);
+    const pb = profit(b);
+    ctx.save();
+    ctx.strokeStyle = t.s2;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(X(b - 2.4), Y(pb - 2.4 * q.l2));
+    ctx.lineTo(X(b + 2.4), Y(pb + 2.4 * q.l2));
+    ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, 'slope = λ₂ = ' + fmt(q.l2, 2), b + 0.4, pb - 14, t.s2, { size: 13, bold: true });
+
+    VIZ.dot(p, b, pb, t.s5, 8, true);
+
+    el('ch-bv').textContent = fmt(b, 2);
+    el('ch-x1').textContent = fmt(q.x1, 3);
+    el('ch-x2').textContent = fmt(q.x2, 3);
+    el('ch-l1').textContent = fmt(q.l1, 2);
+    el('ch-l2').textContent = fmt(q.l2, 2);
+    el('ch-p').textContent = fmt(pb, 2);
+  }
+
+  el('ch-b').addEventListener('input', e => { b = +e.target.value; el('ch-status').textContent = ''; draw(); });
+  document.querySelectorAll('#ch-cases button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#ch-cases button').forEach(x => x.classList.toggle('active', x === btn));
+      const st = el('ch-status');
+      const i = +btn.dataset.c;
+      st.className = i === 3 ? 'status ok' : 'status info';
+      st.textContent = CASES[i];
+    });
+  });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 5 — KKT checker (slides 33-36)
+   max ln(x1+1) + x2  s.t.  2x1 + x2 <= 3, x >= 0
+   ============================================================ */
+(() => {
+  const canvas = el('c-kk');
+  const view = { x0: -0.15, x1: 1.9, y0: -0.2, y1: 3.5 };
+  let pt = { x: 0.7, y: 1.0 };
+  let dragging = false, lastPlot = null;
+
+  const f = (x, y) => Math.log(x + 1) + y;
+
+  // For a candidate (x,y), scan lambda >= 0 and grade each KKT condition.
+  function grade(x, y) {
+    const TOLE = 2e-3, TOLI = 1e-6;
+    const conds = lam => {
+      const s1 = 1 / (x + 1) - 2 * lam;   // stationarity slack for x1
+      const s2 = 1 - lam;                 // stationarity slack for x2
+      const slack = 3 - 2 * x - y;
+      return [
+        { name: '1/(x₁+1) − 2λ ≤ 0', ok: s1 <= TOLI },
+        { name: '1 − λ ≤ 0', ok: s2 <= TOLI },
+        { name: 'x₁·[1/(x₁+1) − 2λ] = 0', ok: Math.abs(x * s1) <= TOLE },
+        { name: 'x₂·[1 − λ] = 0', ok: Math.abs(y * s2) <= TOLE },
+        { name: 'λ·[3 − 2x₁ − x₂] = 0', ok: Math.abs(lam * slack) <= TOLE },
+        { name: '2x₁ + x₂ ≤ 3 (feasible)', ok: slack >= -TOLI },
+        { name: 'x₁, x₂ ≥ 0, λ ≥ 0', ok: x >= -TOLI && y >= -TOLI },
+      ];
+    };
+    let bestLam = 0, bestList = conds(0), bestCount = bestList.filter(c => c.ok).length;
+    for (let lam = 0; lam <= 3.0001; lam += 0.005) {
+      const list = conds(lam);
+      const count = list.filter(c => c.ok).length;
+      if (count > bestCount) { bestCount = count; bestLam = lam; bestList = list; }
+    }
+    return { lam: bestLam, list: bestList, all: bestCount === bestList.length };
+  }
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    lastPlot = p;
+    VIZ.axes(p, t, { xticks: [0, 0.5, 1, 1.5], yticks: [0, 1, 2, 3], xlabel: 'x₁', ylabel: 'x₂' });
+    const { ctx, X, Y } = p;
+
+    // feasible region: 2x1 + x2 <= 3, x >= 0
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0));
+    ctx.lineTo(X(1.5), Y(0));
+    ctx.lineTo(X(0), Y(3));
+    ctx.closePath();
+    ctx.fillStyle = t.region;
+    ctx.fill();
+    ctx.strokeStyle = t.axis;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, '2x₁ + x₂ = 3', 0.95, 1.25, t.ink2, { size: 13 });
+    VIZ.label(p, 'feasible', 0.3, 0.9, t.ink2, { bold: true });
+
+    const g = grade(pt.x, pt.y);
+    VIZ.dot(p, pt.x, pt.y, g.all ? t.good : t.s5, 8, true);
+
+    el('kk-pt').textContent = '(' + fmt(pt.x, 2) + ', ' + fmt(pt.y, 2) + ')';
+    el('kk-f').textContent = fmt(f(Math.max(0, pt.x), pt.y), 4);
+    el('kk-lam').textContent = fmt(g.lam, 2);
+
+    const ul = el('kk-list');
+    ul.innerHTML = '';
+    g.list.forEach(c => {
+      const li = document.createElement('li');
+      li.textContent = (c.ok ? '✓ ' : '✗ ') + c.name;
+      li.style.color = c.ok ? 'var(--good)' : 'var(--critical)';
+      li.style.fontWeight = c.ok ? '400' : '700';
+      ul.appendChild(li);
+    });
+
+    const st = el('kk-status');
+    if (g.all) {
+      st.className = 'status ok';
+      st.textContent = 'ALL conditions hold with λ = ' + fmt(g.lam, 2) + '. f is concave and g is linear, so KKT is sufficient — this point is OPTIMAL (slide 36).';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'Some condition fails for every λ ≥ 0 — this point cannot be optimal. Where does the red condition push you?';
+    }
+  }
+
+  function setFromPointer(ev) {
+    const { px, py } = VIZ.pointer(canvas, ev);
+    pt = { x: Math.max(0, lastPlot.invX(px)), y: Math.max(0, lastPlot.invY(py)) };
+    draw();
+  }
+  canvas.addEventListener('pointerdown', ev => { dragging = true; canvas.setPointerCapture(ev.pointerId); setFromPointer(ev); });
+  canvas.addEventListener('pointermove', ev => { if (dragging) setFromPointer(ev); });
+  canvas.addEventListener('pointerup', () => dragging = false);
+  el('kk-reveal').addEventListener('click', () => { pt = { x: 0, y: 3 }; draw(); });
+  VIZ.register(canvas, draw);
+})();
+</script>
+</body>
+</html>
