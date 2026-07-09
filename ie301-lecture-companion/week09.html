@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 9 — Probabilistic Dynamic Programming (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<style>
+  table.dp { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; margin: 8px 0 14px; }
+  table.dp th, table.dp td { border: 1px solid var(--grid); padding: 4px 10px; text-align: right; }
+  table.dp th { color: var(--ink-2); }
+  table.dp tr.best td { color: var(--good); font-weight: 700; }
+  .runlog { font-size: 0.9rem; font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: pre-line; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 9: Probabilistic DP</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#milk">1 · Milk allocation</a>
+    <a href="#pinv">2 · Inventory under uncertainty</a>
+    <a href="#sally">3 · Sally’s stopping rule</a>
+    <a href="#reject">4 · Reject allowances</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : MILK ALLOCATION ================= -->
+<section class="widget" id="milk">
+  <h2>Six gallons, three stores, random demand <span class="chip">Slides 6–12</span></h2>
+  <p class="howto">
+    Milk costs $1/gal, sells for $2, and leftovers are bought back at 50¢. Demands are random
+    (distributions below). <b>Allocate the 6 gallons</b> to maximize expected revenue — highest
+    expectation in class wins.
+  </p>
+  <table class="dp">
+    <thead><tr><th>demand</th><th>P store 1</th><th>P store 2</th><th>P store 3</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>0.6</td><td>0.5</td><td>0.4</td></tr>
+      <tr><td>2</td><td>0</td><td>0.1</td><td>0.3</td></tr>
+      <tr><td>3</td><td>0.4</td><td>0.4</td><td>0.3</td></tr>
+    </tbody>
+  </table>
+  <div class="controls">
+    <div class="group"><label>Store 1</label><input type="number" id="mk-x1" min="0" max="6" value="2" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Store 2</label><input type="number" id="mk-x2" min="0" max="6" value="2" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Store 3</label><input type="number" id="mk-x3" min="0" max="6" value="2" style="width:64px;font:inherit"></div>
+    <span class="readout">gallons used: <b id="mk-used">—</b> / 6</span>
+    <span class="readout">expected revenue: <b id="mk-rev">—</b></span>
+    <span class="readout">expected profit: <b id="mk-prof">—</b></span>
+    <button id="mk-reveal" class="primary">Reveal the DP</button>
+  </div>
+  <p class="status info" id="mk-status"></p>
+  <div id="mk-tables"></div>
+  <p class="note">
+    Same skeleton as Week 8’s resource allocation, but rewards are now <em>expected</em> revenues
+    rₜ(g) = Σ P(d)·[2·min(g, d) + 0.5·(g − d)⁺] (slide 10). DP doesn’t care that the reward came from an
+    expectation — that is the whole point of slide 5’s recursion. Optimum: 1, 3, 2.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : PROBABILISTIC INVENTORY ================= -->
+<section class="widget" id="pinv">
+  <h2>Produce now, roll the dice <span class="chip">Slides 13–24</span></h2>
+  <p class="howto">
+    Three periods, demand each period is 1 or 2 with probability ½ each; production cost 2x + 3 (if x &gt; 0),
+    holding $1, end-of-period inventory ≤ 3, all demand met on time; leftovers after period 3 sell for $2.
+    Start with 1 unit. First reveal the optimal <b>policy</b>, then <b>play</b> it against random demand and
+    watch the average converge to the DP value.
+  </p>
+  <div class="controls">
+    <button id="pv-solve" class="primary">Reveal optimal policy + f-tables</button>
+    <button id="pv-run">Play one run 🎲</button>
+    <button id="pv-run1000">Run 1000 times</button>
+    <span class="readout">runs: <b id="pv-n">0</b></span>
+    <span class="readout">average cost: <b id="pv-avg">—</b></span>
+    <span class="readout">DP expected cost f₁(1): <b id="pv-f1">?</b></span>
+  </div>
+  <p class="status info" id="pv-status"></p>
+  <div class="runlog" id="pv-log"></div>
+  <div id="pv-tables"></div>
+  <p class="note">
+    The state after a decision is now RANDOM: producing x from inventory i leads to i + x − 1 or
+    i + x − 2, each with probability ½ — so the recursion averages the two futures
+    (slide 20). An optimal solution is no longer a fixed plan but a <em>policy</em>: at stage 1 produce 3,
+    then react to whatever demand materializes (slide 24).
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : SALLY'S STOPPING RULE ================= -->
+<section class="widget" id="sally">
+  <h2>Stay in line or give up? <span class="chip">Slides 26–33</span></h2>
+  <p class="howto">
+    Sally has 30 minutes and 20 people ahead. Each minute 0, 1 or 2 customers finish (probabilities
+    0.3 / 0.5 / 0.2); reaching the teller pays reward r, and each minute in line costs c. The map shows
+    the DP’s verdict for every (time, queue) state. <b>Move the r and c sliders</b> — watch the give-up
+    frontier shift.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="sl-r">reward r</label>
+      <input type="range" id="sl-r" min="5" max="100" step="1" value="40" style="width:180px">
+      <span class="readout"><b id="sl-rv">40</b></span>
+    </div>
+    <div class="group">
+      <label for="sl-c">waiting cost c / min</label>
+      <input type="range" id="sl-c" min="0.2" max="5" step="0.1" value="1" style="width:180px">
+      <span class="readout"><b id="sl-cv">1.0</b></span>
+    </div>
+    <span class="readout">f₀(20) = <b id="sl-f">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-sl"></canvas>
+  <p class="status info" id="sl-status"></p>
+  <p class="note">
+    The recursion (slide 31): fₜ(n) = max{ 0 (leave), r·p(n|n) − c + Σₖ p(k|n)·fₜ₊₁(n−k) (stay) }.
+    Because “leave” ends the problem, this is a <em>stopping-rule</em> problem (slide 33) — the optimal
+    policy is a frontier in the (time, queue-length) plane, not a single number.
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : REJECT ALLOWANCES ================= -->
+<section class="widget" id="reject">
+  <h2>Hit-and-Miss Manufacturing <span class="chip">Slides 34–45</span></h2>
+  <p class="howto">
+    One acceptable item is needed; each produced item is acceptable with probability ½. Setup $300 +
+    $100/item per run, at most 3 runs, and failing all runs costs $1600. <b>Choose the lot size for each
+    run</b> (applies only if all previous runs failed) and minimize the expected cost. Beat $675!
+  </p>
+  <div class="controls">
+    <div class="group"><label>Run 1 lot</label><input type="number" id="rj-x1" min="0" max="5" value="1" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Run 2 lot</label><input type="number" id="rj-x2" min="0" max="5" value="1" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Run 3 lot</label><input type="number" id="rj-x3" min="0" max="5" value="1" style="width:64px;font:inherit"></div>
+    <span class="readout">expected cost: <b id="rj-cost">—</b></span>
+    <span class="readout">best: <b id="rj-best">—</b></span>
+    <button id="rj-reveal" class="primary">Reveal the DP tables</button>
+  </div>
+  <p class="status info" id="rj-status"></p>
+  <div id="rj-tables"></div>
+  <p class="note">
+    State = do we still need an item (1) or not (0); P(a lot of x yields none acceptable) = 0.5ˣ
+    (slides 37–41). Expected cost = run 1 + 0.5^x₁·[run 2 + 0.5^x₂·(run 3 + 0.5^x₃·1600)].
+    DP optimum: lot 2, then 2 or 3, then 3 or 4 → $675 (slide 45). Bigger lots buy insurance;
+    the question is how much insurance is worth $100 a unit.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 9.
+  Figures follow the examples used in the Week 9 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* ============================================================
+   WIDGET 1 — milk allocation (slides 6-12)
+   ============================================================ */
+(() => {
+  const DIST = [
+    { 1: 0.6, 2: 0, 3: 0.4 },
+    { 1: 0.5, 2: 0.1, 3: 0.4 },
+    { 1: 0.4, 2: 0.3, 3: 0.3 },
+  ];
+  const r = (store, g) => {
+    let s = 0;
+    for (const d of [1, 2, 3]) s += DIST[store][d] * (2 * Math.min(g, d) + 0.5 * Math.max(0, g - d));
+    return s;
+  };
+
+  function update() {
+    const xs = [1, 2, 3].map(i => +el('mk-x' + i).value);
+    const used = xs[0] + xs[1] + xs[2];
+    el('mk-used').textContent = used;
+    const st = el('mk-status');
+    if (used > 6) {
+      el('mk-rev').textContent = '—'; el('mk-prof').textContent = '—';
+      st.className = 'status bad';
+      st.textContent = 'Only 6 gallons were bought — you allocated ' + used + '.';
+      return;
+    }
+    const rev = r(0, xs[0]) + r(1, xs[1]) + r(2, xs[2]);
+    el('mk-rev').textContent = '$' + fmt(rev, 2);
+    el('mk-prof').textContent = '$' + fmt(rev - 6, 2);
+    const opt = r(0, 1) + r(1, 3) + r(2, 2);
+    if (Math.abs(rev - opt) < 1e-9) { st.className = 'status ok'; st.textContent = 'Expected revenue $' + fmt(rev, 2) + ' — the DP optimum!'; }
+    else { st.className = 'status info'; st.textContent = 'Expected revenue $' + fmt(rev, 2) + '. The purchase cost $6 is sunk — maximize revenue (slide 8).'; }
+  }
+
+  el('mk-reveal').addEventListener('click', () => {
+    // r-tables and DP
+    const rt = [0, 1, 2].map(s => [0, 1, 2, 3, 4, 5, 6].map(g => r(s, g)));
+    const f3 = rt[2].slice(); // f3(x) = r3(x) (monotone in x here)
+    const f2 = [], g2 = [];
+    for (let x = 0; x <= 6; x++) {
+      let best = -1, bg = 0;
+      for (let g = 0; g <= x; g++) {
+        const v = rt[1][g] + f3[x - g];
+        if (v > best + 1e-12) { best = v; bg = g; }
+      }
+      f2[x] = best; g2[x] = bg;
+    }
+    let f1 = -1, g1 = 0;
+    const rows1 = [];
+    for (let g = 0; g <= 6; g++) {
+      const v = rt[0][g] + f2[6 - g];
+      rows1.push({ g, v });
+      if (v > f1 + 1e-12) { f1 = v; g1 = g; }
+    }
+    el('mk-tables').innerHTML =
+      '<h4>Expected revenues rₜ(g)</h4><table class="dp"><thead><tr><th>g</th>' + [0, 1, 2, 3, 4, 5, 6].map(g => '<th>' + g + '</th>').join('') + '</tr></thead><tbody>' +
+      ['Store 1', 'Store 2', 'Store 3'].map((n, s) => '<tr><td>' + n + '</td>' + rt[s].map(v => '<td>' + fmt(v, 2) + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table>' +
+      '<h4>f₂(x) with best g₂</h4><table class="dp"><thead><tr><th>x</th>' + [0, 1, 2, 3, 4, 5, 6].map(g => '<th>' + g + '</th>').join('') + '</tr></thead><tbody>' +
+      '<tr><td>f₂</td>' + f2.map(v => '<td>' + fmt(v, 2) + '</td>').join('') + '</tr>' +
+      '<tr><td>g₂*</td>' + g2.map(v => '<td>' + v + '</td>').join('') + '</tr></tbody></table>' +
+      '<h4>Stage 1 (all 6 gallons)</h4><table class="dp"><thead><tr><th>g₁</th><th>r₁(g₁) + f₂(6−g₁)</th></tr></thead><tbody>' +
+      rows1.map(q => '<tr' + (q.g === g1 ? ' class="best"' : '') + '><td>' + q.g + '</td><td>' + fmt(q.v, 2) + (q.g === g1 ? ' *' : '') + '</td></tr>').join('') + '</tbody></table>';
+    el('mk-x1').value = 1; el('mk-x2').value = 3; el('mk-x3').value = 2;
+    update();
+    const st = el('mk-status');
+    st.className = 'status ok';
+    st.textContent = 'Optimum 1, 3, 2 → expected revenue $' + fmt(f1, 2) + ', expected profit $' + fmt(f1 - 6, 2) + ' (slide 12).';
+  });
+
+  ['mk-x1', 'mk-x2', 'mk-x3'].forEach(id => el(id).addEventListener('input', update));
+  update();
+})();
+
+/* ============================================================
+   WIDGET 2 — probabilistic inventory (slides 13-24)
+   ============================================================ */
+(() => {
+  const cProd = x => x > 0 ? 2 * x + 3 : 0;
+  // DP over states i = 0..3, stages 1..3; x in {0..4}, 2-i <= x <= 4-i
+  const f = [null, {}, {}, {}], xopt = [null, {}, {}, {}];
+  for (let t = 3; t >= 1; t--) {
+    for (let i = 0; i <= 3; i++) {
+      let best = Infinity, bx = null;
+      for (let x = Math.max(0, 2 - i); x <= Math.min(4, 4 - i); x++) {
+        const e1 = i + x - 1, e2 = i + x - 2; // after demand 1 / 2
+        let v = cProd(x) + 0.5 * e1 + 0.5 * e2;
+        if (t === 3) v -= 2 * (0.5 * e1 + 0.5 * e2);
+        else v += 0.5 * f[t + 1][e1] + 0.5 * f[t + 1][e2];
+        if (v < best - 1e-12) { best = v; bx = x; }
+      }
+      f[t][i] = best; xopt[t][i] = bx;
+    }
+  }
+
+  let runs = 0, totalCost = 0;
+
+  function playRun(log) {
+    let i = 1, cost = 0;
+    const lines = [];
+    for (let t = 1; t <= 3; t++) {
+      const x = xopt[t][i];
+      const d = Math.random() < 0.5 ? 1 : 2;
+      const end = i + x - d;
+      cost += cProd(x) + end;
+      if (t === 3) cost -= 2 * end;
+      lines.push('period ' + t + ': start ' + i + ', produce ' + x + ', demand 🎲 ' + d + ', end ' + end);
+      i = end;
+    }
+    runs++; totalCost += cost;
+    if (log) {
+      el('pv-log').textContent = lines.join('\n') + '\nrealized cost: $' + fmt(cost, 2);
+    }
+    return cost;
+  }
+
+  el('pv-solve').addEventListener('click', () => {
+    el('pv-f1').textContent = '$' + fmt(f[1][1], 2);
+    el('pv-tables').innerHTML = [3, 2, 1].map(t =>
+      '<h4>f' + t + '(i) and x' + t + '(i)</h4><table class="dp"><thead><tr><th>i</th><th>x*</th><th>f' + t + '(i)</th></tr></thead><tbody>' +
+      [0, 1, 2, 3].filter(i => t > 1 || i === 1).map(i =>
+        '<tr><td>' + i + '</td><td>' + xopt[t][i] + '</td><td>$' + fmt(f[t][i], 2) + '</td></tr>').join('') + '</tbody></table>'
+    ).join('');
+    const st = el('pv-status');
+    st.className = 'status ok';
+    st.textContent = 'Optimal policy (slide 24): at stage 1 with i = 1, produce ' + xopt[1][1] + ' — then react to realized demand using the stage-2 and stage-3 rows.';
+  });
+
+  el('pv-run').addEventListener('click', () => {
+    playRun(true);
+    el('pv-n').textContent = runs;
+    el('pv-avg').textContent = '$' + fmt(totalCost / runs, 2);
+  });
+  el('pv-run1000').addEventListener('click', () => {
+    for (let k = 0; k < 1000; k++) playRun(false);
+    el('pv-n').textContent = runs;
+    el('pv-avg').textContent = '$' + fmt(totalCost / runs, 2);
+    const st = el('pv-status');
+    st.className = 'status info';
+    st.textContent = 'Average over ' + runs + ' random runs: $' + fmt(totalCost / runs, 2) + ' — converging to the DP expectation f₁(1) = $' + fmt(f[1][1], 2) + '. Individual runs differ; the policy optimizes the AVERAGE.';
+  });
+})();
+
+/* ============================================================
+   WIDGET 3 — Sally's stopping rule (slides 26-33)
+   p(k finish per minute) = 0.3 / 0.5 / 0.2 for k = 0/1/2.
+   ============================================================ */
+(() => {
+  const canvas = el('c-sl');
+  const T = 30, N = 20;
+  const PK = [0.3, 0.5, 0.2];
+
+  function solve(r, c) {
+    // f[t][n], t = 0..T (f[T] = 0), n = 1..N; stay[t][n]
+    const f = [], stay = [];
+    for (let t = T; t >= 0; t--) {
+      f[t] = new Array(N + 1).fill(0);
+      stay[t] = new Array(N + 1).fill(false);
+      if (t === T) continue;
+      for (let n = 1; n <= N; n++) {
+        // p(n|n): all n ahead finish this minute -> Sally is served, problem ends
+        const pServe = n === 1 ? PK[1] + PK[2] : n === 2 ? PK[2] : 0;
+        // continuation only over k < n departures (n - k people still ahead)
+        let v = r * pServe - c;
+        for (let k = 0; k <= 2; k++) {
+          if (k < n) v += PK[k] * f[t + 1][n - k];
+        }
+        const s = v > 0;
+        f[t][n] = Math.max(0, v);
+        stay[t][n] = s;
+      }
+    }
+    return { f, stay };
+  }
+
+  function draw() {
+    const r = +el('sl-r').value, c = +el('sl-c').value;
+    el('sl-rv').textContent = r;
+    el('sl-cv').textContent = fmt(c, 1);
+    const { f, stay } = solve(r, c);
+    el('sl-f').textContent = fmt(f[0][20], 2);
+
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const padL = 56, padB = 44, padT = 26, padR = 16;
+    const cw = (w - padL - padR) / T, ch = (h - padT - padB) / N;
+    for (let tt = 0; tt < T; tt++) {
+      for (let n = 1; n <= N; n++) {
+        ctx.save();
+        ctx.fillStyle = stay[tt][n] ? t.region : t.bad;
+        ctx.globalAlpha = stay[tt][n] ? 0.95 : 0.22;
+        ctx.fillRect(padL + tt * cw + 1, padT + (N - n) * ch + 1, cw - 2, ch - 2);
+        ctx.restore();
+      }
+    }
+    // axes labels
+    ctx.save();
+    ctx.fillStyle = t.ink2;
+    ctx.font = '600 13px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let tt = 0; tt <= T; tt += 5) ctx.fillText(String(tt), padL + tt * cw, h - padB + 18);
+    ctx.fillText('minute t', (w + padL) / 2, h - 8);
+    ctx.textAlign = 'right';
+    for (let n = 5; n <= N; n += 5) ctx.fillText(String(n), padL - 8, padT + (N - n) * ch + ch / 2 + 4);
+    ctx.save();
+    ctx.translate(14, (h - padB + padT) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.fillText('people ahead n', 0, 0);
+    ctx.restore();
+    // legend
+    ctx.textAlign = 'left';
+    ctx.fillStyle = t.s1; ctx.fillText('■ STAY', padL, 16);
+    ctx.fillStyle = t.bad; ctx.fillText('■ LEAVE', padL + 70, 16);
+    ctx.restore();
+
+    // Sally's start
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(padL + 0 * cw + cw / 2, padT + (N - 20) * ch + ch / 2, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = t.s5;
+    ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = t.surface; ctx.stroke();
+    ctx.restore();
+
+    const st = el('sl-status');
+    if (stay[0][20]) {
+      st.className = 'status ok';
+      st.textContent = 'At (t = 0, n = 20) the DP says STAY: expected net reward f₀(20) = ' + fmt(f[0][20], 2) + '. But watch the red region — if the line moves too slowly, quitting becomes optimal mid-wait.';
+    } else {
+      st.className = 'status bad';
+      st.textContent = 'At (t = 0, n = 20) the DP says LEAVE immediately: f₀(20) = 0. The reward no longer justifies the expected waiting cost.';
+    }
+  }
+
+  el('sl-r').addEventListener('input', draw);
+  el('sl-c').addEventListener('input', draw);
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 4 — reject allowances (slides 34-45), in $100 units internally
+   ============================================================ */
+(() => {
+  const K = x => x > 0 ? 3 : 0;
+  const runCost = x => K(x) + x;
+  const expCost = (x1, x2, x3) =>
+    runCost(x1) + Math.pow(0.5, x1) * (runCost(x2) + Math.pow(0.5, x2) * (runCost(x3) + Math.pow(0.5, x3) * 16));
+
+  let best = null;
+
+  function update() {
+    const xs = [1, 2, 3].map(i => +el('rj-x' + i).value);
+    const e = expCost(...xs) * 100;
+    el('rj-cost').textContent = '$' + fmt(e, 2);
+    if (best === null || e < best) best = e;
+    el('rj-best').textContent = '$' + fmt(best, 2);
+    const st = el('rj-status');
+    if (Math.abs(e - 675) < 0.01) { st.className = 'status ok'; st.textContent = '$675 — the DP optimum!'; }
+    else { st.className = 'status info'; st.textContent = 'Expected cost $' + fmt(e, 2) + '. Remember: runs 2 and 3 only happen if everything before failed.'; }
+  }
+
+  el('rj-reveal').addEventListener('click', () => {
+    const mkRows = cont => [0, 1, 2, 3, 4, 5].map(x => ({ x, v: runCost(x) + Math.pow(0.5, x) * cont }));
+    const bestOf = rows => Math.min(...rows.map(q => q.v));
+    const r3 = mkRows(16), f3 = bestOf(r3);
+    const r2 = mkRows(f3), f2 = bestOf(r2);
+    const r1 = mkRows(f2), f1 = bestOf(r1);
+    const tbl = (title, rows, fbest) =>
+      '<h4>' + title + '</h4><table class="dp"><thead><tr><th>lot x</th><th>expected cost ($100s)</th></tr></thead><tbody>' +
+      rows.map(q => '<tr' + (Math.abs(q.v - fbest) < 1e-9 ? ' class="best"' : '') + '><td>' + q.x + '</td><td>' + fmt(q.v, 3) + (Math.abs(q.v - fbest) < 1e-9 ? ' *' : '') + '</td></tr>').join('') + '</tbody></table>';
+    el('rj-tables').innerHTML =
+      tbl('Run 3 (fail afterwards costs 16)', r3, f3) +
+      tbl('Run 2 (continuation f₃ = ' + fmt(f3, 2) + ')', r2, f2) +
+      tbl('Run 1 (continuation f₂ = ' + fmt(f2, 2) + ')', r1, f1);
+    el('rj-x1').value = 2; el('rj-x2').value = 2; el('rj-x3').value = 3;
+    update();
+    const st = el('rj-status');
+    st.className = 'status ok';
+    st.textContent = 'DP (slides 42–45): f₃*(1) = 8 at lot 3 or 4; f₂*(1) = 7 at lot 2 or 3; f₁*(1) = 6.75 at lot 2 → $675 expected.';
+  });
+
+  ['rj-x1', 'rj-x2', 'rj-x3'].forEach(id => el(id).addEventListener('input', update));
+  update();
+})();
+</script>
+</body>
+</html>
