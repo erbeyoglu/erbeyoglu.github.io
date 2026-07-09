@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 2 — Modeling and NLP in One Variable (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 2: Modeling and NLP in One Variable</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#warehouse">1 · Warehouse locator</a>
+    <a href="#tank">2 · Tank designer</a>
+    <a href="#bisection">3 · Bisection method</a>
+    <a href="#newton">4 · Newton’s method</a>
+    <a href="#candidates">5 · Extremum candidates</a>
+    <a href="#monopolist">6 · Monopolist</a>
+  </nav>
+</header>
+
+<main>
+
+<p class="howto" style="margin:18px 4px 0">
+  Warm-up (slides 3–4): test f(x₁,x₂) = x₁x₂ and the 3-variable quadratic with the
+  <a href="week01.html#hessian">Week 1 Hessian tester</a> — x₁x₂ is exactly its “saddle” preset.
+</p>
+
+<!-- ================= WIDGET 1 : WAREHOUSE LOCATOR ================= -->
+<section class="widget" id="warehouse">
+  <h2>Where should the warehouse go? <span class="chip">Slide 8</span></h2>
+  <p class="howto">
+    Trucko ships to four customers (dot size = annual shipments). <b>Drag the warehouse</b> to
+    minimize the total annual truck distance Σ wᵢ·dᵢ. Call out your best value — then reveal the optimum.
+  </p>
+  <div class="controls">
+    <span class="readout">total weighted distance: <b id="wh-total">—</b></span>
+    <span class="readout">your best: <b id="wh-best">—</b></span>
+    <button id="wh-reveal" class="primary">Reveal optimum ★</button>
+    <button id="wh-reset">Reset</button>
+  </div>
+  <canvas class="viz short" id="c-wh"></canvas>
+  <p class="status info" id="wh-status">Drag the violet warehouse dot.</p>
+  <p class="note">
+    The NLP: min Σᵢ wᵢ·√((x−xᵢ)² + (y−yᵢ)²) — an unconstrained NLP in two variables (x, y).
+    The distance terms make it nonlinear; no closed-form solution exists, which is why search methods matter.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : TANK DESIGNER ================= -->
+<section class="widget" id="tank">
+  <h2>Design the cheapest tank <span class="chip">Slide 10</span></h2>
+  <p class="howto">
+    A closed cylinder must hold <b>at least 20 ft³</b> and its height may not exceed twice its diameter.
+    Top and sides cost <b>$2/ft²</b>, the heavy base costs <b>$8/ft²</b>. Tune r and h, log your design —
+    cheapest feasible tank in class wins.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="tk-r">radius r</label>
+      <input type="range" id="tk-r" min="0.3" max="3" step="0.01" value="1.5" style="width:180px">
+      <span class="readout"><b id="tk-rval">1.50</b> ft</span>
+    </div>
+    <div class="group">
+      <label for="tk-h">height h</label>
+      <input type="range" id="tk-h" min="0.3" max="6" step="0.01" value="3" style="width:180px">
+      <span class="readout"><b id="tk-hval">3.00</b> ft</span>
+    </div>
+  </div>
+  <div class="controls">
+    <span class="readout">volume: <b id="tk-vol">—</b> ft³ (≥ 20)</span>
+    <span class="readout">h ≤ 2·diameter: <b id="tk-ratio">—</b></span>
+    <span class="readout">cost: <b id="tk-cost">—</b> $</span>
+    <button id="tk-log" class="primary">Log design</button>
+    <button id="tk-reveal">Reveal optimum</button>
+  </div>
+  <canvas class="viz short" id="c-tk" style="height:280px"></canvas>
+  <p class="status info" id="tk-status"></p>
+  <table class="attempts" id="tk-table" style="display:none">
+    <thead><tr><th>#</th><th>r</th><th>h</th><th>volume</th><th>cost</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="note">
+    The NLP: min 2πr² + 8πr² + 2(2πrh) = 10πr² + 4πrh &nbsp;s.t.&nbsp; πr²h ≥ 20, h ≤ 4r, r, h ≥ 0.
+    At the optimum <em>both</em> constraints are tight — wasted volume and a stubby shape both cost money.
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : BISECTION METHOD ================= -->
+<section class="widget" id="bisection">
+  <h2>Bisection method, step by step <span class="chip">Slides 16–22</span></h2>
+  <p class="howto">
+    max f(x) = 12x − 3x⁴ − 2x⁶ on [0, 2], ε = 0.001 — the slides’ example. Before each step, vote:
+    is f′ at the midpoint <b>positive (x* is to the right)</b> or <b>negative (x* is to the left)</b>?
+    Then step and watch the bracket halve.
+  </p>
+  <div class="controls">
+    <button id="bi-step" class="primary">Step one iteration</button>
+    <button id="bi-run">Run to convergence</button>
+    <button id="bi-reset">Reset</button>
+    <span class="readout">bracket width: <b id="bi-width">2.000000</b></span>
+  </div>
+  <canvas class="viz short" id="c-bi"></canvas>
+  <p class="status info" id="bi-status"></p>
+  <table class="attempts" id="bi-table">
+    <thead><tr><th>iter</th><th>f′(x′)</th><th>x̲ (lower)</th><th>x̄ (upper)</th><th>x′ (mid)</th><th>f(x′)</th><th>error</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="note">
+    Logic (slide 17): f concave ⇒ f′(x) &gt; 0 means x* &gt; x (x becomes the lower bound);
+    f′(x) &lt; 0 means x* &lt; x. Stop when the bracket is within 2ε (slide 19). It always converges —
+    but slowly, and it ignores the curvature information in f″ (slide 22).
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : NEWTON'S METHOD ================= -->
+<section class="widget" id="newton">
+  <h2>Newton’s method: ride the parabola <span class="chip">Slides 23–28</span></h2>
+  <p class="howto">
+    Same problem. Newton fits a <b>quadratic</b> (2nd-order Taylor) at the current point and jumps to its peak:
+    x<sub>i+1</sub> = x<sub>i</sub> − f′(x<sub>i</sub>)/f″(x<sub>i</sub>). The dashed parabola shows the
+    approximation; the hollow dot is where the next step lands. Try different starting points — compare
+    the iteration count with bisection’s.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="nw-x0">start x₀</label>
+      <input type="range" id="nw-x0" min="0.1" max="2.4" step="0.05" value="2">
+      <span class="readout"><b id="nw-x0val">2.00</b></span>
+    </div>
+    <button id="nw-step" class="primary">Step</button>
+    <button id="nw-run">Run to convergence</button>
+    <button id="nw-reset">Reset</button>
+  </div>
+  <canvas class="viz short" id="c-nw"></canvas>
+  <p class="status info" id="nw-status"></p>
+  <table class="attempts" id="nw-table">
+    <thead><tr><th>iter</th><th>xᵢ</th><th>f′(xᵢ)</th><th>f″(xᵢ)</th><th>f(xᵢ)</th><th>error</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="note">
+    Fast local convergence, but not globally convergent (slide 28): with a small x₀ here, f″ ≈ 0 and the
+    first jump flies far off the chart before crawling back. Newton can also land on a minimum or saddle —
+    it only looks for f′ = 0.
+  </p>
+</section>
+
+<!-- ================= WIDGET 5 : EXTREMUM CANDIDATES ================= -->
+<section class="widget" id="candidates">
+  <h2>Find every extremum candidate <span class="chip">Slides 29–34</span></h2>
+  <p class="howto">
+    This f(x) on [0, 10] is not concave and not differentiable everywhere. <b>Click every point</b> that
+    could be a local max or min: stationary points (f′ = 0), points where f′ doesn’t exist, and the
+    endpoints. Then check your answer.
+  </p>
+  <div class="controls">
+    <span class="readout">found: <b id="ec-found">0</b> / 4</span>
+    <button id="ec-check" class="primary">Check answers</button>
+    <button id="ec-reset">Reset</button>
+  </div>
+  <canvas class="viz short" id="c-ec"></canvas>
+  <p class="status info" id="ec-status"></p>
+  <p class="note">
+    The three candidate types (slide 33): stationary points a &lt; x &lt; b with f′(x) = 0; points where
+    f′(x) does not exist (kinks); and the endpoints a, b. The global optimum is the best candidate —
+    and here it hides at an endpoint, where the derivative never vanishes.
+  </p>
+</section>
+
+<!-- ================= WIDGET 6 : MONOPOLIST ================= -->
+<section class="widget" id="monopolist">
+  <h2>The monopolist’s sweet spot <span class="chip">Slides 35–37</span></h2>
+  <p class="howto">
+    Producing x units costs $5/unit and each sells for (10 − x) dollars. Slide the production level and
+    watch profit P(x) = x(10 − x) − 5x = 5x − x². Vote first: produce more or fewer than 3 units?
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="mp-x">production x</label>
+      <input type="range" id="mp-x" min="0" max="10" step="0.1" value="1">
+      <span class="readout"><b id="mp-xval">1.0</b> units</span>
+    </div>
+    <span class="readout">price: <b id="mp-price">9.0</b> $</span>
+    <span class="readout">profit: <b id="mp-profit">4.00</b> $</span>
+    <button id="mp-reveal" class="primary">Reveal the analysis</button>
+  </div>
+  <canvas class="viz short" id="c-mp" style="height:330px"></canvas>
+  <p class="status info" id="mp-status"></p>
+  <p class="note">
+    Candidate check (slide 36): P′(x) = 5 − 2x = 0 gives x = 2.5 with P = 6.25; P′ exists everywhere;
+    endpoints give P(0) = 0 and P(10) = −50. The stationary point wins.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 2.
+  Figures follow the examples used in the Week 2 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* ============================================================
+   WIDGET 1 — warehouse locator (slide 8)
+   min sum w_i * dist((x,y),(xi,yi)); optimum via Weiszfeld iteration.
+   ============================================================ */
+(() => {
+  const canvas = el('c-wh');
+  const CUST = [
+    { x: 5, y: 10, w: 200 }, { x: 10, y: 5, w: 150 },
+    { x: 0, y: 12, w: 200 }, { x: 12, y: 0, w: 300 },
+  ];
+  const view = { x0: -1.2, x1: 13.8, y0: -1.4, y1: 13.6 };
+  let wh = { x: 6, y: 6 };
+  let best = null, showOpt = false, dragging = false, lastPlot = null;
+
+  const total = (x, y) => CUST.reduce((s, c) => s + c.w * Math.hypot(x - c.x, y - c.y), 0);
+
+  // Weiszfeld: fixed-point iteration for the weighted geometric median
+  const opt = (() => {
+    let x = 7, y = 7;
+    for (let k = 0; k < 500; k++) {
+      let nx = 0, ny = 0, den = 0;
+      CUST.forEach(c => {
+        const d = Math.max(1e-9, Math.hypot(x - c.x, y - c.y));
+        nx += c.w * c.x / d; ny += c.w * c.y / d; den += c.w / d;
+      });
+      x = nx / den; y = ny / den;
+    }
+    return { x, y, v: total(x, y) };
+  })();
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    lastPlot = p;
+    VIZ.axes(p, t, { xticks: [0, 2, 4, 6, 8, 10, 12], yticks: [0, 2, 4, 6, 8, 10, 12], xlabel: 'x', ylabel: 'y' });
+    const { ctx, X, Y } = p;
+
+    // routes, thickness by shipments
+    CUST.forEach(c => {
+      ctx.save();
+      ctx.strokeStyle = t.grid;
+      ctx.lineWidth = 1 + 2.5 * c.w / 300;
+      ctx.beginPath(); ctx.moveTo(X(wh.x), Y(wh.y)); ctx.lineTo(X(c.x), Y(c.y)); ctx.stroke();
+      ctx.restore();
+    });
+
+    CUST.forEach((c, i) => {
+      VIZ.dot(p, c.x, c.y, t.s1, 5 + 5 * Math.sqrt(c.w / 300));
+      VIZ.label(p, 'C' + (i + 1) + ' (' + c.w + ')', c.x, c.y, t.ink2, { dx: 12, dy: -6, size: 13, bold: true });
+    });
+
+    if (showOpt) {
+      VIZ.star(p, opt.x, opt.y, t.s2, 11);
+      VIZ.label(p, 'optimum ' + fmt(opt.v, 0), opt.x, opt.y, t.s2, { dx: 13, dy: 14, bold: true, baseline: 'top' });
+    }
+
+    VIZ.dot(p, wh.x, wh.y, t.s5, 9, true);
+    VIZ.label(p, 'warehouse', wh.x, wh.y, t.s5, { dx: 13, dy: -8, bold: true });
+
+    const v = total(wh.x, wh.y);
+    if (best === null || v < best) best = v;
+    el('wh-total').textContent = fmt(v, 0);
+    el('wh-best').textContent = fmt(best, 0);
+
+    const st = el('wh-status');
+    if (showOpt) {
+      st.className = 'status info';
+      st.textContent = 'Optimum ≈ (' + fmt(opt.x, 2) + ', ' + fmt(opt.y, 2) + ') with total ' + fmt(opt.v, 0) +
+        '. Note how the heavy customer C4 (300 shipments) pulls the warehouse toward it.';
+    } else if (v < opt.v * 1.002) {
+      st.className = 'status ok';
+      st.textContent = 'Within 0.2% of the optimum — excellent placement!';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'Drag the violet warehouse dot.';
+    }
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    dragging = true;
+    canvas.setPointerCapture(ev.pointerId);
+    const { px, py } = VIZ.pointer(canvas, ev);
+    wh = { x: lastPlot.invX(px), y: lastPlot.invY(py) };
+    draw();
+  });
+  canvas.addEventListener('pointermove', ev => {
+    if (!dragging) return;
+    const { px, py } = VIZ.pointer(canvas, ev);
+    wh = { x: lastPlot.invX(px), y: lastPlot.invY(py) };
+    draw();
+  });
+  canvas.addEventListener('pointerup', () => dragging = false);
+
+  el('wh-reveal').addEventListener('click', () => { showOpt = true; draw(); });
+  el('wh-reset').addEventListener('click', () => { wh = { x: 6, y: 6 }; best = null; showOpt = false; draw(); });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — tank designer (slide 10)
+   min 10*pi*r^2 + 4*pi*r*h  s.t.  pi*r^2*h >= 20,  h <= 4r.
+   Closed form: both constraints tight -> r = (5/pi)^(1/3), h = 4r.
+   ============================================================ */
+(() => {
+  const canvas = el('c-tk');
+  let r = 1.5, h = 3;
+  const attempts = [];
+  const vol = () => Math.PI * r * r * h;
+  const cost = () => 10 * Math.PI * r * r + 4 * Math.PI * r * h;
+  const feas = () => vol() >= 20 - 1e-9 && h <= 4 * r + 1e-9;
+  const rStar = Math.cbrt(5 / Math.PI), hStar = 4 * rStar;
+  const costStar = 26 * Math.PI * rStar * rStar;
+
+  function draw() {
+    const { ctx, w, hh } = (() => { const s = VIZ.setup(canvas); return { ctx: s.ctx, w: s.w, hh: s.h }; })();
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, hh);
+    const k = Math.min((w - 120) / 6, (hh - 70) / 6.5);
+    const cw = 2 * r * k, ch = h * k, ey = 0.25 * cw; // ellipse minor axis
+    const cx = w / 2, bot = hh - 25;
+    const stroke = feas() ? t.s1 : t.bad;
+    ctx.save();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = stroke;
+    ctx.fillStyle = t.region;
+    // body
+    ctx.beginPath();
+    ctx.moveTo(cx - cw / 2, bot - ch);
+    ctx.lineTo(cx - cw / 2, bot);
+    ctx.ellipse(cx, bot, cw / 2, ey / 2, 0, Math.PI, 0, true);
+    ctx.lineTo(cx + cw / 2, bot - ch);
+    ctx.fill();
+    ctx.stroke();
+    // top ellipse
+    ctx.beginPath();
+    ctx.ellipse(cx, bot - ch, cw / 2, ey / 2, 0, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+    // heavy base hint
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(cx, bot, cw / 2, ey / 2, 0, 0, Math.PI);
+    ctx.stroke();
+    // labels
+    ctx.fillStyle = t.ink2;
+    ctx.font = '600 14px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('d = ' + fmt(2 * r, 2) + ' ft', cx, bot - ch - ey / 2 - 8);
+    ctx.textAlign = 'left';
+    ctx.fillText('h = ' + fmt(h, 2) + ' ft', cx + cw / 2 + 12, bot - ch / 2);
+    ctx.textAlign = 'right';
+    ctx.fillText('$8/ft² base', cx - cw / 2 - 10, bot);
+    ctx.restore();
+
+    el('tk-vol').textContent = fmt(vol(), 1);
+    el('tk-vol').parentElement.style.color = vol() >= 20 - 1e-9 ? 'var(--good)' : 'var(--critical)';
+    el('tk-ratio').textContent = h <= 4 * r + 1e-9 ? 'OK' : 'violated';
+    el('tk-ratio').parentElement.style.color = h <= 4 * r + 1e-9 ? 'var(--good)' : 'var(--critical)';
+    el('tk-cost').textContent = fmt(cost(), 2);
+  }
+
+  function renderTable() {
+    const table = el('tk-table');
+    const body = table.querySelector('tbody');
+    body.innerHTML = '';
+    const bestC = Math.min(...attempts.filter(q => q.ok).map(q => q.c), Infinity);
+    attempts.forEach((q, i) => {
+      const tr = document.createElement('tr');
+      if (!q.ok) tr.className = 'infeasible';
+      else if (q.c === bestC) tr.className = 'best';
+      tr.innerHTML = '<td>' + (i + 1) + (q.ok && q.c === bestC ? ' 🏆' : '') + '</td><td>' + fmt(q.r, 2) + '</td><td>' + fmt(q.h, 2) +
+        '</td><td>' + fmt(q.v, 1) + (q.ok ? '' : ' ✗') + '</td><td><b>' + fmt(q.c, 2) + '</b></td>';
+      body.appendChild(tr);
+    });
+    table.style.display = attempts.length ? '' : 'none';
+  }
+
+  el('tk-r').addEventListener('input', e => { r = +e.target.value; el('tk-rval').textContent = fmt(r); el('tk-status').textContent = ''; draw(); });
+  el('tk-h').addEventListener('input', e => { h = +e.target.value; el('tk-hval').textContent = fmt(h); el('tk-status').textContent = ''; draw(); });
+  el('tk-log').addEventListener('click', () => {
+    attempts.push({ r, h, v: vol(), c: cost(), ok: feas() });
+    renderTable();
+    const st = el('tk-status');
+    if (feas()) {
+      st.className = 'status ok';
+      st.textContent = '✓ Logged: $' + fmt(cost(), 2) + '. ' + (vol() > 22 ? 'You are hauling ' + fmt(vol() - 20, 1) + ' ft³ of unneeded volume — pure cost.' : 'Volume is nearly tight — good.');
+    } else {
+      st.className = 'status bad';
+      st.textContent = '✗ Logged as infeasible — ' + (vol() < 20 ? 'it holds less than 20 ft³.' : 'it is too tall: h must be ≤ twice the diameter.');
+    }
+  });
+  el('tk-reveal').addEventListener('click', () => {
+    r = rStar; h = Math.min(6, hStar);
+    el('tk-r').value = r; el('tk-h').value = h;
+    el('tk-rval').textContent = fmt(r); el('tk-hval').textContent = fmt(h);
+    draw();
+    const st = el('tk-status');
+    st.className = 'status info';
+    st.textContent = 'Optimum: r = ' + fmt(rStar, 3) + ' ft, h = ' + fmt(hStar, 3) + ' ft, cost $' + fmt(costStar, 2) +
+      '. BOTH constraints are tight: volume exactly 20 ft³ and h exactly twice the diameter.';
+  });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   Shared for widgets 3-4: the slides' example
+   max f(x) = 12x - 3x^4 - 2x^6 on [0,2]
+   ============================================================ */
+const F2 = x => 12 * x - 3 * x ** 4 - 2 * x ** 6;
+const F2p = x => 12 - 12 * x ** 3 - 12 * x ** 5;
+const F2pp = x => -36 * x * x - 60 * x ** 4;
+const XSTAR2 = 0.836920; // root of f' on [0,2]
+
+/* ============================================================
+   WIDGET 3 — bisection stepper (slides 16-22)
+   ============================================================ */
+(() => {
+  const canvas = el('c-bi');
+  const view = { x0: -0.08, x1: 2.08, y0: -15, y1: 10.5 };
+  const EPS = 0.001;
+  let rows, done;
+
+  function reset() {
+    rows = [{ i: 0, fp: null, lo: 0, hi: 2, xp: 1, f: F2(1), err: 2 }];
+    done = false;
+    renderTable();
+    el('bi-status').className = 'status info';
+    el('bi-status').textContent = 'Initial bracket [0, 2], first midpoint x′ = 1.';
+    draw();
+  }
+
+  function step() {
+    if (done) return;
+    const last = rows[rows.length - 1];
+    const fp = F2p(last.xp);
+    const lo = fp > 0 ? last.xp : last.lo;
+    const hi = fp > 0 ? last.hi : last.xp;
+    const xp = (lo + hi) / 2;
+    const err = hi - lo;
+    rows.push({ i: last.i + 1, fp, lo, hi, xp, f: F2(xp), err });
+    const st = el('bi-status');
+    if (err <= 2 * EPS) {
+      done = true;
+      st.className = 'status ok';
+      st.textContent = 'STOP — bracket ≤ 2ε, so x′ = ' + fmt(xp, 6) + ' is within ε of x* (true x* ≈ ' + fmt(XSTAR2, 4) + '). ' + rows.length + ' rows, just like slide 21.';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'f′(' + fmt(last.xp, 6) + ') = ' + fmt(fp, 3) + (fp > 0 ? ' > 0 → the max is to the RIGHT: midpoint becomes the new lower bound.' : ' < 0 → the max is to the LEFT: midpoint becomes the new upper bound.');
+    }
+    renderTable();
+    draw();
+  }
+
+  function renderTable() {
+    const body = el('bi-table').querySelector('tbody');
+    body.innerHTML = '';
+    rows.forEach(q => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + q.i + '</td><td>' + (q.fp === null ? '—' : fmt(q.fp, 3)) + '</td><td>' + fmt(q.lo, 6) +
+        '</td><td>' + fmt(q.hi, 6) + '</td><td>' + fmt(q.xp, 6) + '</td><td>' + fmt(q.f, 4) + '</td><td>' + fmt(q.err, 5) + '</td>';
+      body.appendChild(tr);
+    });
+    el('bi-width').textContent = fmt(rows[rows.length - 1].err, 6);
+  }
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [0, 0.5, 1, 1.5, 2], yticks: [-15, -10, -5, 5, 10], xlabel: 'x', ylabel: 'f(x)' });
+    const { ctx, X, Y } = p;
+    const last = rows[rows.length - 1];
+
+    // current bracket
+    ctx.save();
+    ctx.fillStyle = t.region;
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(X(last.lo), p.padT, X(last.hi) - X(last.lo), p.h - p.padT - p.padB);
+    ctx.restore();
+    VIZ.label(p, 'x̲ = ' + fmt(last.lo, 4), last.lo, view.y1 - 0.5, t.ink2, { dx: 4, size: 12, baseline: 'top' });
+    VIZ.label(p, 'x̄ = ' + fmt(last.hi, 4), last.hi, view.y1 - 0.5, t.ink2, { dx: 4, size: 12, baseline: 'top' });
+
+    VIZ.curve(p, F2, t.s1, 2.5);
+    VIZ.label(p, 'f(x) = 12x − 3x⁴ − 2x⁶', 1.15, 8.6, t.s1, { bold: true });
+
+    // past midpoints, fading
+    rows.slice(0, -1).forEach(q => VIZ.dot(p, q.xp, F2(q.xp), t.axis, 4));
+    VIZ.dot(p, last.xp, last.f, t.s5, 7, true);
+    VIZ.label(p, "x′ = " + fmt(last.xp, 4), last.xp, last.f, t.s5, { dy: -12, bold: true, align: 'center' });
+
+    if (done) {
+      VIZ.star(p, XSTAR2, F2(XSTAR2), t.s2, 10);
+    }
+  }
+
+  el('bi-step').addEventListener('click', step);
+  el('bi-run').addEventListener('click', () => { let g = 0; while (!done && g++ < 60) step(); });
+  el('bi-reset').addEventListener('click', reset);
+  reset();
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 4 — Newton stepper (slides 23-28)
+   ============================================================ */
+(() => {
+  const canvas = el('c-nw');
+  const view = { x0: -0.08, x1: 2.35, y0: -15, y1: 10.5 };
+  const EPS = 0.001;
+  let x0 = 2, pts, done;
+
+  function reset() {
+    pts = [x0];
+    done = false;
+    renderTable();
+    el('nw-status').className = 'status info';
+    el('nw-status').textContent = 'Starting at x₀ = ' + fmt(x0, 2) + '. The dashed parabola is the 2nd-order Taylor fit; Newton jumps to its peak.';
+    draw();
+  }
+
+  function step() {
+    if (done) return;
+    const xi = pts[pts.length - 1];
+    const fpp = F2pp(xi);
+    const st = el('nw-status');
+    if (Math.abs(fpp) < 1e-9) {
+      st.className = 'status bad';
+      st.textContent = 'f″(x) ≈ 0 here — Newton’s step f′/f″ blows up. This is exactly why it is not globally convergent (slide 28).';
+      return;
+    }
+    const x1 = xi - F2p(xi) / fpp;
+    pts.push(x1);
+    if (Math.abs(x1 - xi) <= EPS) {
+      done = true;
+      st.className = 'status ok';
+      st.textContent = 'Converged: x ≈ ' + fmt(x1, 6) + ' in ' + (pts.length - 1) + ' iterations (bisection needed 10). f(x) ≈ ' + fmt(F2(x1), 6) + '.';
+    } else if (x1 > view.x1 || x1 < view.x0) {
+      st.className = 'status bad';
+      st.textContent = 'The step jumped to x = ' + fmt(x1, 2) + ' — off the chart! Bad starting points overshoot wildly; keep stepping to watch it crawl back.';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'x' + (pts.length - 1) + ' = ' + fmt(xi, 4) + ' − (' + fmt(F2p(xi), 2) + ')/(' + fmt(fpp, 2) + ') = ' + fmt(x1, 6);
+    }
+    renderTable();
+    draw();
+  }
+
+  function renderTable() {
+    const body = el('nw-table').querySelector('tbody');
+    body.innerHTML = '';
+    pts.forEach((x, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + i + '</td><td>' + fmt(x, 6) + '</td><td>' + fmt(F2p(x), 3) + '</td><td>' + fmt(F2pp(x), 3) +
+        '</td><td>' + fmt(F2(x), 6) + '</td><td>' + (i === 0 ? '—' : fmt(Math.abs(x - pts[i - 1]), 6)) + '</td>';
+      body.appendChild(tr);
+    });
+  }
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [0, 0.5, 1, 1.5, 2], yticks: [-15, -10, -5, 5, 10], xlabel: 'x', ylabel: 'f(x)' });
+    VIZ.curve(p, F2, t.s1, 2.5);
+    VIZ.label(p, 'f(x)', 1.1, 8.6, t.s1, { bold: true });
+
+    const xi = pts[pts.length - 1];
+    // Taylor quadratic at the current point (clip to plot box)
+    if (!done && xi >= view.x0 && xi <= view.x1) {
+      const q = x => F2(xi) + F2p(xi) * (x - xi) + 0.5 * F2pp(xi) * (x - xi) ** 2;
+      const { ctx } = p;
+      ctx.save();
+      ctx.setLineDash([6, 5]);
+      VIZ.curve(p, q, t.s5, 2);
+      ctx.restore();
+      const fpp = F2pp(xi);
+      if (Math.abs(fpp) > 1e-9) {
+        const xv = xi - F2p(xi) / fpp;
+        if (xv >= view.x0 && xv <= view.x1) {
+          const { ctx: c2, X, Y } = p;
+          c2.save();
+          c2.beginPath(); c2.arc(X(xv), Y(q(xv)), 6, 0, 2 * Math.PI);
+          c2.strokeStyle = t.s5; c2.lineWidth = 2; c2.stroke();
+          c2.restore();
+          VIZ.label(p, 'next', xv, q(xv), t.s5, { dy: -10, size: 12, align: 'center' });
+        }
+      }
+    }
+    // visited points
+    pts.forEach((x, i) => {
+      if (x < view.x0 || x > view.x1) return;
+      const isLast = i === pts.length - 1;
+      VIZ.dot(p, x, F2(x), isLast ? t.s5 : t.axis, isLast ? 7 : 4, isLast);
+      if (isLast) VIZ.label(p, 'x' + i, x, F2(x), t.s5, { dy: -12, bold: true, align: 'center' });
+    });
+    if (done) VIZ.star(p, XSTAR2, F2(XSTAR2), t.s2, 10);
+  }
+
+  el('nw-x0').addEventListener('input', e => { x0 = +e.target.value; el('nw-x0val').textContent = fmt(x0); reset(); });
+  el('nw-step').addEventListener('click', step);
+  el('nw-run').addEventListener('click', () => { let g = 0; while (!done && g++ < 60) step(); });
+  el('nw-reset').addEventListener('click', reset);
+  reset();
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 5 — extremum candidates hunt (slides 29-34)
+   Piecewise f on [0,10]: stationary max, kink, and a global max at
+   the right ENDPOINT (derivative never vanishes there).
+   ============================================================ */
+(() => {
+  const canvas = el('c-ec');
+  const view = { x0: -0.4, x1: 10.5, y0: 0, y1: 11.2 };
+  const f = x => x < 4 ? -0.5 * (x - 2) ** 2 + 5 : x < 7 ? 3 + 1.2 * (x - 4) : 6.6 + 0.9 * (x - 7) + 0.05 * (x - 7) ** 2;
+  const CAND = [
+    { x: 0, label: 'endpoint a', why: 'endpoint of [a, b]' },
+    { x: 2, label: 'stationary', why: 'f′(2) = 0 — a local max' },
+    { x: 4, label: 'kink', why: 'f′ does not exist — a local min' },
+    { x: 10, label: 'endpoint b — GLOBAL MAX', why: 'endpoint of [a, b]; best of all candidates' },
+  ];
+  let found = new Set(), misses = [], checked = false;
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], yticks: [2, 4, 6, 8, 10], xlabel: 'x', ylabel: 'f(x)' });
+    VIZ.curve(p, f, t.s1, 2.5);
+    VIZ.label(p, 'f(x) on [0, 10]', 5.2, 10.4, t.s1, { bold: true });
+
+    misses.forEach(mx => {
+      const { ctx, X, Y } = p;
+      ctx.save();
+      ctx.strokeStyle = t.bad;
+      ctx.lineWidth = 2;
+      const px = X(mx), py = Y(f(mx));
+      ctx.beginPath();
+      ctx.moveTo(px - 5, py - 5); ctx.lineTo(px + 5, py + 5);
+      ctx.moveTo(px - 5, py + 5); ctx.lineTo(px + 5, py - 5);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    CAND.forEach((c, i) => {
+      if (found.has(i)) {
+        VIZ.dot(p, c.x, f(c.x), t.s2, 7, true);
+        VIZ.label(p, c.label, c.x, f(c.x), t.s2, { dy: -12, size: 13, bold: true, align: c.x > 8 ? 'right' : 'left' });
+      } else if (checked) {
+        VIZ.dot(p, c.x, f(c.x), t.bad, 7, true);
+        VIZ.label(p, 'missed: ' + c.label, c.x, f(c.x), t.bad, { dy: -12, size: 13, bold: true, align: c.x > 8 ? 'right' : 'left' });
+      }
+    });
+    el('ec-found').textContent = found.size;
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    if (checked) return;
+    const p = VIZ.plot(canvas, view);
+    const { px } = VIZ.pointer(canvas, ev);
+    const x = p.invX(px);
+    let hit = -1;
+    CAND.forEach((c, i) => { if (Math.abs(x - c.x) < 0.35) hit = i; });
+    const st = el('ec-status');
+    if (hit >= 0) {
+      found.add(hit);
+      st.className = 'status ok';
+      st.textContent = '✓ ' + CAND[hit].label + ' — ' + CAND[hit].why + '. (' + found.size + '/4)';
+    } else {
+      misses.push(Math.max(0, Math.min(10, x)));
+      st.className = 'status bad';
+      st.textContent = '✗ x ≈ ' + fmt(x, 1) + ' is not a candidate: f′ exists there and is not zero, and it is not an endpoint.';
+    }
+    draw();
+  });
+
+  el('ec-check').addEventListener('click', () => {
+    checked = true;
+    const st = el('ec-status');
+    st.className = found.size === 4 ? 'status ok' : 'status info';
+    st.textContent = 'You found ' + found.size + '/4. Candidates: both endpoints, the stationary point at x = 2, and the kink at x = 4. ' +
+      'The global max f(10) = ' + fmt(f(10), 2) + ' sits at the ENDPOINT — checking only f′ = 0 would have missed it.';
+    draw();
+  });
+  el('ec-reset').addEventListener('click', () => {
+    found = new Set(); misses = []; checked = false;
+    el('ec-status').className = 'status info'; el('ec-status').textContent = '';
+    draw();
+  });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 6 — monopolist (slides 35-37): P(x) = 5x - x^2 on [0,10]
+   ============================================================ */
+(() => {
+  const canvas = el('c-mp');
+  const view = { x0: -0.4, x1: 10.5, y0: -50, y1: 12 };
+  const P = x => 5 * x - x * x;
+  let x = 1, revealed = false;
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [0, 2, 4, 6, 8, 10], yticks: [-50, -40, -30, -20, -10, 10], xlabel: 'x (units)', ylabel: 'P(x)' });
+    VIZ.curve(p, P, t.s1, 2.5);
+    VIZ.label(p, 'P(x) = 5x − x²', 1.1, 10.5, t.s1, { bold: true });
+
+    if (revealed) {
+      VIZ.star(p, 2.5, P(2.5), t.s2, 10);
+      VIZ.label(p, 'x* = 2.5, P = 6.25', 2.5, P(2.5), t.s2, { dy: -12, bold: true });
+      VIZ.dot(p, 0, 0, t.axis, 6);
+      VIZ.label(p, 'P(0) = 0', 0, 0, t.ink2, { dx: 10, dy: 16, size: 13, baseline: 'top' });
+      VIZ.dot(p, 10, P(10), t.axis, 6);
+      VIZ.label(p, 'P(10) = −50', 10, P(10), t.ink2, { dx: -10, dy: -8, size: 13, align: 'right' });
+    }
+
+    VIZ.dot(p, x, P(x), t.s5, 8, true);
+    VIZ.label(p, 'you', x, P(x), t.s5, { dy: -13, bold: true, align: 'center' });
+
+    el('mp-xval').textContent = fmt(x, 1);
+    el('mp-price').textContent = fmt(10 - x, 1);
+    el('mp-profit').textContent = fmt(P(x), 2);
+  }
+
+  el('mp-x').addEventListener('input', e => { x = +e.target.value; draw(); });
+  el('mp-reveal').addEventListener('click', () => {
+    revealed = true;
+    const st = el('mp-status');
+    st.className = 'status info';
+    st.textContent = 'P′(x) = 5 − 2x = 0 → x = 2.5 (P = 6.25). Endpoints: P(0) = 0, P(10) = −50. ' +
+      'Producing more means slashing the price for EVERY unit — that is why profit collapses.';
+    draw();
+  });
+
+  VIZ.register(canvas, draw);
+})();
+</script>
+</body>
+</html>
