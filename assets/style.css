@@ -275,3 +275,8 @@ footer.site {
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+footer.site .credit {
+  margin-top: 8px;
+  font-size: 0.78rem;
+}
