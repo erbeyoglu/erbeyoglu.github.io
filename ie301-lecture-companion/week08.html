@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 8 — Deterministic Dynamic Programming, Part 2 (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<style>
+  table.dp { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; margin: 8px 0 14px; }
+  table.dp th, table.dp td { border: 1px solid var(--grid); padding: 4px 10px; text-align: right; }
+  table.dp th { color: var(--ink-2); }
+  table.dp tr.best td { color: var(--good); font-weight: 700; }
+  .toggle { font: inherit; padding: 8px 14px; border-radius: 8px; border: 2px solid var(--border); background: var(--page); cursor: pointer; }
+  .toggle.on { border-color: var(--s1); background: var(--region-fill); font-weight: 700; }
+  .toggle:disabled { cursor: not-allowed; opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 8: Deterministic DP (Part 2)</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#ww">1 · Wagner-Whitin</a>
+    <a href="#teams">2 · Medical teams</a>
+    <a href="#glueco">3 · Glueco (multiplicative)</a>
+    <a href="#fishery">4 · The fishery trade-off</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : WAGNER-WHITIN ================= -->
+<section class="widget" id="ww">
+  <h2>Place the setups: Wagner-Whitin <span class="chip">Slides 3–10</span></h2>
+  <p class="howto">
+    Demands 220, 280, 360, 140, 270; setup K = $250, variable c = $2, holding h = $1. By Lemma 1,
+    each production run covers whole demands up to the next setup — so a plan is just a <b>choice of
+    setup periods</b>. Toggle them and beat the class. (Notice: the variable cost never changes. Why?)
+  </p>
+  <div class="controls" id="ww-toggles">
+    <button class="toggle on" data-t="1" disabled>Period 1<br>d=220</button>
+    <button class="toggle on" data-t="2">Period 2<br>d=280</button>
+    <button class="toggle on" data-t="3">Period 3<br>d=360</button>
+    <button class="toggle on" data-t="4">Period 4<br>d=140</button>
+    <button class="toggle on" data-t="5">Period 5<br>d=270</button>
+  </div>
+  <div class="controls">
+    <span class="readout">setups: <b id="ww-setup">—</b></span>
+    <span class="readout">variable: <b id="ww-var">—</b></span>
+    <span class="readout">holding: <b id="ww-hold">—</b></span>
+    <span class="readout">TOTAL: <b id="ww-total">—</b></span>
+    <span class="readout">best: <b id="ww-best">—</b></span>
+    <button id="ww-reveal" class="primary">Reveal the recursion</button>
+  </div>
+  <canvas class="viz short" id="c-ww" style="height:250px"></canvas>
+  <p class="status info" id="ww-status"></p>
+  <div id="ww-work" style="font-size:0.92rem;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:pre-line"></div>
+  <p class="note">
+    Recursion (slide 8): fₜ = minⱼ { cₜⱼ + fₜ₊ⱼ₊₁ } with cₜⱼ = K + c·(covered demand) + h·(weighted
+    carry). Variable cost is $2 × 1270 = $2540 under EVERY feasible plan — only setups and holding
+    trade off. Optimum: setups in 1, 2, 3, 5 → produce 220, 280, 500, 0, 270 for $3680.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : MEDICAL TEAMS ================= -->
+<section class="widget" id="teams">
+  <h2>Five teams, three countries <span class="chip">Slides 13–22</span></h2>
+  <p class="howto">
+    Allocate the 5 medical teams using the slides’ effectiveness table (thousands of person-years).
+    Whole teams only — no proportionality here, which is exactly why LP fails and DP shines.
+  </p>
+  <table class="dp">
+    <thead><tr><th># teams</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+    <tbody>
+      <tr><td>Country 1</td><td>0</td><td>45</td><td>70</td><td>90</td><td>105</td><td>120</td></tr>
+      <tr><td>Country 2</td><td>0</td><td>20</td><td>45</td><td>75</td><td>110</td><td>150</td></tr>
+      <tr><td>Country 3</td><td>0</td><td>50</td><td>70</td><td>80</td><td>100</td><td>130</td></tr>
+    </tbody>
+  </table>
+  <div class="controls">
+    <div class="group"><label>Country 1</label><input type="number" id="tm-x1" min="0" max="5" value="2" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Country 2</label><input type="number" id="tm-x2" min="0" max="5" value="2" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Country 3</label><input type="number" id="tm-x3" min="0" max="5" value="1" style="width:64px;font:inherit"></div>
+    <span class="readout">teams used: <b id="tm-used">—</b> / 5</span>
+    <span class="readout">total benefit: <b id="tm-total">—</b></span>
+    <button id="tm-reveal" class="primary">Reveal the DP tables</button>
+  </div>
+  <p class="status info" id="tm-status"></p>
+  <div id="tm-tables"></div>
+  <p class="note">
+    State = teams still available, stage = country (slide 15). The stage-2 table (slides 20–21) is where
+    the work happens; the answer is 1, 3, 1 → 170 thousand person-years. Note f₂(2) has TWO optimal
+    decisions — DP happily reports ties.
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : GLUECO ================= -->
+<section class="widget" id="glueco">
+  <h2>Glueco: when benefits multiply <span class="chip">Slides 27–30</span></h2>
+  <p class="howto">
+    Two sales reps, three regions; the product must sell well in <b>ALL</b> regions, so the objective is
+    the <b>product</b> of the probabilities — not the sum. Allocate the 2 reps. Gut feeling first: doesn’t
+    region 1 (0.6 → 0.8) look tempting?
+  </p>
+  <table class="dp">
+    <thead><tr><th># reps</th><th>Region 1</th><th>Region 2</th><th>Region 3</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0.60</td><td>0.50</td><td>0.30</td></tr>
+      <tr><td>1</td><td>0.80</td><td>0.70</td><td>0.55</td></tr>
+      <tr><td>2</td><td>0.85</td><td>0.85</td><td>0.70</td></tr>
+    </tbody>
+  </table>
+  <div class="controls">
+    <div class="group"><label>Region 1</label><input type="number" id="gl-x1" min="0" max="2" value="1" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Region 2</label><input type="number" id="gl-x2" min="0" max="2" value="1" style="width:64px;font:inherit"></div>
+    <div class="group"><label>Region 3</label><input type="number" id="gl-x3" min="0" max="2" value="0" style="width:64px;font:inherit"></div>
+    <span class="readout">P(sells well everywhere) = <b id="gl-p">—</b></span>
+    <button id="gl-reveal" class="primary">Reveal DP + all plans</button>
+  </div>
+  <p class="status info" id="gl-status"></p>
+  <div id="gl-tables"></div>
+  <p class="note">
+    The recursion is fₜ(s) = maxₓ { pₓ · fₜ₊₁(s−x) } — multiplication, not addition (slide 29). DP
+    handles it because the objective still decomposes stage by stage. Optimum: 0, 1, 1 → 0.6 × 0.7 ×
+    0.55 = 0.231. Region 1 gets nothing: its no-rep probability was already the highest.
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : FISHERY ================= -->
+<section class="widget" id="fishery">
+  <h2>The fishery: now versus later <span class="chip">Slides 31–37</span></h2>
+  <p class="howto">
+    10 000 bass at the start; whatever you leave grows 20% by next year: b<sub>t+1</sub> = 1.2(b<sub>t</sub> − x<sub>t</sub>).
+    Choose what fraction to catch each year over 5 years and maximize the <b>total catch</b>. Every early
+    fish you take never gets to compound…
+  </p>
+  <div class="controls" id="fs-sliders">
+    <div class="group"><label>yr 1</label><input type="range" id="fs-1" min="0" max="100" step="5" value="20" style="width:110px"><span class="readout"><b id="fs-1v">20</b>%</span></div>
+    <div class="group"><label>yr 2</label><input type="range" id="fs-2" min="0" max="100" step="5" value="20" style="width:110px"><span class="readout"><b id="fs-2v">20</b>%</span></div>
+    <div class="group"><label>yr 3</label><input type="range" id="fs-3" min="0" max="100" step="5" value="20" style="width:110px"><span class="readout"><b id="fs-3v">20</b>%</span></div>
+    <div class="group"><label>yr 4</label><input type="range" id="fs-4" min="0" max="100" step="5" value="20" style="width:110px"><span class="readout"><b id="fs-4v">20</b>%</span></div>
+    <div class="group"><label>yr 5</label><input type="range" id="fs-5" min="0" max="100" step="5" value="20" style="width:110px"><span class="readout"><b id="fs-5v">20</b>%</span></div>
+  </div>
+  <div class="controls">
+    <span class="readout">total caught: <b id="fs-total">—</b> bass</span>
+    <button id="fs-reveal" class="primary">What does the recursion say?</button>
+  </div>
+  <canvas class="viz short" id="c-fs" style="height:280px"></canvas>
+  <p class="status info" id="fs-status"></p>
+  <p class="note">
+    The DP skeleton (slides 35–36): decision 0 ≤ xₜ ≤ bₜ, reward r(xₜ) − c(xₜ, bₜ), state transition
+    bₜ₊₁ = 1.2(bₜ − xₜ), recursion fₜ(bₜ) = max { r − c + fₜ₊₁(1.2(bₜ − xₜ)) }. With pure revenue and no
+    catching costs the recursion says: wait and take everything in year 5 (20 736). Real r and c bend
+    that answer — but the state equation is what carries “the future” into today’s decision.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 8.
+  Figures follow the examples used in the Week 8 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* ============================================================
+   WIDGET 1 — Wagner-Whitin (slides 3-10)
+   ============================================================ */
+(() => {
+  const canvas = el('c-ww');
+  const D = [220, 280, 360, 140, 270], K = 250, c = 2, h = 1;
+  let setups = [true, true, true, true, true];
+
+  function planCost(sel) {
+    // batches: from each setup to the period before the next setup
+    let holding = 0;
+    for (let t = 0; t < 5; t++) {
+      if (!sel[t]) continue;
+      let j = 0;
+      while (t + j + 1 < 5 && !sel[t + j + 1]) j++;
+      for (let m = 1; m <= j; m++) holding += h * m * D[t + m];
+    }
+    const nSetups = sel.filter(Boolean).length;
+    return { setup: nSetups * K, variable: c * D.reduce((a, b) => a + b, 0), holding, total: nSetups * K + c * 1270 + holding };
+  }
+
+  // DP for the reveal
+  function solve() {
+    const f = new Array(7).fill(0);
+    const bestJ = new Array(6).fill(0);
+    for (let t = 5; t >= 1; t--) {
+      let best = Infinity;
+      for (let j = 0; j <= 5 - t; j++) {
+        let cov = 0, hold = 0;
+        for (let m = 0; m <= j; m++) cov += D[t - 1 + m];
+        for (let m = 1; m <= j; m++) hold += h * m * D[t - 1 + m];
+        const v = K + c * cov + hold + f[t + j + 1];
+        if (v < best - 1e-9) { best = v; bestJ[t] = j; }
+      }
+      f[t] = best;
+    }
+    return { f, bestJ };
+  }
+
+  let best = null;
+
+  function draw() {
+    const { ctx, w, hh } = (() => { const s = VIZ.setup(canvas); return { ctx: s.ctx, w: s.w, hh: s.h }; })();
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, hh);
+    const n = 5, bw = Math.min(90, (w - 120) / n - 30);
+    const x0 = (w - n * (bw + 30)) / 2 + 15, base = hh - 46;
+    const scale = (hh - 120) / 360;
+    for (let i = 0; i < n; i++) {
+      const bx = x0 + i * (bw + 30);
+      const bh = D[i] * scale;
+      ctx.save();
+      ctx.fillStyle = t.region;
+      ctx.strokeStyle = setups[i] ? t.s1 : t.grid;
+      ctx.lineWidth = setups[i] ? 2.5 : 1.5;
+      ctx.fillRect(bx, base - bh, bw, bh);
+      ctx.strokeRect(bx, base - bh, bw, bh);
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 13px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('t=' + (i + 1), bx + bw / 2, base + 18);
+      ctx.fillText(String(D[i]), bx + bw / 2, base - bh - 8);
+      ctx.restore();
+      if (setups[i]) {
+        // coverage arc to the last covered period
+        let j = 0;
+        while (i + j + 1 < 5 && !setups[i + j + 1]) j++;
+        if (j > 0) {
+          const ex = x0 + (i + j) * (bw + 30) + bw / 2;
+          ctx.save();
+          ctx.strokeStyle = t.s2;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(bx + bw / 2, base - bh - 22);
+          ctx.quadraticCurveTo((bx + bw / 2 + ex) / 2, base - bh - 60, ex, base - D[i + j] * scale - 22);
+          ctx.stroke();
+          ctx.restore();
+        }
+        ctx.save();
+        ctx.fillStyle = t.s1;
+        ctx.font = '700 12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SETUP', bx + bw / 2, base - bh - 24);
+        ctx.restore();
+      }
+    }
+    const pc = planCost(setups);
+    el('ww-setup').textContent = '$' + pc.setup;
+    el('ww-var').textContent = '$' + pc.variable;
+    el('ww-hold').textContent = '$' + pc.holding;
+    el('ww-total').textContent = '$' + pc.total;
+    if (best === null || pc.total < best) best = pc.total;
+    el('ww-best').textContent = '$' + best;
+  }
+
+  document.querySelectorAll('#ww-toggles .toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = +btn.dataset.t - 1;
+      setups[i] = !setups[i];
+      btn.classList.toggle('on', setups[i]);
+      const st = el('ww-status');
+      const pc = planCost(setups);
+      st.className = 'status info';
+      st.textContent = pc.total === 3680 ? '' : 'Total $' + pc.total + '. The optimum is $3680 — trade one $250 setup against carrying demand forward.';
+      if (pc.total === 3680) { st.className = 'status ok'; st.textContent = '$3680 — you found the Wagner-Whitin optimum: produce 220, 280, 500, 0, 270.'; }
+      draw();
+    });
+  });
+
+  el('ww-reveal').addEventListener('click', () => {
+    const { f, bestJ } = solve();
+    setups = [true, true, true, false, true];
+    document.querySelectorAll('#ww-toggles .toggle').forEach((btn, i) => btn.classList.toggle('on', setups[i]));
+    draw();
+    el('ww-work').textContent =
+      'f6 = 0\n' +
+      [5, 4, 3, 2, 1].map(t2 => 'f' + t2 + ' = ' + f[t2] + '   (best: produce for periods ' + t2 + '…' + (t2 + bestJ[t2]) + ')').join('\n') +
+      '\nOptimal plan: 220, 280, 500, 0, 270 → $3680 (slide 10).';
+    const st = el('ww-status');
+    st.className = 'status ok';
+    st.textContent = 'Backward recursion, exactly as slides 9–10. Period 4 has zero production — its demand rides along with period 3’s batch.';
+  });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — medical teams (slides 13-22)
+   ============================================================ */
+(() => {
+  const P = [
+    [0, 45, 70, 90, 105, 120],
+    [0, 20, 45, 75, 110, 150],
+    [0, 50, 70, 80, 100, 130],
+  ];
+
+  function update() {
+    const xs = [1, 2, 3].map(i => +el('tm-x' + i).value);
+    const used = xs[0] + xs[1] + xs[2];
+    el('tm-used').textContent = used;
+    const st = el('tm-status');
+    if (used > 5) {
+      el('tm-total').textContent = '—';
+      st.className = 'status bad';
+      st.textContent = 'Only 5 teams exist — you allocated ' + used + '.';
+      return;
+    }
+    const total = P[0][xs[0]] + P[1][xs[1]] + P[2][xs[2]];
+    el('tm-total').textContent = total;
+    if (total === 170) { st.className = 'status ok'; st.textContent = '170 — that is the DP optimum!'; }
+    else { st.className = 'status info'; st.textContent = 'Feasible: ' + total + ' thousand person-years. Can the class do better?'; }
+  }
+
+  el('tm-reveal').addEventListener('click', () => {
+    // generic DP
+    const f3 = [], x3 = [];
+    for (let s = 0; s <= 5; s++) { f3[s] = P[2][s]; x3[s] = s; }
+    const f2 = [], x2 = [];
+    const rows2 = [];
+    for (let s = 0; s <= 5; s++) {
+      let bestV = -1, bx = [];
+      for (let x = 0; x <= s; x++) {
+        const v = P[1][x] + f3[s - x];
+        rows2.push({ s, x, p: P[1][x], f3: f3[s - x], v });
+        if (v > bestV + 1e-9) { bestV = v; bx = [x]; }
+        else if (Math.abs(v - bestV) < 1e-9) bx.push(x);
+      }
+      f2[s] = bestV; x2[s] = bx;
+      rows2.filter(r => r.s === s).forEach(r => r.best = Math.abs(r.v - bestV) < 1e-9);
+    }
+    let best1 = -1, bx1 = 0;
+    const rows1 = [];
+    for (let x = 0; x <= 5; x++) {
+      const v = P[0][x] + f2[5 - x];
+      rows1.push({ x, p: P[0][x], f2: f2[5 - x], v });
+      if (v > best1) { best1 = v; bx1 = x; }
+    }
+    rows1.forEach(r => r.best = r.v === best1);
+
+    const host = el('tm-tables');
+    host.innerHTML =
+      '<h4>Country 3: f₃(s) = p₃(s)</h4><table class="dp"><thead><tr><th>s</th>' + [0, 1, 2, 3, 4, 5].map(s => '<th>' + s + '</th>').join('') + '</tr></thead>' +
+      '<tbody><tr><td>f₃</td>' + f3.map(v => '<td>' + v + '</td>').join('') + '</tr></tbody></table>' +
+      '<h4>Country 2 (slides 20–21)</h4><table class="dp"><thead><tr><th>s₂</th><th>x₂</th><th>p₂(x₂)</th><th>f₃(s₂−x₂)</th><th>total</th></tr></thead><tbody>' +
+      rows2.map(r => '<tr' + (r.best ? ' class="best"' : '') + '><td>' + r.s + '</td><td>' + r.x + '</td><td>' + r.p + '</td><td>' + r.f3 + '</td><td>' + r.v + (r.best ? ' *' : '') + '</td></tr>').join('') +
+      '</tbody></table>' +
+      '<h4>Country 1 (slide 22)</h4><table class="dp"><thead><tr><th>x₁</th><th>p₁(x₁)</th><th>f₂(5−x₁)</th><th>total</th></tr></thead><tbody>' +
+      rows1.map(r => '<tr' + (r.best ? ' class="best"' : '') + '><td>' + r.x + '</td><td>' + r.p + '</td><td>' + r.f2 + '</td><td>' + r.v + (r.best ? ' *' : '') + '</td></tr>').join('') +
+      '</tbody></table>';
+    el('tm-x1').value = 1; el('tm-x2').value = 3; el('tm-x3').value = 1;
+    update();
+    const st = el('tm-status');
+    st.className = 'status ok';
+    st.textContent = 'DP optimum: 1, 3, 1 → 170. Follow the stars: x₁* = 1 leaves s₂ = 4; f₂(4) picks x₂* = 3; the last team goes to country 3.';
+  });
+
+  ['tm-x1', 'tm-x2', 'tm-x3'].forEach(id => el(id).addEventListener('input', update));
+  update();
+})();
+
+/* ============================================================
+   WIDGET 3 — Glueco multiplicative recursion (slides 27-30)
+   ============================================================ */
+(() => {
+  const P = [
+    [0.6, 0.8, 0.85],
+    [0.5, 0.7, 0.85],
+    [0.3, 0.55, 0.7],
+  ];
+
+  function update() {
+    const xs = [1, 2, 3].map(i => +el('gl-x' + i).value);
+    const used = xs[0] + xs[1] + xs[2];
+    const st = el('gl-status');
+    if (used > 2) {
+      el('gl-p').textContent = '—';
+      st.className = 'status bad';
+      st.textContent = 'Only 2 representatives exist — you assigned ' + used + '.';
+      return;
+    }
+    const p = P[0][xs[0]] * P[1][xs[1]] * P[2][xs[2]];
+    el('gl-p').textContent = fmt(p, 4);
+    if (Math.abs(p - 0.231) < 1e-9) { st.className = 'status ok'; st.textContent = '0.231 — the DP optimum. Region 1 stays uncovered!'; }
+    else { st.className = 'status info'; st.textContent = 'P = ' + fmt(p, 4) + '. Try other splits — the product punishes the weakest link.'; }
+  }
+
+  el('gl-reveal').addEventListener('click', () => {
+    // enumerate all plans + DP text
+    const plans = [];
+    for (let a = 0; a <= 2; a++) for (let b = 0; b <= 2 - a; b++) {
+      const c = 2 - a - b;
+      plans.push({ a, b, c, p: P[0][a] * P[1][b] * P[2][c] });
+    }
+    plans.sort((u, v) => v.p - u.p);
+    el('gl-tables').innerHTML =
+      '<h4>All plans using both reps</h4><table class="dp"><thead><tr><th>R1</th><th>R2</th><th>R3</th><th>P(all sell well)</th></tr></thead><tbody>' +
+      plans.map((q, i) => '<tr' + (i === 0 ? ' class="best"' : '') + '><td>' + q.a + '</td><td>' + q.b + '</td><td>' + q.c + '</td><td>' + fmt(q.p, 4) + (i === 0 ? ' *' : '') + '</td></tr>').join('') +
+      '</tbody></table>' +
+      '<div style="font-size:0.92rem;color:var(--ink-2);white-space:pre-line">DP (slides 29–30):\n' +
+      'f₃(s) = p₃(s):  0.3, 0.55, 0.7\n' +
+      'f₂(2) = max{0.5·0.7, 0.7·0.55, 0.85·0.3} = max{0.35, 0.385*, 0.255} → assign 1\n' +
+      'f₂(1) = max{0.5·0.55, 0.7·0.3} = max{0.275*, 0.21} → assign 0\n' +
+      'f₁(2) = max{0.6·f₂(2), 0.8·f₂(1), 0.85·f₂(0)} = max{0.231*, 0.220, 0.128} → assign 0</div>';
+    el('gl-x1').value = 0; el('gl-x2').value = 1; el('gl-x3').value = 1;
+    update();
+  });
+
+  ['gl-x1', 'gl-x2', 'gl-x3'].forEach(id => el(id).addEventListener('input', update));
+  update();
+})();
+
+/* ============================================================
+   WIDGET 4 — fishery trade-off (slides 31-37)
+   ============================================================ */
+(() => {
+  const canvas = el('c-fs');
+  const B1 = 10000;
+
+  function trajectory() {
+    const fr = [1, 2, 3, 4, 5].map(i => +el('fs-' + i).value / 100);
+    let b = B1, caught = 0;
+    const rows = [];
+    for (let t = 0; t < 5; t++) {
+      const x = b * fr[t];
+      rows.push({ b, x });
+      caught += x;
+      b = 1.2 * (b - x);
+    }
+    return { rows, caught };
+  }
+
+  function draw() {
+    [1, 2, 3, 4, 5].forEach(i => el('fs-' + i + 'v').textContent = el('fs-' + i).value);
+    const { rows, caught } = trajectory();
+    el('fs-total').textContent = Math.round(caught).toLocaleString('en-US');
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const maxB = Math.max(20800, ...rows.map(r => r.b));
+    const bw = Math.min(110, (w - 100) / 5 - 24);
+    const x0 = (w - 5 * (bw + 24)) / 2 + 12, base = h - 40;
+    const sc = (h - 90) / maxB;
+    rows.forEach((r, i) => {
+      const bx = x0 + i * (bw + 24);
+      ctx.save();
+      // lake population
+      ctx.fillStyle = t.region;
+      ctx.strokeStyle = t.s1;
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(bx, base - r.b * sc, bw, r.b * sc);
+      ctx.strokeRect(bx, base - r.b * sc, bw, r.b * sc);
+      // caught share
+      ctx.fillStyle = t.bad;
+      ctx.globalAlpha = 0.55;
+      ctx.fillRect(bx, base - r.b * sc, bw, r.x * sc);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 12px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('yr ' + (i + 1), bx + bw / 2, base + 16);
+      ctx.fillText(Math.round(r.b).toLocaleString('en-US'), bx + bw / 2, base - r.b * sc - 6);
+      ctx.restore();
+    });
+    // legend
+    ctx.save();
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.fillStyle = t.ink2;
+    ctx.fillText('bar = lake population at start of year · red = your catch', 14, 16);
+    ctx.restore();
+
+    const st = el('fs-status');
+    if (caught >= 20735) { st.className = 'status ok'; st.textContent = 'Maximum possible: you let the lake compound and harvested everything at the end.'; }
+    else { st.className = 'status info'; st.textContent = 'Total ' + Math.round(caught).toLocaleString('en-US') + ' of a possible 20 736 — every early catch forfeits its 20% yearly growth.'; }
+  }
+
+  [1, 2, 3, 4, 5].forEach(i => el('fs-' + i).addEventListener('input', draw));
+  el('fs-reveal').addEventListener('click', () => {
+    [1, 2, 3, 4].forEach(i => el('fs-' + i).value = 0);
+    el('fs-5').value = 100;
+    draw();
+    const st = el('fs-status');
+    st.className = 'status info';
+    st.textContent = 'With reward = fish caught and no costs, fₜ(b) says: catch 0, let b grow to 10000·1.2⁴ = 20 736, take it all in year 5. Add real r(x) and c(x, b) and the recursion balances today against tomorrow.';
+  });
+  VIZ.register(canvas, draw);
+})();
+</script>
+</body>
+</html>
