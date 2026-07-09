@@ -3,31 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Neutral root page: this domain hosts several independent sites under
-     different paths, so the root deliberately does not redirect anywhere. -->
+<!-- Neutral root page listing every site hosted under this domain.
+     The list is maintained by hand — add a row when a new repo with
+     GitHub Pages is published. No redirects here by design. -->
 <title>erbeyoglu.github.io</title>
 <style>
   body {
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    max-width: 640px;
-    margin: 12vh auto;
+    max-width: 680px;
+    margin: 10vh auto;
     padding: 0 20px;
     color: #1a1a19;
     background: #fcfcfb;
     line-height: 1.6;
   }
   h1 { font-size: 1.3rem; }
-  a { color: #1c5cab; }
+  ul { list-style: none; padding: 0; }
+  li {
+    border: 1px solid rgba(11, 11, 11, 0.12);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  a { color: #1c5cab; font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .desc { color: #52514e; font-size: 0.9rem; margin-top: 2px; }
   @media (prefers-color-scheme: dark) {
     body { color: #e8e7e0; background: #1a1a19; }
     a { color: #6da7ec; }
+    li { border-color: rgba(255, 255, 255, 0.14); }
+    .desc { color: #b5b4aa; }
   }
 </style>
 </head>
 <body>
 <h1>erbeyoglu.github.io</h1>
 <ul>
-  <li><a href="ie301-lecture-companion.html">IE301 Operations Research II — Interactive Lectures</a></li>
+  <li>
+    <a href="ie301-lecture-companion.html">IE301 Operations Research II — Interactive Lectures</a>
+    <div class="desc">In-class interactive companions to the weekly IE301 lecture slides.</div>
+  </li>
+  <li>
+    <a href="/ie301-studio/">IE301 · OR II Studio</a>
+    <div class="desc">Studio material for IE301 Operations Research II.</div>
+  </li>
+  <li>
+    <a href="/ie342-studio/">IE342 Modeling Studio</a>
+    <div class="desc">Studio material for IE342.</div>
+  </li>
+  <li>
+    <a href="/slickoil-arena/">Slick Oil Arena — IE101 Optimizasyon Yarışması</a>
+    <div class="desc">Multi-round in-class optimization competition for IE101, adapted from Michael Watson's Slick Oil game.</div>
+  </li>
 </ul>
 </body>
 </html>
