@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 1 — NLP Introduction (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 1: NLP Introduction</h1>
+  <div class="sub"><a href="ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <nav class="widgets">
+    <a href="#regression">1 · Regression game</a>
+    <a href="#box">2 · Box design game</a>
+    <a href="#explorer">3 · LP vs NLP explorer</a>
+    <a href="#hunt">4 · Optimum hunt</a>
+    <a href="#convexity">5 · Convexity lab</a>
+    <a href="#hessian">6 · Hessian test</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : REGRESSION GAME ================= -->
+<section class="widget" id="regression">
+  <h2>Beat the computer: least squares by hand <span class="chip">Slide 9</span></h2>
+  <p class="howto">
+    Tune <b>a</b> (slope) and <b>b</b> (intercept) to make the sum of squared errors as small as you can.
+    Call out your best SSE — lowest in class wins. Then reveal the least-squares fit.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="rg-a">a (slope)</label>
+      <input type="range" id="rg-a" min="-1" max="2.5" step="0.01" value="0">
+      <span class="readout">a = <b id="rg-aval">0.00</b></span>
+    </div>
+    <div class="group">
+      <label for="rg-b">b (intercept)</label>
+      <input type="range" id="rg-b" min="-3" max="8" step="0.05" value="5">
+      <span class="readout">b = <b id="rg-bval">5.00</b></span>
+    </div>
+  </div>
+  <div class="controls">
+    <span class="readout">SSE = <b id="rg-sse">—</b></span>
+    <span class="readout">your best: <b id="rg-bestsse">—</b></span>
+    <label><input type="checkbox" id="rg-squares"> show the actual <em>squares</em></label>
+    <button id="rg-reveal" class="primary">Reveal least-squares fit</button>
+  </div>
+  <canvas class="viz short" id="c-reg"></canvas>
+  <p class="status info" id="rg-status"></p>
+  <p class="note">
+    This is the NLP on slide 9: &nbsp;min<sub>a,b</sub> Σᵢ (yᵢ − (a xᵢ + b))² — an <em>unconstrained</em> NLP
+    in two decision variables. The values you are hunting for are the least-squares estimates.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : BOX DESIGN GAME ================= -->
+<section class="widget" id="box">
+  <h2>Design the biggest box <span class="chip">Slide 10</span></h2>
+  <p class="howto">
+    You have <b>A = 600 cm²</b> of cardboard. Choose the dimensions x, y, z; the box needs surface
+    2(xy + yz + xz) ≤ 600. Log your attempt — biggest feasible volume in the class wins.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="bx-x">x</label>
+      <input type="range" id="bx-x" min="1" max="20" step="0.1" value="5" style="width:160px">
+      <span class="readout"><b id="bx-xval">5.0</b></span>
+    </div>
+    <div class="group">
+      <label for="bx-y">y</label>
+      <input type="range" id="bx-y" min="1" max="20" step="0.1" value="5" style="width:160px">
+      <span class="readout"><b id="bx-yval">5.0</b></span>
+    </div>
+    <div class="group">
+      <label for="bx-z">z</label>
+      <input type="range" id="bx-z" min="1" max="20" step="0.1" value="5" style="width:160px">
+      <span class="readout"><b id="bx-zval">5.0</b></span>
+    </div>
+  </div>
+  <div class="controls">
+    <span class="readout">cardboard used: <b id="bx-area">150</b> / 600 cm²</span>
+    <span class="readout">volume V = <b id="bx-vol">125</b> cm³</span>
+    <button id="bx-log" class="primary">Log attempt</button>
+    <button id="bx-reveal">Reveal optimum</button>
+  </div>
+  <canvas class="viz short" id="c-box" style="height:300px"></canvas>
+  <p class="status info" id="bx-status"></p>
+  <table class="attempts" id="bx-table" style="display:none">
+    <thead><tr><th>#</th><th>x</th><th>y</th><th>z</th><th>area used</th><th>volume</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="note">
+    The NLP on slide 10: &nbsp;max V = xyz &nbsp;s.t.&nbsp; 2(xy + yz + xz) ≤ A. Notice at the best
+    designs the constraint becomes <em>tight</em> — leftover cardboard is wasted volume.
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : LP vs NLP EXPLORER ================= -->
+<section class="widget" id="explorer">
+  <h2>Where does the optimum live? <span class="chip">Slides 12–16</span></h2>
+  <p class="howto">
+    Same feasible region, three different objectives. Push the <b>Z slider</b> up as far as you can
+    while the contour still touches the shaded region — then vote: is the optimum at a
+    <b>corner</b>, on an <b>edge</b>, or <b>inside</b>? Click anywhere to move the probe point.
+  </p>
+
+  <div class="controls">
+    <div class="group">
+      <span class="segwrap">
+        <button class="seg active" id="ex-mA">Objective A</button>
+        <button class="seg" id="ex-mB">Objective B</button>
+        <button class="seg" id="ex-mC">Objective C</button>
+      </span>
+    </div>
+    <div class="group">
+      <label for="ex-z">Z level</label>
+      <input type="range" id="ex-z" min="0" max="44" step="0.5" value="15">
+      <span class="readout">Z = <b id="ex-zval">15</b></span>
+    </div>
+    <button id="ex-opt">Reveal optimum ★</button>
+  </div>
+
+  <div class="readout" id="ex-formula" style="display:inline-block;margin-bottom:10px">
+    Z = 3x₁ + 5x₂ &nbsp;(linear)
+  </div>
+  <span class="readout" id="ex-probe">probe: —</span>
+
+  <canvas class="viz" id="c-explorer"></canvas>
+  <p class="status info" id="ex-status"></p>
+  <p class="note">
+    Constraints (slide 12): x₁ ≤ 4, &nbsp;2x₂ ≤ 12, &nbsp;3x₁ + 2x₂ ≤ 18, &nbsp;x₁, x₂ ≥ 0.
+    The lesson (slide 16): for an NLP we must consider <em>all</em> feasible points — not just the corners.
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : LOCAL VS GLOBAL HUNT ================= -->
+<section class="widget" id="hunt">
+  <h2>Where is the maximum? <span class="chip">Slides 17–18</span></h2>
+  <p class="howto">
+    The function is <b>hidden</b> and each evaluation is expensive — you have a budget of
+    <b>10 probes</b>. Click an x-position to evaluate f(x). As a class: where do you probe next,
+    and when are you convinced you found <em>the</em> maximum?
+  </p>
+  <div class="controls">
+    <span class="readout">Probes: <b id="ht-count">0</b> / 10</span>
+    <span class="readout">Best so far: <b id="ht-best">—</b></span>
+    <button id="ht-reveal" class="primary">Reveal the function</button>
+    <button id="ht-new">New hidden function</button>
+    <button id="ht-reset">Reset probes</button>
+  </div>
+  <canvas class="viz short" id="c-hunt"></canvas>
+  <p class="status info" id="ht-status"></p>
+  <p class="note">
+    A <em>local</em> maximum beats only its neighbourhood (slide 17); the <em>global</em> maximum beats
+    every feasible point. Every hilltop has slope 0 — the first-order condition alone can’t tell you which
+    hill is highest. (This is exactly why Week 2’s search algorithms will matter.)
+  </p>
+</section>
+
+<!-- ================= WIDGET 5 : CONVEXITY LAB ================= -->
+<section class="widget" id="convexity">
+  <h2>Convexity lab <span class="chip">Slides 24–33</span></h2>
+
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="cx-tab-sets">Convex sets</button>
+      <button class="seg" id="cx-tab-fns">Convex functions</button>
+    </span>
+  </div>
+
+  <!-- ---- sets panel ---- -->
+  <div id="cx-sets">
+    <p class="howto">
+      Class vote first: <b>convex or not?</b> Then test it — click <b>two points inside the set</b>;
+      the line segment between them is drawn. If any part of the segment escapes, the set is not convex (slide 25).
+    </p>
+    <div class="controls">
+      <div class="group" id="cx-shapes">
+        <span class="segwrap">
+          <button class="seg active" data-shape="disk">Disk</button>
+          <button class="seg" data-shape="triangle">Triangle</button>
+          <button class="seg" data-shape="star">Star</button>
+          <button class="seg" data-shape="lshape">L-shape</button>
+          <button class="seg" data-shape="pacman">Pac-man</button>
+          <button class="seg" data-shape="ring">Ring</button>
+        </span>
+      </div>
+      <button id="cx-reveal-set">Reveal answer</button>
+      <button id="cx-clear">Clear points</button>
+    </div>
+    <canvas class="viz short" id="c-sets"></canvas>
+    <p class="status info" id="cx-set-status">Pick two points inside the set.</p>
+    <p class="note">
+      Definition (slide 25): S is convex if λx + (1−λ)y ∈ S for all x, y ∈ S and λ ∈ [0,1].
+      One escaping segment is a <em>proof</em> of non-convexity; staying inside once is <em>not</em> a proof of convexity.
+    </p>
+  </div>
+
+  <!-- ---- functions panel ---- -->
+  <div id="cx-fns" style="display:none">
+    <p class="howto">
+      Vote: <b>convex, concave, both, or neither?</b> Drag the two handles x′ and x″ along the curve
+      and slide λ — watch whether the <b>chord</b> stays above or below the function (slides 27–28).
+    </p>
+    <div class="controls">
+      <div class="group">
+        <label for="cx-fn">function</label>
+        <select id="cx-fn" style="font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--page);color:var(--ink)"></select>
+      </div>
+      <div class="group">
+        <label for="cx-lam">λ</label>
+        <input type="range" id="cx-lam" min="0" max="1" step="0.01" value="0.55">
+        <span class="readout">λ = <b id="cx-lamval">0.55</b></span>
+      </div>
+    </div>
+    <div class="controls">
+      <span style="color:var(--ink-2)">Your vote:</span>
+      <button data-ans="convex" class="cx-vote">Convex</button>
+      <button data-ans="concave" class="cx-vote">Concave</button>
+      <button data-ans="both" class="cx-vote">Both</button>
+      <button data-ans="neither" class="cx-vote">Neither</button>
+    </div>
+    <canvas class="viz short" id="c-fnlab"></canvas>
+    <p class="status info" id="cx-fn-status"></p>
+    <p class="note">
+      Convex: f(λx′ + (1−λ)x″) ≤ λf(x′) + (1−λ)f(x″) — the chord is never below the curve.
+      One-variable test (slide 33): f″ ≥ 0 everywhere ⇔ convex; f″ ≤ 0 everywhere ⇔ concave.
+    </p>
+  </div>
+</section>
+
+<!-- ================= WIDGET 6 : HESSIAN TEST ================= -->
+<section class="widget" id="hessian">
+  <h2>Convex or concave? — the Hessian test <span class="chip">Slides 34–39</span></h2>
+  <p class="howto">
+    Build a quadratic f(x₁, x₂) = a·x₁² + b·x₁x₂ + c·x₂². Look at the surface and the Hessian,
+    apply the principal-minor theorem (slide 37) in your head, and <b>vote</b> — then check.
+  </p>
+
+  <div class="controls">
+    <div class="group">
+      <label for="hs-a">a (x₁²)</label>
+      <input type="range" id="hs-a" min="-3" max="3" step="0.5" value="1" style="width:150px">
+      <span class="readout"><b id="hs-aval">1.0</b></span>
+    </div>
+    <div class="group">
+      <label for="hs-b">b (x₁x₂)</label>
+      <input type="range" id="hs-b" min="-4" max="4" step="0.5" value="3" style="width:150px">
+      <span class="readout"><b id="hs-bval">3.0</b></span>
+    </div>
+    <div class="group">
+      <label for="hs-c">c (x₂²)</label>
+      <input type="range" id="hs-c" min="-3" max="3" step="0.5" value="2.5" style="width:150px">
+      <span class="readout"><b id="hs-cval">2.5</b></span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span style="color:var(--ink-2)">Presets:</span>
+    <button id="hs-p1">x₁² + 3x₁x₂ + 5⁄2 x₂² (slide 35)</button>
+    <button id="hs-p2">−x₁² − x₁x₂ − 2x₂² (slide 36)</button>
+    <button id="hs-p3">x₁x₂ (saddle)</button>
+  </div>
+
+  <div class="controls">
+    <div class="group">
+      <span class="readout" id="hs-formula">f = x₁² + 3x₁x₂ + 2.5x₂²</span>
+      <span style="font-size:1.05rem">H&nbsp;=</span>
+      <span class="matrix">
+        <span id="hs-11">2</span><span id="hs-12">3</span>
+        <span id="hs-21">3</span><span id="hs-22">5</span>
+      </span>
+    </div>
+    <div class="group">
+      <span style="color:var(--ink-2)">Your vote:</span>
+      <button class="hs-vote" data-ans="convex">Convex</button>
+      <button class="hs-vote" data-ans="concave">Concave</button>
+      <button class="hs-vote" data-ans="neither">Neither</button>
+      <button id="hs-check">Show the minors</button>
+    </div>
+  </div>
+
+  <canvas class="viz short" id="c-hess" style="height:330px"></canvas>
+  <p class="status info" id="hs-status"></p>
+  <p class="note">
+    Theorem (slide 37): f is <em>convex</em> on S ⇔ all principal minors of H are ≥ 0.
+    f is <em>concave</em> ⇔ all nonzero principal minors of order k have the sign of (−1)ᵏ.
+    For this 2×2 Hessian: first principal minors are the diagonal entries 2a and 2c;
+    the second principal minor is det H = 4ac − b².
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 1.
+  Figures follow the examples used in the Week 1 slides.
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* ============================================================
+   WIDGET 3 — LP vs NLP explorer
+   Region (slide 12): x1<=4, 2x2<=12, 3x1+2x2<=18, x>=0.
+   Objectives: A linear (corner optimum), B nonlinear (edge, non-corner
+   optimum at (8/3,5)), C nonlinear (interior optimum at (3,3)).
+   B and C rewrite as Z = base - 9(x1-c1)^2 - 13(x2-c2)^2, so every level
+   curve is an ellipse centred at (c1,c2).
+   ============================================================ */
+(() => {
+  const canvas = el('c-explorer');
+  const view = { x0: -0.45, x1: 7.35, y0: -0.6, y1: 8.75 };
+  const VERTS = [[0, 0], [4, 0], [4, 3], [2, 6], [0, 6]];
+  const MODES = {
+    A: { html: 'Z = 3x₁ + 5x₂ &nbsp;(linear)', kind: 'line',
+         f: (x, y) => 3 * x + 5 * y,
+         zmin: 0, zmax: 44, zstep: 0.5, zstart: 15, zstar: 36, opt: [2, 6],
+         where: 'at a CORNER of the feasible region — exactly like LP.' },
+    B: { html: 'Z = 126x₁ − 9x₁² + 182x₂ − 13x₂²', kind: 'ellipse',
+         f: (x, y) => 126 * x - 9 * x * x + 182 * y - 13 * y * y,
+         center: [7, 7], base: 1078,
+         zmin: 0, zmax: 1050, zstep: 1, zstart: 400, zstar: 857, opt: [8 / 3, 5],
+         where: 'on the BOUNDARY (edge 3x₁ + 2x₂ = 18), but NOT at a corner.' },
+    C: { html: 'Z = 54x₁ − 9x₁² + 78x₂ − 13x₂²', kind: 'ellipse',
+         f: (x, y) => 54 * x - 9 * x * x + 78 * y - 13 * y * y,
+         center: [3, 3], base: 198,
+         zmin: 0, zmax: 210, zstep: 0.5, zstart: 60, zstar: 198, opt: [3, 3],
+         where: 'strictly INSIDE the feasible region — no constraint is active.' },
+  };
+  let mode = 'A';
+  let Z = 15;
+  let probe = { x: 1, y: 2 };
+  let showOpt = false;
+  let lastPlot = null;
+
+  const feasible = (x, y) =>
+    x >= -1e-9 && y >= -1e-9 && x <= 4 + 1e-9 && 2 * y <= 12 + 1e-9 && 3 * x + 2 * y <= 18 + 1e-9;
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    const m = MODES[mode];
+    lastPlot = p;
+    VIZ.axes(p, t, { xticks: [1, 2, 3, 4, 5, 6, 7], yticks: [1, 2, 3, 4, 5, 6, 7, 8], xlabel: 'x₁', ylabel: 'x₂' });
+
+    const { ctx, X, Y } = p;
+
+    // feasible region
+    ctx.save();
+    ctx.beginPath();
+    VERTS.forEach(([x, y], i) => i === 0 ? ctx.moveTo(X(x), Y(y)) : ctx.lineTo(X(x), Y(y)));
+    ctx.closePath();
+    ctx.fillStyle = t.region;
+    ctx.fill();
+    ctx.strokeStyle = t.axis;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, 'feasible region', 1.1, 3.2, t.ink2, { bold: true });
+
+    // constraint guide lines beyond the region border
+    ctx.save();
+    ctx.strokeStyle = t.grid;
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(4), Y(3)); ctx.lineTo(X(4), Y(8.4)); ctx.stroke();        // x1 = 4
+    ctx.beginPath(); ctx.moveTo(X(2), Y(6)); ctx.lineTo(X(7.1), Y(6)); ctx.stroke();        // x2 = 6
+    ctx.beginPath(); ctx.moveTo(X(2), Y(6)); ctx.lineTo(X(6), Y(0)); ctx.stroke();          // 3x1+2x2=18
+    ctx.restore();
+    VIZ.label(p, 'x₁ = 4', 4.08, 8.1, t.muted, { size: 13 });
+    VIZ.label(p, '2x₂ = 12', 5.7, 6.35, t.muted, { size: 13 });
+    VIZ.label(p, '3x₁ + 2x₂ = 18', 4.55, 2.6, t.muted, { size: 13 });
+
+    // objective contour, clipped to the plot box
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(p.padL, p.padT, p.w - p.padL - p.padR, p.h - p.padT - p.padB);
+    ctx.clip();
+    ctx.strokeStyle = t.s1;
+    ctx.lineWidth = 2.5;
+    if (m.kind === 'line') {
+      ctx.beginPath();
+      ctx.moveTo(X(view.x0), Y((Z - 3 * view.x0) / 5));
+      ctx.lineTo(X(view.x1), Y((Z - 3 * view.x1) / 5));
+      ctx.stroke();
+    } else {
+      const k = m.base - Z;
+      if (k > 0) {
+        const a = Math.sqrt(k / 9), b = Math.sqrt(k / 13);
+        const sx = X(1) - X(0), sy = Y(0) - Y(1);
+        ctx.beginPath();
+        ctx.ellipse(X(m.center[0]), Y(m.center[1]), a * sx, b * sy, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+      } else if (Math.abs(k) < 1e-9) {
+        VIZ.dot(p, m.center[0], m.center[1], t.s1, 5);
+      }
+    }
+    ctx.restore();
+    VIZ.label(p, 'contour  Z = ' + fmt(Z, m.zstep < 1 ? 1 : 0), view.x0 + 0.25, view.y1 - 0.15, t.s1, { bold: true, baseline: 'top' });
+
+    // optimum
+    if (showOpt) {
+      VIZ.star(p, m.opt[0], m.opt[1], t.s2, 11);
+      VIZ.label(p, 'optimum  Z* = ' + fmt(m.zstar, 0) + '  at (' + fmt(m.opt[0], 2) + ', ' + fmt(m.opt[1], 2) + ')',
+        m.opt[0], m.opt[1], t.s2, { dx: 14, dy: -8, bold: true });
+    }
+
+    // probe point
+    const pf = feasible(probe.x, probe.y);
+    VIZ.dot(p, probe.x, probe.y, pf ? t.good : t.bad, 7, true);
+    VIZ.label(p, 'probe', probe.x, probe.y, pf ? t.good : t.bad, { dx: 12, dy: 12, size: 13, baseline: 'top' });
+
+    // readouts
+    el('ex-probe').innerHTML = 'probe (' + fmt(probe.x, 2) + ', ' + fmt(probe.y, 2) + '): Z = <b>' +
+      fmt(m.f(probe.x, probe.y), 1) + '</b> — ' +
+      (pf ? '<span style="color:var(--good)">feasible ✓</span>' : '<span style="color:var(--critical)">infeasible ✗</span>');
+
+    const st = el('ex-status');
+    if (Z > m.zstar + 1e-9) {
+      st.className = 'status bad';
+      st.textContent = 'No feasible point attains Z = ' + fmt(Z, 1) + ' — you have overshot the optimum. Back off until the contour touches the region again.';
+    } else {
+      st.className = 'status ok';
+      st.textContent = 'Z = ' + fmt(Z, 1) + ' is attainable in the feasible region — push it higher!';
+    }
+  }
+
+  function setMode(k) {
+    mode = k;
+    const m = MODES[k];
+    const s = el('ex-z');
+    s.min = m.zmin; s.max = m.zmax; s.step = m.zstep; s.value = m.zstart;
+    Z = m.zstart;
+    showOpt = false;
+    el('ex-opt').textContent = 'Reveal optimum ★';
+    el('ex-formula').innerHTML = m.html;
+    el('ex-zval').textContent = fmt(Z, 0);
+    ['A', 'B', 'C'].forEach(x => el('ex-m' + x).classList.toggle('active', x === k));
+    draw();
+  }
+
+  ['A', 'B', 'C'].forEach(k => el('ex-m' + k).addEventListener('click', () => setMode(k)));
+  el('ex-z').addEventListener('input', e => { Z = +e.target.value; el('ex-zval').textContent = fmt(Z, 1); draw(); });
+  el('ex-opt').addEventListener('click', () => {
+    showOpt = !showOpt;
+    el('ex-opt').textContent = showOpt ? 'Hide optimum' : 'Reveal optimum ★';
+    if (showOpt) {
+      const m = MODES[mode];
+      const st = el('ex-status');
+      st.className = 'status info';
+      st.textContent = 'The optimum is ' + m.where;
+    }
+    draw();
+  });
+
+  let dragging = false;
+  canvas.addEventListener('pointerdown', ev => {
+    dragging = true;
+    canvas.setPointerCapture(ev.pointerId);
+    const { px, py } = VIZ.pointer(canvas, ev);
+    probe = { x: lastPlot.invX(px), y: lastPlot.invY(py) };
+    draw();
+  });
+  canvas.addEventListener('pointermove', ev => {
+    if (!dragging) return;
+    const { px, py } = VIZ.pointer(canvas, ev);
+    probe = { x: lastPlot.invX(px), y: lastPlot.invY(py) };
+    draw();
+  });
+  canvas.addEventListener('pointerup', () => dragging = false);
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 5a — Convex sets: click two points, watch the segment.
+   Shapes are defined analytically (inside tests), drawn as paths.
+   ============================================================ */
+(() => {
+  const canvas = el('c-sets');
+  let shapeKey = 'disk';
+  let pts = [];          // clicked points in canvas px
+  let lastSize = { w: 0, h: 0 };
+  let revealed = false;
+
+  const inPoly = (verts, x, y) => {
+    let inside = false;
+    for (let i = 0, j = verts.length - 1; i < verts.length; j = i++) {
+      const [xi, yi] = verts[i], [xj, yj] = verts[j];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  };
+
+  // Geometry is rebuilt from the current canvas size on each draw.
+  function geo(w, h) {
+    const cx = w / 2, cy = h / 2, R = 0.38 * Math.min(w, h);
+    const starVerts = [];
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? R : 0.42 * R;
+      const a = -Math.PI / 2 + i * Math.PI / 5;
+      starVerts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+    }
+    const L = [[cx - R, cy - R], [cx, cy - R], [cx, cy], [cx + R, cy], [cx + R, cy + R], [cx - R, cy + R]];
+    const T = [[cx - 1.25 * R, cy + 0.8 * R], [cx + 1.25 * R, cy + 0.8 * R], [cx, cy - R]];
+    const mouth = 0.62; // pac-man half-mouth angle (rad)
+    return {
+      disk: {
+        answer: 'Convex — every segment between two points of a disk stays inside.',
+        convex: true,
+        inside: (x, y) => (x - cx) ** 2 + (y - cy) ** 2 <= R * R,
+        path: ctx => { ctx.arc(cx, cy, R, 0, 2 * Math.PI); },
+      },
+      triangle: {
+        answer: 'Convex — triangles (all polygons with no “dents”) are convex.',
+        convex: true,
+        inside: (x, y) => inPoly(T, x, y),
+        path: ctx => { T.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)); ctx.closePath(); },
+      },
+      star: {
+        answer: 'NOT convex — segments between neighbouring tips cut across the gaps.',
+        convex: false,
+        inside: (x, y) => inPoly(starVerts, x, y),
+        path: ctx => { starVerts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)); ctx.closePath(); },
+      },
+      lshape: {
+        answer: 'NOT convex — connect the two arms of the L and the segment leaves the set.',
+        convex: false,
+        inside: (x, y) => inPoly(L, x, y),
+        path: ctx => { L.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)); ctx.closePath(); },
+      },
+      pacman: {
+        answer: 'NOT convex — a segment across the mouth leaves the set.',
+        convex: false,
+        inside: (x, y) => {
+          const dx = x - cx, dy = y - cy;
+          if (dx * dx + dy * dy > R * R) return false;
+          return Math.abs(Math.atan2(dy, dx)) > mouth;
+        },
+        path: ctx => { ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, mouth, 2 * Math.PI - mouth); ctx.closePath(); },
+      },
+      ring: {
+        answer: 'NOT convex — a segment across the hole leaves the set.',
+        convex: false,
+        inside: (x, y) => {
+          const d2 = (x - cx) ** 2 + (y - cy) ** 2;
+          return d2 <= R * R && d2 >= (0.45 * R) ** 2;
+        },
+        path: ctx => {
+          ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+          ctx.arc(cx, cy, 0.45 * R, 0, 2 * Math.PI, true); // reversed inner circle => hole
+        },
+      },
+    };
+  }
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    if (w !== lastSize.w || h !== lastSize.h) { pts = []; lastSize = { w, h }; }
+    const shape = geo(w, h)[shapeKey];
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.beginPath();
+    shape.path(ctx);
+    ctx.fillStyle = t.region;
+    ctx.fill();
+    ctx.strokeStyle = t.s1;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    // segment between the two chosen points, coloured by inside/outside
+    if (pts.length === 2) {
+      const [P, Q] = pts;
+      const N = 240;
+      ctx.save();
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      for (let i = 0; i < N; i++) {
+        const x1 = P.x + (Q.x - P.x) * i / N, y1 = P.y + (Q.y - P.y) * i / N;
+        const x2 = P.x + (Q.x - P.x) * (i + 1) / N, y2 = P.y + (Q.y - P.y) * (i + 1) / N;
+        const mid = shape.inside((x1 + x2) / 2, (y1 + y2) / 2);
+        ctx.strokeStyle = mid ? t.good : t.bad;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // chosen points
+    pts.forEach((pt, i) => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = t.s5;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = t.surface;
+      ctx.stroke();
+      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.fillStyle = t.s5;
+      ctx.fillText(i === 0 ? 'x' : 'y', pt.x + 10, pt.y - 8);
+      ctx.restore();
+    });
+
+    // verdict
+    const st = el('cx-set-status');
+    if (revealed) {
+      st.className = 'status info';
+      st.textContent = 'Answer: ' + shape.answer;
+    } else if (pts.length === 2) {
+      const [P, Q] = pts;
+      let escapes = false;
+      for (let i = 0; i <= 300; i++) {
+        const lx = P.x + (Q.x - P.x) * i / 300, ly = P.y + (Q.y - P.y) * i / 300;
+        if (!shape.inside(lx, ly)) { escapes = true; break; }
+      }
+      if (escapes) {
+        st.className = 'status bad';
+        st.textContent = '✗ The segment leaves the set — this proves the set is NOT convex.';
+      } else {
+        st.className = 'status ok';
+        st.textContent = '✓ This segment stays inside. Not a proof yet — convexity needs EVERY pair. Can anyone find an escaping pair?';
+      }
+    } else {
+      st.className = 'status info';
+      st.textContent = pts.length === 0 ? 'Pick two points inside the set.' : 'Pick the second point.';
+    }
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    const { px, py } = VIZ.pointer(canvas, ev);
+    const shape = geo(canvas.clientWidth, canvas.clientHeight)[shapeKey];
+    if (!shape.inside(px, py)) {
+      const st = el('cx-set-status');
+      st.className = 'status bad';
+      st.textContent = 'That point is outside the set — both endpoints must belong to the set.';
+      return;
+    }
+    if (pts.length >= 2) pts = [];
+    pts.push({ x: px, y: py });
+    revealed = false;
+    draw();
+  });
+
+  document.querySelectorAll('#cx-shapes button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      shapeKey = btn.dataset.shape;
+      pts = [];
+      revealed = false;
+      document.querySelectorAll('#cx-shapes button').forEach(b => b.classList.toggle('active', b === btn));
+      draw();
+    });
+  });
+  el('cx-reveal-set').addEventListener('click', () => { revealed = true; draw(); });
+  el('cx-clear').addEventListener('click', () => { pts = []; revealed = false; draw(); });
+
+  VIZ.register(canvas, draw);
+  window.__drawSets = draw; // redrawn when its tab becomes visible
+})();
+
+/* ============================================================
+   WIDGET 5b — Convex functions: draggable chord + λ slider.
+   ============================================================ */
+(() => {
+  const canvas = el('c-fnlab');
+  const FNS = [
+    { label: 'f(x) = x²', f: x => x * x, ans: 'convex',
+      why: 'f″(x) = 2 ≥ 0 everywhere — the chord never dips below the curve.' },
+    { label: 'f(x) = 4 − x²', f: x => 4 - x * x, ans: 'concave',
+      why: 'f″(x) = −2 ≤ 0 everywhere — the chord never rises above the curve.' },
+    { label: 'f(x) = x³ / 8', f: x => x * x * x / 8, ans: 'neither',
+      why: 'f″(x) = 3x/4 changes sign at x = 0 — convex on one side, concave on the other.' },
+    { label: 'f(x) = |x|', f: x => Math.abs(x), ans: 'convex',
+      why: 'piecewise linear and convex — even though f″ does not exist at x = 0.' },
+    { label: 'f(x) = x⁴/8 − x²', f: x => x ** 4 / 8 - x * x, ans: 'neither',
+      why: 'f″ = 1.5x² − 2 is negative near 0 and positive for |x| > 1.15 — try chords in both zones.' },
+    { label: 'f(x) = x/2 + 1', f: x => x / 2 + 1, ans: 'both',
+      why: 'linear functions are both convex AND concave — the chord lies exactly on the curve.' },
+  ];
+  let idx = 0, xa = -3, xb = 2, lam = 0.55;
+  let lastPlot = null, dragTarget = null;
+
+  const sel = el('cx-fn');
+  FNS.forEach((fn, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = fn.label;
+    sel.appendChild(o);
+  });
+
+  function viewFor(fn) {
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i <= 100; i++) {
+      const v = fn.f(-4 + 8 * i / 100);
+      lo = Math.min(lo, v); hi = Math.max(hi, v);
+    }
+    const pad = 0.18 * (hi - lo || 1);
+    return { x0: -4.4, x1: 4.4, y0: lo - pad, y1: hi + pad };
+  }
+
+  function draw() {
+    const fn = FNS[idx];
+    const view = viewFor(fn);
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    lastPlot = p;
+    const yticks = [];
+    const stepY = Math.max(1, Math.round((view.y1 - view.y0) / 5));
+    for (let y = Math.ceil(view.y0); y <= view.y1; y += stepY) yticks.push(y);
+    VIZ.axes(p, t, { xticks: [-4, -3, -2, -1, 1, 2, 3, 4], yticks, xlabel: 'x', ylabel: 'f(x)',
+                     yAxisAt: view.y0 > 0 ? view.y0 : (view.y1 < 0 ? view.y1 : 0) });
+
+    VIZ.curve(p, fn.f, t.s1, 2.5);
+    VIZ.label(p, fn.label, view.x1 - 0.2, fn.f(3.9), t.s1, { align: 'right', dy: -10, bold: true });
+
+    const fa = fn.f(xa), fb = fn.f(xb);
+    const { ctx, X, Y } = p;
+
+    // chord
+    ctx.save();
+    ctx.strokeStyle = t.s5;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(X(xa), Y(fa)); ctx.lineTo(X(xb), Y(fb)); ctx.stroke();
+    ctx.restore();
+    VIZ.label(p, 'chord', (xa + xb) / 2, (fa + fb) / 2, t.s5, { dx: 8, dy: -6, bold: true, size: 13 });
+
+    // λ point: value on the curve vs value on the chord
+    const xl = lam * xa + (1 - lam) * xb;
+    const onCurve = fn.f(xl);
+    const onChord = lam * fa + (1 - lam) * fb;
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = t.muted;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(xl), Y(onCurve)); ctx.lineTo(X(xl), Y(onChord)); ctx.stroke();
+    ctx.restore();
+    VIZ.dot(p, xl, onChord, t.s5, 6);
+    VIZ.dot(p, xl, onCurve, t.s1, 6);
+
+    // draggable endpoints on the curve
+    VIZ.dot(p, xa, fa, t.s5, 8, true);
+    VIZ.dot(p, xb, fb, t.s5, 8, true);
+    VIZ.label(p, "x′", xa, fa, t.s5, { dy: -12, bold: true });
+    VIZ.label(p, "x″", xb, fb, t.s5, { dy: -12, bold: true });
+
+    const gap = onChord - onCurve;
+    const st = el('cx-fn-status');
+    if (!st.dataset.voted) {
+      st.className = 'status info';
+      st.textContent =
+        'At λ = ' + fmt(lam) + ':  f(λx′+(1−λ)x″) = ' + fmt(onCurve) + '   vs   λf(x′)+(1−λ)f(x″) = ' + fmt(onChord) +
+        (Math.abs(gap) < 1e-6 ? '  — chord ON the curve.' : gap > 0 ? '  — chord ABOVE the curve here (convex-like).' : '  — chord BELOW the curve here (concave-like).');
+    }
+  }
+
+  sel.addEventListener('change', () => {
+    idx = +sel.value;
+    delete el('cx-fn-status').dataset.voted;
+    draw();
+  });
+  el('cx-lam').addEventListener('input', e => {
+    lam = +e.target.value;
+    el('cx-lamval').textContent = fmt(lam);
+    delete el('cx-fn-status').dataset.voted;
+    draw();
+  });
+
+  document.querySelectorAll('.cx-vote').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const fn = FNS[idx];
+      const st = el('cx-fn-status');
+      st.dataset.voted = '1';
+      if (btn.dataset.ans === fn.ans) {
+        st.className = 'status ok';
+        st.textContent = '✓ Correct — ' + fn.ans.toUpperCase() + '. ' + fn.why;
+      } else {
+        st.className = 'status bad';
+        st.textContent = '✗ It is ' + fn.ans.toUpperCase() + '. ' + fn.why;
+      }
+    });
+  });
+
+  canvas.addEventListener('pointerdown', ev => {
+    if (!lastPlot) return;
+    const { px } = VIZ.pointer(canvas, ev);
+    const da = Math.abs(px - lastPlot.X(xa));
+    const db = Math.abs(px - lastPlot.X(xb));
+    if (Math.min(da, db) > 30) return;
+    dragTarget = da < db ? 'a' : 'b';
+    canvas.setPointerCapture(ev.pointerId);
+  });
+  canvas.addEventListener('pointermove', ev => {
+    if (!dragTarget || !lastPlot) return;
+    const { px } = VIZ.pointer(canvas, ev);
+    const x = Math.max(-4, Math.min(4, lastPlot.invX(px)));
+    if (dragTarget === 'a') xa = x; else xb = x;
+    delete el('cx-fn-status').dataset.voted;
+    draw();
+  });
+  canvas.addEventListener('pointerup', () => dragTarget = null);
+
+  VIZ.register(canvas, draw);
+  window.__drawFns = draw;
+})();
+
+/* tab switching for the convexity lab */
+(() => {
+  const tabSets = el('cx-tab-sets'), tabFns = el('cx-tab-fns');
+  function show(which) {
+    el('cx-sets').style.display = which === 'sets' ? '' : 'none';
+    el('cx-fns').style.display = which === 'fns' ? '' : 'none';
+    tabSets.classList.toggle('active', which === 'sets');
+    tabFns.classList.toggle('active', which === 'fns');
+    // the hidden canvas had zero size; redraw the one that just appeared
+    requestAnimationFrame(() => which === 'sets' ? window.__drawSets() : window.__drawFns());
+  }
+  tabSets.addEventListener('click', () => show('sets'));
+  tabFns.addEventListener('click', () => show('fns'));
+})();
+
+/* ============================================================
+   WIDGET 6 — Hessian test (slides 34–39)
+   f(x1,x2) = a x1² + b x1x2 + c x2², H = [[2a, b], [b, 2c]].
+   The surface is an isometric wireframe with height normalized to the
+   grid's max |f|, so the SHAPE (bowl / dome / saddle) stays readable
+   for any coefficients even though absolute scale is not preserved.
+   ============================================================ */
+(() => {
+  const canvas = el('c-hess');
+  let a = 1, b = 3, c = 2.5;
+  const f = (x, y) => a * x * x + b * x * y + c * y * y;
+
+  function classify() {
+    const m1 = 2 * a, m2 = 2 * c, det = 4 * a * c - b * b;
+    const convex = m1 >= 0 && m2 >= 0 && det >= 0;
+    const concave = m1 <= 0 && m2 <= 0 && det >= 0;
+    const ans = convex && concave ? 'both' : convex ? 'convex' : concave ? 'concave' : 'neither';
+    return { m1, m2, det, ans };
+  }
+
+  function minorsText() {
+    const { m1, m2, det, ans } = classify();
+    let rule;
+    if (ans === 'both') rule = 'all minors are 0 → both convex and concave (a linear/zero function).';
+    else if (ans === 'convex') rule = 'all principal minors ≥ 0 → CONVEX.';
+    else if (ans === 'concave') rule = 'first minors ≤ 0 and second minor ≥ 0 (sign of (−1)ᵏ) → CONCAVE.';
+    else rule = 'the sign pattern matches neither theorem → NEITHER convex nor concave (a saddle).';
+    return 'First principal minors: ' + fmt(m1, 1) + ' and ' + fmt(m2, 1) +
+      '.  Second principal minor: det H = 4ac − b² = ' + fmt(det, 1) + '.  ' + rule;
+  }
+
+  function coefStr() {
+    const term = (v, s) => v === 0 ? '' : (v > 0 ? ' + ' : ' − ') + (Math.abs(v) === 1 ? '' : fmt(Math.abs(v), 1)) + s;
+    let s = (term(a, 'x₁²') + term(b, 'x₁x₂') + term(c, 'x₂²')).trim();
+    if (s.startsWith('+')) s = s.slice(1).trim();
+    return 'f = ' + (s || '0');
+  }
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+
+    const n = 20, R = 2;
+    const grid = [];
+    let fmax = 1e-9;
+    for (let i = 0; i <= n; i++) {
+      const row = [];
+      for (let j = 0; j <= n; j++) {
+        const v = f(-R + 2 * R * i / n, -R + 2 * R * j / n);
+        fmax = Math.max(fmax, Math.abs(v));
+        row.push(v);
+      }
+      grid.push(row);
+    }
+    const s = Math.min(w, h) / 7;
+    const hz = 0.22 * Math.min(w, h);
+    const cx = w / 2, cy = h / 2;
+    const P = (x, y, v) => [cx + (x - y) * s * 0.87, cy + (x + y) * s * 0.45 - (v / fmax) * hz];
+
+    ctx.save();
+    ctx.strokeStyle = t.s1;
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= n; i++) {
+      ctx.beginPath();
+      for (let j = 0; j <= n; j++) {
+        const [px, py] = P(-R + 2 * R * i / n, -R + 2 * R * j / n, grid[i][j]);
+        j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.beginPath();
+      for (let j = 0; j <= n; j++) {
+        const [px, py] = P(-R + 2 * R * j / n, -R + 2 * R * i / n, grid[j][i]);
+        j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // axis direction labels at the base corners
+    ctx.save();
+    ctx.fillStyle = t.ink2;
+    ctx.font = '600 14px system-ui, sans-serif';
+    const [ax, ay] = P(R + 0.45, -R, 0);
+    const [bx, by] = P(-R, R + 0.45, 0);
+    ctx.fillText('x₁', ax, ay);
+    ctx.fillText('x₂', bx, by);
+    ctx.restore();
+
+    // live readouts
+    el('hs-formula').textContent = coefStr();
+    el('hs-11').textContent = fmt(2 * a, 1);
+    el('hs-12').textContent = fmt(b, 1);
+    el('hs-21').textContent = fmt(b, 1);
+    el('hs-22').textContent = fmt(2 * c, 1);
+  }
+
+  function clearStatus() {
+    const st = el('hs-status');
+    st.className = 'status info';
+    st.textContent = '';
+  }
+
+  function set(na, nb, nc) {
+    a = na; b = nb; c = nc;
+    el('hs-a').value = a; el('hs-b').value = b; el('hs-c').value = c;
+    el('hs-aval').textContent = fmt(a, 1);
+    el('hs-bval').textContent = fmt(b, 1);
+    el('hs-cval').textContent = fmt(c, 1);
+    clearStatus();
+    draw();
+  }
+
+  el('hs-a').addEventListener('input', e => set(+e.target.value, b, c));
+  el('hs-b').addEventListener('input', e => set(a, +e.target.value, c));
+  el('hs-c').addEventListener('input', e => set(a, b, +e.target.value));
+  el('hs-p1').addEventListener('click', () => set(1, 3, 2.5));
+  el('hs-p2').addEventListener('click', () => set(-1, -1, -2));
+  el('hs-p3').addEventListener('click', () => set(0, 1, 0));
+
+  document.querySelectorAll('.hs-vote').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const { ans } = classify();
+      const st = el('hs-status');
+      // when the function is linear/zero it is BOTH — either vote counts
+      const correct = btn.dataset.ans === ans || (ans === 'both' && btn.dataset.ans !== 'neither');
+      st.className = correct ? 'status ok' : 'status bad';
+      st.textContent = (correct ? '✓ Correct. ' : '✗ Not quite. ') + minorsText();
+    });
+  });
+  el('hs-check').addEventListener('click', () => {
+    const st = el('hs-status');
+    st.className = 'status info';
+    st.textContent = minorsText();
+  });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 4 — local vs global optimum hunt (hidden function, 10 probes)
+   ============================================================ */
+(() => {
+  const canvas = el('c-hunt');
+  const view = { x0: -0.3, x1: 10.3, y0: 3, y1: 8.4 };
+  const LIMIT = 10;
+  const PRESETS = [
+    x => 3.0 * Math.exp(-((x - 8) ** 2) / 1.1) + 2.1 * Math.exp(-((x - 2.6) ** 2) / 1.8) + 0.35 * Math.sin(3 * x) + 4.2,
+    x => 3.1 * Math.exp(-((x - 1.7) ** 2) / 0.9) + 2.5 * Math.exp(-((x - 6.4) ** 2) / 2.8) + 0.3 * Math.sin(2.2 * x + 1) + 4.2,
+    x => 2.3 * Math.exp(-((x - 2) ** 2) / 0.7) + 3.0 * Math.exp(-((x - 5.3) ** 2) / 0.55) + 2.6 * Math.exp(-((x - 8.7) ** 2) / 0.8) + 0.25 * Math.sin(4 * x) + 4.2,
+  ];
+  let preset = 0, probes = [], revealed = false;
+
+  function analyze(f) {
+    const N = 900, ys = [];
+    for (let i = 0; i <= N; i++) ys.push(f(10 * i / N));
+    let gi = 0;
+    ys.forEach((v, i) => { if (v > ys[gi]) gi = i; });
+    const peaks = [];
+    for (let i = 2; i < N - 1; i++) {
+      if (ys[i] > ys[i - 1] && ys[i] >= ys[i + 1] && ys[i] > ys[i - 2] && ys[i] > ys[i + 2]) {
+        peaks.push({ x: 10 * i / N, y: ys[i], global: i === gi });
+      }
+    }
+    return { gx: 10 * gi / N, gy: ys[gi], peaks };
+  }
+
+  function draw() {
+    const f = PRESETS[preset];
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], yticks: [4, 5, 6, 7, 8], xlabel: 'x', ylabel: 'f(x)', yAxisAt: 3, xAxisAt: 0 });
+
+    const best = probes.reduce((m, q) => (m === null || q.y > m.y) ? q : m, null);
+
+    if (revealed) {
+      VIZ.curve(p, f, t.s1, 2.5);
+      const { peaks } = analyze(f);
+      peaks.forEach(pk => {
+        if (pk.global) {
+          VIZ.star(p, pk.x, pk.y, t.s2, 11);
+          VIZ.label(p, 'GLOBAL max', pk.x, pk.y, t.s2, { dy: -12, bold: true, align: 'center' });
+        } else {
+          const { ctx, X, Y } = p;
+          ctx.save();
+          ctx.beginPath(); ctx.arc(X(pk.x), Y(pk.y), 6, 0, 2 * Math.PI);
+          ctx.strokeStyle = t.muted; ctx.lineWidth = 2; ctx.stroke();
+          ctx.restore();
+        }
+      });
+      const localCount = peaks.length - 1;
+      const st = el('ht-status');
+      st.className = 'status info';
+      st.textContent = 'This function has ' + peaks.length + ' local maxima (hollow circles) — only one is global.' +
+        (best ? '  Your best probe missed the global max by ' + fmt(analyze(f).gy - best.y, 2) + '.' : '');
+    }
+
+    // probes as stems
+    probes.forEach(q => {
+      const { ctx, X, Y } = p;
+      ctx.save();
+      ctx.strokeStyle = t.grid;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(X(q.x), Y(view.y0)); ctx.lineTo(X(q.x), Y(q.y)); ctx.stroke();
+      ctx.restore();
+      const isBest = best && q === best;
+      VIZ.dot(p, q.x, q.y, isBest ? t.s2 : t.s1, 6, isBest);
+      VIZ.label(p, fmt(q.y, 1), q.x, q.y, isBest ? t.s2 : t.ink2, { dy: -10, size: 12, align: 'center', bold: isBest });
+    });
+    if (best) VIZ.label(p, 'best so far', best.x, view.y0, t.s2, { dy: -6, size: 12, align: 'center', bold: true });
+
+    el('ht-count').textContent = probes.length;
+    el('ht-best').textContent = best ? 'f(' + fmt(best.x, 2) + ') = ' + fmt(best.y, 2) : '—';
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    if (revealed) return;
+    if (probes.length >= LIMIT) {
+      const st = el('ht-status');
+      st.className = 'status bad';
+      st.textContent = 'Probe budget exhausted — decide: reveal the function, or reset and try a smarter probing strategy.';
+      return;
+    }
+    const p = VIZ.plot(canvas, view); // mapping only; draw() repaints right after
+    const { px } = VIZ.pointer(canvas, ev);
+    const x = Math.max(0, Math.min(10, p.invX(px)));
+    probes.push({ x, y: PRESETS[preset](x) });
+    draw();
+  });
+
+  el('ht-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  el('ht-reset').addEventListener('click', () => {
+    probes = []; revealed = false;
+    el('ht-status').className = 'status info'; el('ht-status').textContent = '';
+    draw();
+  });
+  el('ht-new').addEventListener('click', () => {
+    preset = (preset + 1) % PRESETS.length;
+    probes = []; revealed = false;
+    el('ht-status').className = 'status info'; el('ht-status').textContent = 'New hidden function loaded.';
+    draw();
+  });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 1 — least squares by hand (slide 9)
+   ============================================================ */
+(() => {
+  const canvas = el('c-reg');
+  const DATA = [
+    [0.5, 2.9], [1.2, 2.4], [2.0, 4.1], [2.8, 3.6], [3.5, 5.4], [4.3, 5.0],
+    [5.1, 6.8], [5.9, 6.1], [6.8, 7.9], [7.6, 7.4], [8.4, 9.2], [9.3, 9.0],
+  ];
+  const view = { x0: -0.4, x1: 10.2, y0: -0.5, y1: 11 };
+  let a = 0, b = 5, bestSSE = null, revealed = false, showSquares = false;
+
+  // closed-form least squares (what the class is trying to find by hand)
+  const n = DATA.length;
+  const sx = DATA.reduce((s, d) => s + d[0], 0);
+  const sy = DATA.reduce((s, d) => s + d[1], 0);
+  const sxy = DATA.reduce((s, d) => s + d[0] * d[1], 0);
+  const sxx = DATA.reduce((s, d) => s + d[0] * d[0], 0);
+  const aStar = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+  const bStar = (sy - aStar * sx) / n;
+  const sse = (aa, bb) => DATA.reduce((s, [x, y]) => s + (y - (aa * x + bb)) ** 2, 0);
+  const sseStar = sse(aStar, bStar);
+
+  function draw() {
+    const p = VIZ.plot(canvas, view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], yticks: [2, 4, 6, 8, 10], xlabel: 'x', ylabel: 'y' });
+    const { ctx, X, Y } = p;
+
+    // residuals (and optionally the literal squares)
+    DATA.forEach(([x, y]) => {
+      const pred = a * x + b;
+      ctx.save();
+      if (showSquares) {
+        const side = Math.abs(Y(y) - Y(pred));
+        const top = Math.min(Y(y), Y(pred));
+        ctx.fillStyle = t.bad;
+        ctx.globalAlpha = 0.14;
+        ctx.fillRect(X(x) - side, top, side, side);
+        ctx.globalAlpha = 0.75;
+        ctx.strokeStyle = t.bad;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(X(x) - side, top, side, side);
+      }
+      ctx.globalAlpha = 1;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = t.bad;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(X(x), Y(y)); ctx.lineTo(X(x), Y(pred)); ctx.stroke();
+      ctx.restore();
+    });
+
+    // student's line
+    VIZ.curve(p, x => a * x + b, t.s5, 2.5);
+    VIZ.label(p, 'your line', 9.9, a * 9.9 + b, t.s5, { align: 'right', dy: -8, bold: true });
+
+    // least-squares fit
+    if (revealed) {
+      VIZ.curve(p, x => aStar * x + bStar, t.s2, 2.5);
+      VIZ.label(p, 'least-squares fit', 0.3, aStar * 0.9 + bStar, t.s2, { dy: -8, bold: true });
+    }
+
+    // data on top
+    DATA.forEach(([x, y]) => VIZ.dot(p, x, y, t.s1, 6));
+
+    const s = sse(a, b);
+    if (bestSSE === null || s < bestSSE) bestSSE = s;
+    el('rg-sse').textContent = fmt(s, 2);
+    el('rg-bestsse').textContent = fmt(bestSSE, 2);
+
+    const st = el('rg-status');
+    if (revealed) {
+      st.className = 'status info';
+      st.textContent = 'Least-squares estimates: a* = ' + fmt(aStar, 3) + ', b* = ' + fmt(bStar, 3) +
+        ', SSE* = ' + fmt(sseStar, 2) + '. Your best was ' + fmt(bestSSE, 2) + '.';
+    } else if (s < sseStar * 1.01) {
+      st.className = 'status ok';
+      st.textContent = 'Excellent — within 1% of the optimum. You have essentially found the least-squares estimates!';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'Minimum possible SSE is hidden until you reveal — keep tuning.';
+    }
+  }
+
+  el('rg-a').addEventListener('input', e => { a = +e.target.value; el('rg-aval').textContent = fmt(a); draw(); });
+  el('rg-b').addEventListener('input', e => { b = +e.target.value; el('rg-bval').textContent = fmt(b); draw(); });
+  el('rg-squares').addEventListener('change', e => { showSquares = e.target.checked; draw(); });
+  el('rg-reveal').addEventListener('click', () => { revealed = true; draw(); });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — box design game (slide 10): max xyz s.t. 2(xy+yz+xz) <= 600
+   ============================================================ */
+(() => {
+  const canvas = el('c-box');
+  const A = 600;
+  let x = 5, y = 5, z = 5;
+  const attempts = [];
+
+  const area = () => 2 * (x * y + y * z + x * z);
+  const vol = () => x * y * z;
+  const isFeasible = () => area() <= A + 1e-9;
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+
+    // cabinet projection: x → width, z → height, y → depth at 30° (half scale)
+    const dCos = 0.5 * Math.cos(Math.PI / 6), dSin = 0.5 * Math.sin(Math.PI / 6);
+    const k = Math.min((w - 80) / (20 + 20 * dCos), (h - 70) / (20 + 20 * dSin));
+    const bw = x * k, bh = z * k, dx = y * k * dCos, dy = y * k * dSin;
+    const ox = (w - bw - dx) / 2, oy = (h + bh + dy) / 2 - dy;
+
+    const stroke = isFeasible() ? t.s1 : t.bad;
+    ctx.save();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = stroke;
+    // front face
+    ctx.fillStyle = t.region;
+    ctx.fillRect(ox, oy - bh, bw, bh);
+    ctx.strokeRect(ox, oy - bh, bw, bh);
+    // top face
+    ctx.globalAlpha = 0.65;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy - bh); ctx.lineTo(ox + dx, oy - bh - dy);
+    ctx.lineTo(ox + dx + bw, oy - bh - dy); ctx.lineTo(ox + bw, oy - bh);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // side face
+    ctx.globalAlpha = 0.45;
+    ctx.beginPath();
+    ctx.moveTo(ox + bw, oy - bh); ctx.lineTo(ox + bw + dx, oy - bh - dy);
+    ctx.lineTo(ox + bw + dx, oy - dy); ctx.lineTo(ox + bw, oy);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 1;
+    // dimension labels
+    ctx.fillStyle = t.ink2;
+    ctx.font = '600 14px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x = ' + fmt(x, 1), ox + bw / 2, oy + 20);
+    ctx.textAlign = 'left';
+    ctx.fillText('y = ' + fmt(y, 1), ox + bw + dx / 2 + 6, oy - dy / 2 + 12);
+    ctx.textAlign = 'right';
+    ctx.fillText('z = ' + fmt(z, 1), ox - 10, oy - bh / 2);
+    ctx.restore();
+
+    const ar = area();
+    const areaEl = el('bx-area');
+    areaEl.textContent = fmt(ar, 0);
+    areaEl.style.color = isFeasible() ? 'var(--good)' : 'var(--critical)';
+    el('bx-vol').textContent = fmt(vol(), 0);
+
+    if (!isFeasible()) {
+      const st = el('bx-status');
+      st.className = 'status bad';
+      st.textContent = '✗ Infeasible — this design needs ' + fmt(ar, 0) + ' cm² of cardboard, more than the 600 available.';
+    }
+  }
+
+  function renderTable() {
+    const table = el('bx-table');
+    const body = table.querySelector('tbody');
+    body.innerHTML = '';
+    const bestV = Math.max(...attempts.filter(q => q.ok).map(q => q.v), -Infinity);
+    attempts.forEach((q, i) => {
+      const tr = document.createElement('tr');
+      if (!q.ok) tr.className = 'infeasible';
+      else if (q.v === bestV) tr.className = 'best';
+      tr.innerHTML = '<td>' + (i + 1) + (q.ok && q.v === bestV ? ' 🏆' : '') + '</td><td>' + fmt(q.x, 1) + '</td><td>' + fmt(q.y, 1) +
+        '</td><td>' + fmt(q.z, 1) + '</td><td>' + fmt(q.ar, 0) + (q.ok ? '' : ' ✗') + '</td><td><b>' + fmt(q.v, 0) + '</b></td>';
+      body.appendChild(tr);
+    });
+    table.style.display = attempts.length ? '' : 'none';
+  }
+
+  function upd(id, val) { el(id).textContent = fmt(val, 1); }
+  el('bx-x').addEventListener('input', e => { x = +e.target.value; upd('bx-xval', x); el('bx-status').textContent = ''; draw(); });
+  el('bx-y').addEventListener('input', e => { y = +e.target.value; upd('bx-yval', y); el('bx-status').textContent = ''; draw(); });
+  el('bx-z').addEventListener('input', e => { z = +e.target.value; upd('bx-zval', z); el('bx-status').textContent = ''; draw(); });
+
+  el('bx-log').addEventListener('click', () => {
+    attempts.push({ x, y, z, ar: area(), v: vol(), ok: isFeasible() });
+    renderTable();
+    const st = el('bx-status');
+    if (isFeasible()) {
+      st.className = 'status ok';
+      st.textContent = '✓ Logged: V = ' + fmt(vol(), 0) + ' cm³ using ' + fmt(area(), 0) + ' of 600 cm². ' +
+        (area() < 570 ? 'You still have spare cardboard — spare cardboard is wasted volume!' : 'Nearly all the cardboard used — good.');
+    } else {
+      st.className = 'status bad';
+      st.textContent = '✗ Logged as infeasible — it violates 2(xy + yz + xz) ≤ 600.';
+    }
+  });
+
+  el('bx-reveal').addEventListener('click', () => {
+    x = y = z = 10;
+    el('bx-x').value = el('bx-y').value = el('bx-z').value = 10;
+    upd('bx-xval', 10); upd('bx-yval', 10); upd('bx-zval', 10);
+    draw();
+    const st = el('bx-status');
+    st.className = 'status info';
+    st.textContent = 'Optimum: the CUBE, x = y = z = 10 → V = 1000 cm³, using exactly 600 cm². At the optimum the constraint is tight.';
+  });
+
+  VIZ.register(canvas, draw);
+})();
+</script>
+</body>
+</html>
