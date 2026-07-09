@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 3 — NLP in Multiple Variables (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 3: NLP in Multiple Variables</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#classify">1 · Classify the stationary point</a>
+    <a href="#profit">2 · Profit landscapes</a>
+    <a href="#openbox">3 · Open-top box</a>
+    <a href="#gradient">4 · Gradient search</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : CLASSIFY STATIONARY POINTS ================= -->
+<section class="widget" id="classify">
+  <h2>Min, max, or saddle? <span class="chip">Slides 3–5</span></h2>
+  <p class="howto">
+    Each function has a stationary point at the origin (∇f = 0). Look at the surface, apply the
+    principal-minor rules in your head, and <b>vote</b>. Careful: one of these breaks the test.
+  </p>
+  <div class="controls">
+    <span style="color:var(--ink-2)">Function:</span>
+    <span class="segwrap" id="cl-presets">
+      <button class="seg active" data-i="0">x₁² + x₂²</button>
+      <button class="seg" data-i="1">−x₁² − 3x₂²</button>
+      <button class="seg" data-i="2">x₁² − 4x₂²</button>
+      <button class="seg" data-i="3">x₁⁴ + x₂⁴</button>
+    </span>
+  </div>
+  <div class="controls">
+    <span style="color:var(--ink-2)">Your vote:</span>
+    <button class="cl-vote" data-ans="min">Local min</button>
+    <button class="cl-vote" data-ans="max">Local max</button>
+    <button class="cl-vote" data-ans="saddle">Saddle</button>
+    <button class="cl-vote" data-ans="inconclusive">Test inconclusive</button>
+    <button id="cl-show">Show the minors</button>
+  </div>
+  <canvas class="viz short" id="c-cl" style="height:320px"></canvas>
+  <p class="status info" id="cl-status"></p>
+  <p class="note">
+    Rules (slides 4–5): all Hₖ(x*) &gt; 0 → local <em>min</em>; Hₖ(x*) nonzero with sign (−1)ᵏ →
+    local <em>max</em>; Hₙ ≠ 0 but neither pattern → <em>saddle</em>; Hₙ(x*) = 0 → the test is
+    <em>inconclusive</em> (it could still be any of the three). Slide 11’s Example 3 is the homework
+    version of this game.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : PROFIT LANDSCAPES ================= -->
+<section class="widget" id="profit">
+  <h2>Two-variable profit landscapes <span class="chip">Slides 6–10</span></h2>
+  <p class="howto">
+    Drag the decision point over the contour map and hunt the profit peak by feel. Then reveal the
+    stationary point and check it against your best.
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="pf-mA">Example 1 — price discrimination</button>
+      <button class="seg" id="pf-mB">Example 2 — collusive duopoly</button>
+    </span>
+    <span class="readout">profit: <b id="pf-val">—</b></span>
+    <span class="readout">your best: <b id="pf-best">—</b></span>
+    <button id="pf-reveal" class="primary">Reveal optimum ★</button>
+  </div>
+  <div class="readout" id="pf-formula" style="display:inline-block;margin-bottom:10px"></div>
+  <canvas class="viz" id="c-pf"></canvas>
+  <p class="status info" id="pf-status">Drag the violet point.</p>
+  <p class="note" id="pf-note"></p>
+</section>
+
+<!-- ================= WIDGET 3 : OPEN-TOP BOX ================= -->
+<section class="widget" id="openbox">
+  <h2>The 10 m³ open-top container <span class="chip">Slide 12</span></h2>
+  <p class="howto">
+    The box has <b>no top</b>, must hold exactly 10 m³, and you pay for every square meter of sheet
+    metal. Choose the base x × y — the height follows as z = 10/(xy). Least metal in class wins.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="ob-x">base x</label>
+      <input type="range" id="ob-x" min="0.5" max="6" step="0.05" value="4" style="width:170px">
+      <span class="readout"><b id="ob-xval">4.00</b> m</span>
+    </div>
+    <div class="group">
+      <label for="ob-y">base y</label>
+      <input type="range" id="ob-y" min="0.5" max="6" step="0.05" value="1.5" style="width:170px">
+      <span class="readout"><b id="ob-yval">1.50</b> m</span>
+    </div>
+    <span class="readout">height z = <b id="ob-zval">1.67</b> m</span>
+  </div>
+  <div class="controls">
+    <span class="readout">metal used: <b id="ob-metal">—</b> m²</span>
+    <button id="ob-log" class="primary">Log design</button>
+    <button id="ob-reveal">Reveal optimum</button>
+  </div>
+  <canvas class="viz short" id="c-ob" style="height:280px"></canvas>
+  <p class="status info" id="ob-status"></p>
+  <table class="attempts" id="ob-table" style="display:none">
+    <thead><tr><th>#</th><th>x</th><th>y</th><th>z</th><th>metal (m²)</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="note">
+    Eliminating z turns this into an unconstrained NLP in two variables:
+    min S(x, y) = xy + 20/x + 20/y. Setting both partials to zero gives x = y = ∛20 ≈ 2.71 m and
+    z ≈ 1.36 m — a square base, half as tall as it is wide. The Hessian test confirms a minimum.
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : GRADIENT SEARCH ================= -->
+<section class="widget" id="gradient">
+  <h2>Gradient search: climb the hill <span class="chip">Slides 13–29</span></h2>
+  <p class="howto">
+    The arrow is the gradient ∇f — the steepest-ascent direction, always perpendicular to the contour.
+    Each step moves along the gradient until f stops increasing (the optimal step size t*), then
+    re-aims. <b>Click anywhere to choose a starting point</b>, then step. Why doesn’t it go straight
+    to the top?
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="gs-mA">Example 1 — one clean step</button>
+      <button class="seg" id="gs-mB">Example 2 — the zigzag</button>
+    </span>
+    <button id="gs-step" class="primary">Step</button>
+    <button id="gs-run">Run to convergence</button>
+    <button id="gs-reset">Reset</button>
+  </div>
+  <div class="readout" id="gs-formula" style="display:inline-block;margin-bottom:10px"></div>
+  <canvas class="viz" id="c-gs"></canvas>
+  <p class="status info" id="gs-status"></p>
+  <table class="attempts" id="gs-table">
+    <thead><tr><th>iter</th><th>x′</th><th>∇f(x′)</th><th>t*</th><th>f(x′)</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="note">
+    The procedure (slide 24): express f(x′ + t∇f(x′)) as a function of t, maximize over t ≥ 0, move,
+    repeat until ‖∇f‖ ≤ ε. Consecutive directions are orthogonal — that is the zigzag. For
+    minimization, walk against the gradient instead (slide 29).
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 3.
+  Figures follow the examples used in the Week 3 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* Isometric wireframe surface (shared by widget 1), like Week 1's Hessian view. */
+function wireframe(canvas, f, R = 2) {
+  const { ctx, w, h } = VIZ.setup(canvas);
+  const t = VIZ.theme();
+  ctx.clearRect(0, 0, w, h);
+  const n = 20;
+  const grid = [];
+  let fmax = 1e-9;
+  for (let i = 0; i <= n; i++) {
+    const row = [];
+    for (let j = 0; j <= n; j++) {
+      const v = f(-R + 2 * R * i / n, -R + 2 * R * j / n);
+      fmax = Math.max(fmax, Math.abs(v));
+      row.push(v);
+    }
+    grid.push(row);
+  }
+  const s = Math.min(w, h) / 7, hz = 0.22 * Math.min(w, h);
+  const cx = w / 2, cy = h / 2;
+  const P = (x, y, v) => [cx + (x - y) * s * 0.87, cy + (x + y) * s * 0.45 - (v / fmax) * hz];
+  ctx.save();
+  ctx.strokeStyle = t.s1;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= n; i++) {
+    ctx.beginPath();
+    for (let j = 0; j <= n; j++) {
+      const [px, py] = P(-R + 2 * R * i / n, -R + 2 * R * j / n, grid[i][j]);
+      j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.beginPath();
+    for (let j = 0; j <= n; j++) {
+      const [px, py] = P(-R + 2 * R * j / n, -R + 2 * R * i / n, grid[j][i]);
+      j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+  // stationary point marker at the origin
+  const [ox, oy] = P(0, 0, f(0, 0));
+  ctx.save();
+  ctx.beginPath(); ctx.arc(ox, oy, 5, 0, 2 * Math.PI);
+  ctx.fillStyle = t.s5; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = t.surface; ctx.stroke();
+  ctx.restore();
+}
+
+/* Contours of f = base - (v-c)^T Q (v-c) with Q positive definite:
+   the level set at k = base - Z is r(phi) = sqrt(k / (u^T Q u)). */
+function quadContours(p, t, Q, cx, cy, levels) {
+  const { ctx, X, Y } = p;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(p.padL, p.padT, p.w - p.padL - p.padR, p.h - p.padT - p.padB);
+  ctx.clip();
+  ctx.strokeStyle = t.s1;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 1.5;
+  levels.forEach(k => {
+    if (k <= 0) return;
+    ctx.beginPath();
+    for (let i = 0; i <= 180; i++) {
+      const phi = 2 * Math.PI * i / 180;
+      const u = Math.cos(phi), v = Math.sin(phi);
+      const q = Q[0][0] * u * u + 2 * Q[0][1] * u * v + Q[1][1] * v * v;
+      const r = Math.sqrt(k / q);
+      const px = X(cx + r * u), py = Y(cy + r * v);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+/* ============================================================
+   WIDGET 1 — classify the stationary point (slides 3-5)
+   ============================================================ */
+(() => {
+  const canvas = el('c-cl');
+  const PRESETS = [
+    { f: (x, y) => x * x + y * y, ans: 'min',
+      minors: 'H = [[2, 0], [0, 2]]: H₁ = 2 > 0, H₂ = 4 > 0 — all positive → local MIN.' },
+    { f: (x, y) => -x * x - 3 * y * y, ans: 'max',
+      minors: 'H = [[−2, 0], [0, −6]]: H₁ = −2 (sign of (−1)¹), H₂ = 12 (sign of (−1)²) → local MAX.' },
+    { f: (x, y) => x * x - 4 * y * y, ans: 'saddle',
+      minors: 'H = [[2, 0], [0, −8]]: H₂ = −16 ≠ 0 but the sign patterns fail → SADDLE.' },
+    { f: (x, y) => x ** 4 + y ** 4, ans: 'inconclusive',
+      minors: 'H(0,0) = [[0, 0], [0, 0]]: H₂ = 0 → the test is INCONCLUSIVE (slide 5). Here it happens to be a min — but the minors cannot tell you.' },
+  ];
+  let idx = 0;
+
+  const names = { min: 'a local MIN', max: 'a local MAX', saddle: 'a SADDLE', inconclusive: 'inconclusive by the minor test' };
+
+  function draw() { wireframe(canvas, PRESETS[idx].f, 1.6); }
+
+  document.querySelectorAll('#cl-presets button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      idx = +btn.dataset.i;
+      document.querySelectorAll('#cl-presets button').forEach(b => b.classList.toggle('active', b === btn));
+      el('cl-status').className = 'status info';
+      el('cl-status').textContent = '';
+      draw();
+    });
+  });
+  document.querySelectorAll('.cl-vote').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pr = PRESETS[idx];
+      const st = el('cl-status');
+      const ok = btn.dataset.ans === pr.ans;
+      st.className = ok ? 'status ok' : 'status bad';
+      st.textContent = (ok ? '✓ Correct — ' : '✗ It is ' + names[pr.ans] + '. ') + pr.minors;
+    });
+  });
+  el('cl-show').addEventListener('click', () => {
+    const st = el('cl-status');
+    st.className = 'status info';
+    st.textContent = PRESETS[idx].minors;
+  });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — profit landscapes (slides 6-10)
+   Both examples are concave quadratics: f = base - (v-c)^T Q (v-c).
+   ============================================================ */
+(() => {
+  const canvas = el('c-pf');
+  const MODES = {
+    A: {
+      html: 'f(q₁, q₂) = (70 − 4q₁)q₁ + (150 − 15q₂)q₂ − 100 − 15(q₁ + q₂)',
+      f: (a, b) => (70 - 4 * a) * a + (150 - 15 * b) * b - 100 - 15 * (a + b),
+      Q: [[4, 0], [0, 15]], c: [55 / 8, 4.5],
+      view: { x0: -0.6, x1: 14.5, y0: -0.5, y1: 9.5 },
+      ticksX: [0, 2, 4, 6, 8, 10, 12, 14], ticksY: [0, 2, 4, 6, 8],
+      xl: 'q₁ (customer 1)', yl: 'q₂ (customer 2)',
+      note: 'Slide 7: ∂f/∂q₁ = 55 − 8q₁ = 0 and ∂f/∂q₂ = 135 − 30q₂ = 0 give (6.875, 4.5). H₁ = −8, −30 and H₂ = 240 → f is concave, so this stationary point is the global max.',
+      where: 'Optimum (6.875, 4.5): sell little to the price-sensitive customer 1, more to customer 2 who pays a premium.',
+    },
+    B: {
+      html: 'f(q₁, q₂) = (q₁ + q₂)(200 − q₁ − q₂) − q₁ − 0.5q₂²  =  199q₁ + 200q₂ − q₁² − 2q₁q₂ − 1.5q₂²',
+      f: (a, b) => 199 * a + 200 * b - a * a - 2 * a * b - 1.5 * b * b,
+      Q: [[1, 1], [1, 1.5]], c: [98.5, 1],
+      view: { x0: -8, x1: 145, y0: -38, y1: 42 },
+      ticksX: [0, 25, 50, 75, 100, 125], ticksY: [-30, -15, 0, 15, 30],
+      xl: 'q₁ (firm 1)', yl: 'q₂ (firm 2)',
+      note: 'Slides 9–10: ∇f = 0 at (98.5, 1); H₁ = −2, −3 and H₂ = 2 → concave → global max. The cross term q₁q₂ tilts the contour ellipses.',
+      where: 'Optimum (98.5, 1): firm 2’s quadratic cost makes large q₂ expensive — the cartel lets cheap firm 1 do almost all the producing.',
+    },
+  };
+  let mode = 'A';
+  let pt = { x: 2, y: 2 };
+  let best = null, showOpt = false, dragging = false, lastPlot = null;
+
+  function draw() {
+    const m = MODES[mode];
+    const p = VIZ.plot(canvas, m.view);
+    const t = VIZ.theme();
+    lastPlot = p;
+    VIZ.axes(p, t, { xticks: m.ticksX, yticks: m.ticksY, xlabel: m.xl, ylabel: m.yl });
+
+    // contour ladder scaled to what is visible
+    const corners = [[m.view.x0, m.view.y0], [m.view.x0, m.view.y1], [m.view.x1, m.view.y0], [m.view.x1, m.view.y1]];
+    const kmax = Math.max(...corners.map(([a, b]) => {
+      const dx = a - m.c[0], dy = b - m.c[1];
+      return m.Q[0][0] * dx * dx + 2 * m.Q[0][1] * dx * dy + m.Q[1][1] * dy * dy;
+    }));
+    const levels = [1, 2, 3, 4, 5, 6].map(i => kmax * (i / 6) ** 2);
+    quadContours(p, t, m.Q, m.c[0], m.c[1], levels);
+
+    if (showOpt) {
+      VIZ.star(p, m.c[0], m.c[1], t.s2, 11);
+      VIZ.label(p, 'optimum f* = ' + fmt(m.f(m.c[0], m.c[1]), 2), m.c[0], m.c[1], t.s2, { dx: 14, dy: -8, bold: true });
+    }
+
+    VIZ.dot(p, pt.x, pt.y, t.s5, 8, true);
+    const v = m.f(pt.x, pt.y);
+    if (best === null || v > best) best = v;
+    el('pf-val').textContent = fmt(v, 2);
+    el('pf-best').textContent = fmt(best, 2);
+    el('pf-formula').innerHTML = m.html;
+    el('pf-note').textContent = m.note;
+
+    const st = el('pf-status');
+    if (showOpt) {
+      st.className = 'status info';
+      st.textContent = m.where;
+    } else if (v > m.f(m.c[0], m.c[1]) - Math.abs(m.f(m.c[0], m.c[1])) * 0.002 - 0.5) {
+      st.className = 'status ok';
+      st.textContent = 'Essentially at the peak — nice hill climbing!';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'Drag the violet point. Contour rings are level curves of equal profit.';
+    }
+  }
+
+  function setMode(k) {
+    mode = k;
+    const m = MODES[k];
+    pt = { x: (m.view.x0 + m.view.x1) / 4, y: (m.view.y0 + m.view.y1) / 4 };
+    best = null; showOpt = false;
+    el('pf-mA').classList.toggle('active', k === 'A');
+    el('pf-mB').classList.toggle('active', k === 'B');
+    draw();
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    dragging = true;
+    canvas.setPointerCapture(ev.pointerId);
+    const { px, py } = VIZ.pointer(canvas, ev);
+    pt = { x: lastPlot.invX(px), y: lastPlot.invY(py) };
+    draw();
+  });
+  canvas.addEventListener('pointermove', ev => {
+    if (!dragging) return;
+    const { px, py } = VIZ.pointer(canvas, ev);
+    pt = { x: lastPlot.invX(px), y: lastPlot.invY(py) };
+    draw();
+  });
+  canvas.addEventListener('pointerup', () => dragging = false);
+
+  el('pf-mA').addEventListener('click', () => setMode('A'));
+  el('pf-mB').addEventListener('click', () => setMode('B'));
+  el('pf-reveal').addEventListener('click', () => { showOpt = true; draw(); });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 3 — open-top box (slide 12): min xy + 20/x + 20/y, z = 10/(xy)
+   ============================================================ */
+(() => {
+  const canvas = el('c-ob');
+  let x = 4, y = 1.5;
+  const attempts = [];
+  const z = () => 10 / (x * y);
+  const metal = () => x * y + 2 * z() * (x + y);
+  const xStar = Math.cbrt(20);
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const zz = z();
+    const maxDim = Math.max(x, y, zz, 4);
+    const dCos = 0.5 * Math.cos(Math.PI / 6), dSin = 0.5 * Math.sin(Math.PI / 6);
+    const k = Math.min((w - 90) / (maxDim * (1 + dCos)), (h - 70) / (maxDim * (1 + dSin)));
+    const bw = x * k, bh = zz * k, dx = y * k * dCos, dy = y * k * dSin;
+    const ox = (w - bw - dx) / 2, oy = (h + bh + dy) / 2 - dy;
+    ctx.save();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = t.s1;
+    ctx.fillStyle = t.region;
+    ctx.fillRect(ox, oy - bh, bw, bh);
+    ctx.strokeRect(ox, oy - bh, bw, bh);
+    // open top: outline only, no fill
+    ctx.beginPath();
+    ctx.moveTo(ox, oy - bh); ctx.lineTo(ox + dx, oy - bh - dy);
+    ctx.lineTo(ox + dx + bw, oy - bh - dy); ctx.lineTo(ox + bw, oy - bh);
+    ctx.closePath();
+    ctx.setLineDash([5, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // side face
+    ctx.globalAlpha = 0.45;
+    ctx.beginPath();
+    ctx.moveTo(ox + bw, oy - bh); ctx.lineTo(ox + bw + dx, oy - bh - dy);
+    ctx.lineTo(ox + bw + dx, oy - dy); ctx.lineTo(ox + bw, oy);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = t.ink2;
+    ctx.font = '600 14px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x = ' + fmt(x, 2), ox + bw / 2, oy + 20);
+    ctx.fillText('open top', ox + bw / 2 + dx / 2, oy - bh - dy - 8);
+    ctx.textAlign = 'left';
+    ctx.fillText('y = ' + fmt(y, 2), ox + bw + dx / 2 + 6, oy - dy / 2 + 12);
+    ctx.textAlign = 'right';
+    ctx.fillText('z = ' + fmt(zz, 2), ox - 10, oy - bh / 2);
+    ctx.restore();
+
+    el('ob-zval').textContent = fmt(zz, 2);
+    el('ob-metal').textContent = fmt(metal(), 2);
+  }
+
+  function renderTable() {
+    const table = el('ob-table');
+    const body = table.querySelector('tbody');
+    body.innerHTML = '';
+    const bestS = Math.min(...attempts.map(q => q.s));
+    attempts.forEach((q, i) => {
+      const tr = document.createElement('tr');
+      if (q.s === bestS) tr.className = 'best';
+      tr.innerHTML = '<td>' + (i + 1) + (q.s === bestS ? ' 🏆' : '') + '</td><td>' + fmt(q.x, 2) + '</td><td>' + fmt(q.y, 2) +
+        '</td><td>' + fmt(q.z, 2) + '</td><td><b>' + fmt(q.s, 2) + '</b></td>';
+      body.appendChild(tr);
+    });
+    table.style.display = attempts.length ? '' : 'none';
+  }
+
+  el('ob-x').addEventListener('input', e => { x = +e.target.value; el('ob-xval').textContent = fmt(x); el('ob-status').textContent = ''; draw(); });
+  el('ob-y').addEventListener('input', e => { y = +e.target.value; el('ob-yval').textContent = fmt(y); el('ob-status').textContent = ''; draw(); });
+  el('ob-log').addEventListener('click', () => {
+    attempts.push({ x, y, z: z(), s: metal() });
+    renderTable();
+    const st = el('ob-status');
+    st.className = 'status ok';
+    st.textContent = '✓ Logged ' + fmt(metal(), 2) + ' m². ' + (Math.abs(x - y) > 0.3 ? 'Hint: is a long skinny base ever a good idea?' : '');
+  });
+  el('ob-reveal').addEventListener('click', () => {
+    x = y = xStar;
+    el('ob-x').value = x; el('ob-y').value = y;
+    el('ob-xval').textContent = fmt(x); el('ob-yval').textContent = fmt(y);
+    draw();
+    const st = el('ob-status');
+    st.className = 'status info';
+    st.textContent = 'Optimum: x = y = ∛20 ≈ ' + fmt(xStar, 3) + ' m, z ≈ ' + fmt(10 / (xStar * xStar), 3) +
+      ' m, metal ≈ ' + fmt(metal(), 2) + ' m². Square base, and z = x/2 — with no lid, you buy less wall by going wider and shorter.';
+  });
+
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 4 — gradient search (slides 13-29)
+   ============================================================ */
+(() => {
+  const canvas = el('c-gs');
+  const EPS = 0.01;
+  const MODES = {
+    A: {
+      html: 'f(x₁, x₂) = −(x₁ − 3)² − (x₂ − 2)² &nbsp;·&nbsp; start (1, 1) — slide 25',
+      f: (x, y) => -((x - 3) ** 2) - ((y - 2) ** 2),
+      grad: (x, y) => [-2 * (x - 3), -2 * (y - 2)],
+      Q: [[1, 0], [0, 1]], c: [3, 2],
+      start: [1, 1],
+      view: { x0: -0.3, x1: 5.6, y0: -0.4, y1: 4.4 },
+      ticksX: [0, 1, 2, 3, 4, 5], ticksY: [0, 1, 2, 3, 4],
+    },
+    B: {
+      html: 'f(x₁, x₂) = 2x₁x₂ + 2x₂ − x₁² − 2x₂² &nbsp;·&nbsp; start (0, 0) — slide 27',
+      f: (x, y) => 2 * x * y + 2 * y - x * x - 2 * y * y,
+      grad: (x, y) => [2 * y - 2 * x, 2 * x + 2 - 4 * y],
+      Q: [[1, -1], [-1, 2]], c: [1, 1],
+      start: [0, 0],
+      view: { x0: -0.35, x1: 1.75, y0: -0.3, y1: 1.5 },
+      ticksX: [0, 0.5, 1, 1.5], ticksY: [0, 0.5, 1],
+    },
+  };
+  let mode = 'A', path, done;
+
+  // 1-D line search: maximize f(x + t g) over t >= 0 by grid + refinement
+  function lineMax(m, x, g) {
+    let lo = 0, hi = 4 / Math.max(0.2, Math.hypot(g[0], g[1]));
+    for (let round = 0; round < 4; round++) {
+      let bt = lo, bv = -Infinity;
+      for (let i = 0; i <= 200; i++) {
+        const tt = lo + (hi - lo) * i / 200;
+        const v = m.f(x[0] + tt * g[0], x[1] + tt * g[1]);
+        if (v > bv) { bv = v; bt = tt; }
+      }
+      const step = (hi - lo) / 200;
+      lo = Math.max(0, bt - step); hi = bt + step;
+    }
+    return (lo + hi) / 2;
+  }
+
+  function reset(start) {
+    const m = MODES[mode];
+    path = [start ? start.slice() : m.start.slice()];
+    done = false;
+    el('gs-formula').innerHTML = m.html;
+    el('gs-status').className = 'status info';
+    el('gs-status').textContent = 'Start at (' + fmt(path[0][0], 2) + ', ' + fmt(path[0][1], 2) + '). The arrow shows ∇f — perpendicular to the contour through the point.';
+    renderTable();
+    draw();
+  }
+
+  function step() {
+    if (done) return;
+    const m = MODES[mode];
+    const x = path[path.length - 1];
+    const g = m.grad(x[0], x[1]);
+    const gn = Math.hypot(g[0], g[1]);
+    const st = el('gs-status');
+    if (gn <= EPS) {
+      done = true;
+      st.className = 'status ok';
+      st.textContent = 'TERMINATE — ∇f ≈ (0, 0) at (' + fmt(x[0], 3) + ', ' + fmt(x[1], 3) + '), f = ' + fmt(m.f(x[0], x[1]), 4) + '. ' +
+        (path.length - 1) + ' step(s).' + (mode === 'A' ? ' One perfectly aimed step — because the contours are round.' : ' Count the zigzags — each new direction is perpendicular to the previous one.');
+      draw();
+      return;
+    }
+    const ts = lineMax(m, x, g);
+    const nx = [x[0] + ts * g[0], x[1] + ts * g[1]];
+    nx.tstar = ts;
+    path.push(nx);
+    const g2 = m.grad(nx[0], nx[1]);
+    if (Math.hypot(g2[0], g2[1]) <= EPS) {
+      done = true;
+      st.className = 'status ok';
+      st.textContent = 'TERMINATE — ∇f ≈ (0, 0) at (' + fmt(nx[0], 3) + ', ' + fmt(nx[1], 3) + '), f = ' + fmt(m.f(nx[0], nx[1]), 4) + '. ' + (path.length - 1) + ' step(s).';
+    } else {
+      st.className = 'status info';
+      st.textContent = 'Moved with t* = ' + fmt(ts, 3) + ' to (' + fmt(nx[0], 3) + ', ' + fmt(nx[1], 3) + '). New gradient re-aimed — note the right angle with the previous direction.';
+    }
+    renderTable();
+    draw();
+  }
+
+  function renderTable() {
+    const m = MODES[mode];
+    const body = el('gs-table').querySelector('tbody');
+    body.innerHTML = '';
+    path.forEach((x, i) => {
+      const g = m.grad(x[0], x[1]);
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + i + '</td><td>(' + fmt(x[0], 3) + ', ' + fmt(x[1], 3) + ')</td><td>(' + fmt(g[0], 3) + ', ' + fmt(g[1], 3) +
+        ')</td><td>' + (x.tstar === undefined ? '—' : fmt(x.tstar, 3)) + '</td><td>' + fmt(m.f(x[0], x[1]), 4) + '</td>';
+      body.appendChild(tr);
+    });
+  }
+
+  function draw() {
+    const m = MODES[mode];
+    const p = VIZ.plot(canvas, m.view);
+    const t = VIZ.theme();
+    VIZ.axes(p, t, { xticks: m.ticksX, yticks: m.ticksY, xlabel: 'x₁', ylabel: 'x₂' });
+
+    const corners = [[m.view.x0, m.view.y0], [m.view.x0, m.view.y1], [m.view.x1, m.view.y0], [m.view.x1, m.view.y1]];
+    const kmax = Math.max(...corners.map(([a, b]) => {
+      const dx = a - m.c[0], dy = b - m.c[1];
+      return m.Q[0][0] * dx * dx + 2 * m.Q[0][1] * dx * dy + m.Q[1][1] * dy * dy;
+    }));
+    quadContours(p, t, m.Q, m.c[0], m.c[1], [1, 2, 3, 4, 5, 6].map(i => kmax * (i / 6) ** 2));
+
+    const { ctx, X, Y } = p;
+    // path
+    ctx.save();
+    ctx.strokeStyle = t.s5;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    path.forEach((q, i) => i === 0 ? ctx.moveTo(X(q[0]), Y(q[1])) : ctx.lineTo(X(q[0]), Y(q[1])));
+    ctx.stroke();
+    ctx.restore();
+    path.forEach((q, i) => VIZ.dot(p, q[0], q[1], i === path.length - 1 ? t.s5 : t.axis, i === path.length - 1 ? 7 : 4, i === path.length - 1));
+
+    // gradient arrow at the current point
+    const x = path[path.length - 1];
+    const g = m.grad(x[0], x[1]);
+    const gn = Math.hypot(g[0], g[1]);
+    if (!done && gn > EPS) {
+      const scale = 0.16 * (m.view.x1 - m.view.x0) / Math.max(1, gn);
+      const tip = [x[0] + g[0] * scale, x[1] + g[1] * scale];
+      ctx.save();
+      ctx.strokeStyle = t.s2;
+      ctx.fillStyle = t.s2;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(X(x[0]), Y(x[1])); ctx.lineTo(X(tip[0]), Y(tip[1])); ctx.stroke();
+      const ang = Math.atan2(Y(tip[1]) - Y(x[1]), X(tip[0]) - X(x[0]));
+      ctx.beginPath();
+      ctx.moveTo(X(tip[0]), Y(tip[1]));
+      ctx.lineTo(X(tip[0]) - 10 * Math.cos(ang - 0.4), Y(tip[1]) - 10 * Math.sin(ang - 0.4));
+      ctx.lineTo(X(tip[0]) - 10 * Math.cos(ang + 0.4), Y(tip[1]) - 10 * Math.sin(ang + 0.4));
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      VIZ.label(p, '∇f = (' + fmt(g[0], 2) + ', ' + fmt(g[1], 2) + ')', tip[0], tip[1], t.s2, { dx: 8, dy: -6, size: 13, bold: true });
+    }
+    if (done) VIZ.star(p, m.c[0], m.c[1], t.s2, 10);
+  }
+
+  canvas.addEventListener('pointerdown', ev => {
+    const m = MODES[mode];
+    const p = VIZ.plot(canvas, m.view);
+    const { px, py } = VIZ.pointer(canvas, ev);
+    reset([p.invX(px), p.invY(py)]);
+  });
+
+  el('gs-mA').addEventListener('click', () => { mode = 'A'; el('gs-mA').classList.add('active'); el('gs-mB').classList.remove('active'); reset(); });
+  el('gs-mB').addEventListener('click', () => { mode = 'B'; el('gs-mB').classList.add('active'); el('gs-mA').classList.remove('active'); reset(); });
+  el('gs-step').addEventListener('click', step);
+  el('gs-run').addEventListener('click', () => { let g = 0; while (!done && g++ < 50) step(); });
+  el('gs-reset').addEventListener('click', () => reset());
+  reset();
+  VIZ.register(canvas, draw);
+})();
+</script>
+</body>
+</html>
