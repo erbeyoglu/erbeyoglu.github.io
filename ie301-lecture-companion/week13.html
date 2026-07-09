@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Week 13 — Discrete-Time Markov Chains, Part 2 (Interactive)</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<style>
+  table.dp { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; margin: 8px 0 14px; }
+  table.dp th, table.dp td { border: 1px solid var(--grid); padding: 4px 10px; text-align: right; }
+  table.dp th { color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Week 13: DTMC (Part 2)</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · interactive companion, used alongside the slides</div>
+  <div class="theme-switch" id="theme-switch"></div>
+  <nav class="widgets">
+    <a href="#steady">1 · Reaching steady state</a>
+    <a href="#premium">2 · Long-run premium</a>
+    <a href="#accounts">3 · Accounts receivable</a>
+    <a href="#freezco">4 · Freezco warranty</a>
+    <a href="#hth">5 · The HTH game</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ================= WIDGET 1 : STEADY STATE ================= -->
+<section class="widget" id="steady">
+  <h2>Watch the distribution settle <span class="chip">Slides 3–15</span></h2>
+  <p class="howto">
+    Start the chain anywhere you like — even 100% in one state — and <b>advance step by step</b>.
+    The bars drift to the dashed steady-state levels no matter where you begin. That is Theorem 1.
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg active" id="ss-weather">Weather (slide 9)</button>
+      <button class="seg" id="ss-cola">Cola (slide 14)</button>
+    </span>
+    <span class="segwrap" id="ss-starts"></span>
+    <button id="ss-step" class="primary">Advance one step</button>
+    <button id="ss-run">Advance 10</button>
+    <span class="readout">step: <b id="ss-n">0</b></span>
+  </div>
+  <canvas class="viz short" id="c-ss" style="height:300px"></canvas>
+  <p class="status info" id="ss-status"></p>
+  <p class="note" id="ss-note">
+    Steady-state equations (slide 8): π = πP together with Σπⱼ = 1. Weather: π₀ = 0.8π₀ + 0.6π₁ and
+    π₀ + π₁ = 1 give π = (0.75, 0.25) (slide 9). Interpretation: the long-run <em>fraction of time</em>
+    in each state — not that the chain stops moving.
+  </p>
+</section>
+
+<!-- ================= WIDGET 2 : INSURANCE PREMIUM ================= -->
+<section class="widget" id="premium">
+  <h2>The long-run premium <span class="chip">Slides 24–27</span></h2>
+  <p class="howto">
+    Week 11’s insurance chain, now solved: states (year before, last year), premiums $250 (NN),
+    $400 (NY or YN), $800 (YY). <b>Move the accident probabilities</b> and watch the steady state and
+    the company’s long-run average premium respond.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="pm-pn">P(accident | last year N)</label>
+      <input type="range" id="pm-pn" min="0.01" max="0.15" step="0.01" value="0.03" style="width:170px">
+      <span class="readout"><b id="pm-pnv">3</b>%</span>
+    </div>
+    <div class="group">
+      <label for="pm-py">P(accident | last year Y)</label>
+      <input type="range" id="pm-py" min="0.05" max="0.40" step="0.01" value="0.10" style="width:170px">
+      <span class="readout"><b id="pm-pyv">10</b>%</span>
+    </div>
+    <span class="readout" style="font-size:1.05rem">long-run average premium: <b id="pm-avg">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-pm" style="height:260px"></canvas>
+  <p class="status info" id="pm-status"></p>
+  <p class="note">
+    This chain is ergodic (slide 26): irreducible, recurrent, aperiodic — so π exists and is unique.
+    The average premium is Σ πᵢ·premiumᵢ, the standard long-run-cost use of steady states (slide 13).
+    At the slides’ numbers: π ≈ (0.939, 0.029, 0.029, 0.003) → about $260 per customer-year.
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : ACCOUNTS RECEIVABLE ================= -->
+<section class="widget" id="accounts">
+  <h2>Paid or written off? <span class="chip">Slides 55–61</span></h2>
+  <p class="howto">
+    An account ages month by month: from each age it is either paid, or slides one month closer to
+    being written off as bad debt after month 3. <b>Send 1000 new accounts through</b> and compare with
+    the absorption probabilities.
+  </p>
+  <div class="controls">
+    <button id="ar-sim" class="primary">Simulate 1000 new accounts 🎲</button>
+    <button id="ar-theory">Show the absorption equations</button>
+    <span class="readout">collected: <b id="ar-paid">—</b></span>
+    <span class="readout">bad debt: <b id="ar-bad">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-ar" style="height:280px"></canvas>
+  <p class="status info" id="ar-status"></p>
+  <div id="ar-work" style="font-size:0.92rem;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:pre-line"></div>
+  <p class="note">
+    An absorbing chain (slide 52): Paid and Bad absorb; the age states are transient. Solving the
+    f-equations (slide 60) gives P(new account → bad) = 0.6 × 0.5 × 0.4 × 0.3 = 0.036. With $100 000 of
+    monthly sales, about 12 × $100 000 × 3.6% = $43 200 per year goes uncollected (slide 61).
+  </p>
+</section>
+
+<!-- ================= WIDGET 4 : FREEZCO WARRANTY ================= -->
+<section class="widget" id="freezco">
+  <h2>Design Freezco’s warranty <span class="chip">Slides 62–66</span></h2>
+  <p class="howto">
+    Fridges fail with 3% in year 1, 5% in year 2, 7% in year 3. Freezco replaces any failure inside the
+    warranty for $500 and sells 10 000 fridges a year. <b>Choose the warranty length</b> and read the bill.
+  </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg" data-w="1">1-year warranty</button>
+      <button class="seg" data-w="2">2-year warranty</button>
+      <button class="seg active" data-w="3">3-year warranty</button>
+    </span>
+    <span class="readout">fraction replaced: <b id="fz-frac">—</b></span>
+    <span class="readout">annual replacement cost: <b id="fz-cost">—</b></span>
+    <span class="readout">saving vs 3-year: <b id="fz-save">—</b></span>
+  </div>
+  <canvas class="viz short" id="c-fz" style="height:240px"></canvas>
+  <p class="status info" id="fz-status"></p>
+  <p class="note">
+    The chain ages a fridge year by year with absorbing “replaced” exits (slide 63). Fraction replaced
+    under 3 years: 0.03 + 0.97·0.05 + 0.97·0.95·0.07 ≈ 0.1430; under 2 years: 0.0785. Cutting the
+    warranty to 2 years saves 10 000 × (0.1430 − 0.0785) × $500 = $322 500 (slide 66) — before angry
+    customers are priced in.
+  </p>
+</section>
+
+<!-- ================= WIDGET 5 : HTH GAME ================= -->
+<section class="widget" id="hth">
+  <h2>How long until HTH? <span class="chip">Slide 67</span></h2>
+  <p class="howto">
+    Flip a fair coin until the pattern <b>H T H</b> appears. Class vote first: is the expected number of
+    tosses 6, 8, or 10? Then flip — once, and a thousand times.
+  </p>
+  <div class="controls">
+    <button id="ht-one" class="primary">Play one game 🪙</button>
+    <button id="ht-1000">Play 1000</button>
+    <span class="readout">games: <b id="ht-n">0</b></span>
+    <span class="readout">average tosses: <b id="ht-avg">—</b></span>
+    <button id="ht-solve">Solve it with first passage times</button>
+  </div>
+  <p class="status info" id="ht-status"></p>
+  <div id="ht-seq" style="font-size:1.3rem;letter-spacing:3px;font-variant-numeric:tabular-nums;margin:8px 0;word-break:break-all"></div>
+  <div id="ht-work" style="font-size:0.92rem;color:var(--ink-2);white-space:pre-line"></div>
+  <p class="note">
+    Track the useful prefix as a Markov chain: ∅ → H → HT → HTH. Mean first passage equations
+    (slide 43): μ∅ = 1 + ½μ∅ + ½μ_H, μ_H = 1 + ½μ_H + ½μ_HT, μ_HT = 1 + ½μ∅. Solving: μ∅ = 10.
+    (The sneaky part: from HT, a tail throws you ALL the way back to ∅.)
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · interactive lecture companion · Week 13.
+  Figures follow the examples used in the Week 13 slides.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/viz.js"></script>
+<script>
+const el = id => document.getElementById(id);
+const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* ============================================================
+   WIDGET 1 — distribution settling (slides 3-15)
+   ============================================================ */
+(() => {
+  const canvas = el('c-ss');
+  const CHAINS = {
+    weather: {
+      names: ['Dry', 'Rain'], P: [[0.8, 0.2], [0.6, 0.4]],
+      note: 'Weather: π₀ = 0.8π₀ + 0.6π₁, π₀ + π₁ = 1 → π = (0.75, 0.25) (slide 9).',
+    },
+    cola: {
+      names: ['Cola 1', 'Cola 2'], P: [[0.9, 0.1], [0.2, 0.8]],
+      note: 'Cola: π₁ = 0.9π₁ + 0.2π₂ → π = (2/3, 1/3) — cola 1 ends up with two-thirds of the market regardless of today’s shares (slide 14).',
+    },
+  };
+  let key = 'weather', q = [1, 0], n = 0;
+
+  const pi = () => {
+    const P = CHAINS[key].P;
+    const p01 = P[0][1], p10 = P[1][0];
+    const x = p10 / (p01 + p10);
+    return [x, 1 - x];
+  };
+
+  function buildStarts() {
+    const host = el('ss-starts');
+    host.innerHTML = '';
+    CHAINS[key].names.forEach((nm, i) => {
+      const b = document.createElement('button');
+      b.className = 'seg' + (i === 0 ? ' active' : '');
+      b.textContent = 'start: 100% ' + nm;
+      b.addEventListener('click', () => {
+        q = CHAINS[key].names.map((_, j) => j === i ? 1 : 0);
+        n = 0;
+        host.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+        draw();
+      });
+      host.appendChild(b);
+    });
+  }
+
+  function step() {
+    const P = CHAINS[key].P;
+    q = [q[0] * P[0][0] + q[1] * P[1][0], q[0] * P[0][1] + q[1] * P[1][1]];
+    n++;
+  }
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const m = CHAINS[key];
+    const st = pi();
+    const bw = 130, gap = 90;
+    const x0 = w / 2 - bw - gap / 2, base = h - 50, maxH = h - 100;
+    [0, 1].forEach(i => {
+      const bx = i === 0 ? x0 : x0 + bw + gap;
+      ctx.save();
+      ctx.fillStyle = t.region;
+      ctx.strokeStyle = t.s1;
+      ctx.lineWidth = 2;
+      const bh = q[i] * maxH;
+      ctx.fillRect(bx, base - bh, bw, bh);
+      ctx.strokeRect(bx, base - bh, bw, bh);
+      // steady-state dashes
+      ctx.strokeStyle = t.s2;
+      ctx.setLineDash([7, 5]);
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(bx - 16, base - st[i] * maxH);
+      ctx.lineTo(bx + bw + 16, base - st[i] * maxH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 15px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(m.names[i], bx + bw / 2, base + 24);
+      ctx.fillText(fmt(q[i], 3), bx + bw / 2, base - bh - 10);
+      ctx.fillStyle = t.s2;
+      ctx.font = '600 13px system-ui, sans-serif';
+      ctx.fillText('π = ' + fmt(st[i], 3), bx + bw / 2, base - st[i] * maxH - 8);
+      ctx.restore();
+    });
+    el('ss-n').textContent = n;
+    const gapv = Math.abs(q[0] - st[0]);
+    const s = el('ss-status');
+    s.className = gapv < 0.002 ? 'status ok' : 'status info';
+    s.textContent = gapv < 0.002 ? 'Settled: the distribution is (numerically) AT the steady state — further steps change nothing.'
+      : 'Distance to steady state: ' + fmt(gapv, 4) + '. Each step multiplies the gap by roughly |0.8 − 0.6| … keep stepping.';
+  }
+
+  el('ss-weather').addEventListener('click', () => { key = 'weather'; q = [1, 0]; n = 0; el('ss-weather').classList.add('active'); el('ss-cola').classList.remove('active'); el('ss-note').textContent = CHAINS.weather.note; buildStarts(); draw(); });
+  el('ss-cola').addEventListener('click', () => { key = 'cola'; q = [1, 0]; n = 0; el('ss-cola').classList.add('active'); el('ss-weather').classList.remove('active'); el('ss-note').textContent = CHAINS.cola.note; buildStarts(); draw(); });
+  el('ss-step').addEventListener('click', () => { step(); draw(); });
+  el('ss-run').addEventListener('click', () => { for (let k = 0; k < 10; k++) step(); draw(); });
+  buildStarts();
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 2 — insurance long-run premium (slides 24-27)
+   ============================================================ */
+(() => {
+  const canvas = el('c-pm');
+  const NAMES = ['NN', 'NY', 'YN', 'YY'];
+  const PREM = [250, 400, 400, 800];
+
+  function solve(pn, py) {
+    const P = [
+      [1 - pn, pn, 0, 0],
+      [0, 0, 1 - py, py],
+      [1 - pn, pn, 0, 0],
+      [0, 0, 1 - py, py],
+    ];
+    let q = [0.25, 0.25, 0.25, 0.25];
+    for (let k = 0; k < 400; k++) {
+      q = [0, 1, 2, 3].map(j => q.reduce((s, v, i) => s + v * P[i][j], 0));
+    }
+    return q;
+  }
+
+  function draw() {
+    const pn = +el('pm-pn').value, py = +el('pm-py').value;
+    el('pm-pnv').textContent = Math.round(pn * 100);
+    el('pm-pyv').textContent = Math.round(py * 100);
+    const piv = solve(pn, py);
+    const avg = piv.reduce((s, v, i) => s + v * PREM[i], 0);
+    el('pm-avg').textContent = '$' + fmt(avg, 2);
+
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const bw = Math.min(120, (w - 160) / 4 - 20);
+    const x0 = (w - 4 * (bw + 20)) / 2 + 10, base = h - 50, maxH = h - 100;
+    piv.forEach((v, i) => {
+      const bx = x0 + i * (bw + 20);
+      ctx.save();
+      ctx.fillStyle = t.region;
+      ctx.strokeStyle = t.s1;
+      ctx.lineWidth = 2;
+      const bh = Math.max(2, v * maxH);
+      ctx.fillRect(bx, base - bh, bw, bh);
+      ctx.strokeRect(bx, base - bh, bw, bh);
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(NAMES[i] + ' · $' + PREM[i], bx + bw / 2, base + 22);
+      ctx.fillText('π = ' + fmt(v, 4), bx + bw / 2, base - bh - 8);
+      ctx.restore();
+    });
+
+    const st = el('pm-status');
+    st.className = 'status info';
+    st.textContent = Math.abs(pn - 0.03) < 1e-9 && Math.abs(py - 0.10) < 1e-9
+      ? 'The slides’ numbers: nearly 94% of customer-years sit in NN — the $800 premium is almost never charged, and the average lands around $' + fmt(avg, 0) + '.'
+      : 'Riskier drivers shift mass to the right-hand states and the average premium climbs. Note π(NY) = π(YN) always — every accident year is followed by exactly one “Y-then” year.';
+  }
+
+  el('pm-pn').addEventListener('input', draw);
+  el('pm-py').addEventListener('input', draw);
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 3 — accounts receivable (slides 55-61)
+   New: paid 0.4 / age 0.6 · 1mo: 0.5/0.5 · 2mo: 0.6/0.4 · 3mo: paid 0.7 / bad 0.3
+   ============================================================ */
+(() => {
+  const canvas = el('c-ar');
+  const PAY = [0.4, 0.5, 0.6, 0.7];
+  const LABEL = ['new', '1 month', '2 months', '3 months'];
+  let counts = null; // {paidAt: [..4], bad: n}
+
+  function simulate() {
+    counts = { alive: [1000, 0, 0, 0], paid: 0, bad: 0, perStage: [0, 0, 0, 0] };
+    let alive = 1000;
+    const stage = [1000];
+    for (let s = 0; s < 4; s++) {
+      let paid = 0;
+      for (let k = 0; k < alive; k++) if (Math.random() < PAY[s]) paid++;
+      counts.perStage[s] = alive;
+      counts.paid += paid;
+      alive -= paid;
+      stage.push(alive);
+    }
+    counts.bad = alive;
+    draw();
+    el('ar-paid').textContent = counts.paid + ' (' + fmt(counts.paid / 10, 1) + '%)';
+    el('ar-bad').textContent = counts.bad + ' (' + fmt(counts.bad / 10, 1) + '%)';
+    const st = el('ar-status');
+    st.className = 'status info';
+    st.textContent = 'Theory: 96.4% collected, 3.6% bad. Your simulated batch: ' + fmt(counts.paid / 10, 1) + '% / ' + fmt(counts.bad / 10, 1) + '%.';
+  }
+
+  function draw() {
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const data = counts ? counts.perStage : [1000, 600, 300, 120];
+    const badN = counts ? counts.bad : 36;
+    const bw = Math.min(130, (w - 200) / 5 - 16);
+    const x0 = 40, base = h - 46, maxH = h - 92;
+    data.forEach((v, i) => {
+      const bx = x0 + i * (bw + 26);
+      ctx.save();
+      ctx.fillStyle = t.region;
+      ctx.strokeStyle = t.s1;
+      ctx.lineWidth = 2;
+      const bh = Math.max(2, v / 1000 * maxH);
+      ctx.fillRect(bx, base - bh, bw, bh);
+      ctx.strokeRect(bx, base - bh, bw, bh);
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 13px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(LABEL[i], bx + bw / 2, base + 20);
+      ctx.fillText(String(v), bx + bw / 2, base - bh - 8);
+      ctx.restore();
+    });
+    // bad debt bar
+    const bx = x0 + 4 * (bw + 26);
+    ctx.save();
+    ctx.fillStyle = t.bad;
+    ctx.globalAlpha = 0.35;
+    const bh = Math.max(2, badN / 1000 * maxH);
+    ctx.fillRect(bx, base - bh, bw, bh);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = t.bad;
+    ctx.strokeRect(bx, base - bh, bw, bh);
+    ctx.fillStyle = t.bad;
+    ctx.font = '700 13px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BAD DEBT', bx + bw / 2, base + 20);
+    ctx.fillText(String(badN), bx + bw / 2, base - bh - 8);
+    ctx.restore();
+    ctx.save();
+    ctx.fillStyle = t.ink2;
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.fillText(counts ? 'accounts still unpaid entering each age (simulated)' : 'accounts still unpaid entering each age (expected values)', 40, 18);
+    ctx.restore();
+  }
+
+  el('ar-sim').addEventListener('click', simulate);
+  el('ar-theory').addEventListener('click', () => {
+    el('ar-work').textContent =
+      'Absorption into Bad (slide 60), working backwards:\n' +
+      'f(3 months → bad) = 0.3\n' +
+      'f(2 months → bad) = 0.4 × 0.3 = 0.12\n' +
+      'f(1 month  → bad) = 0.5 × 0.12 = 0.06\n' +
+      'f(new      → bad) = 0.6 × 0.06 = 0.036  →  96.4% of new accounts are eventually collected.\n' +
+      'Yearly write-off at $100 000 sales/month: 12 × 100 000 × 0.036 = $43 200 (slide 61).';
+  });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 4 — Freezco warranty (slides 62-66)
+   ============================================================ */
+(() => {
+  const canvas = el('c-fz');
+  const FAIL = [0.03, 0.05, 0.07];
+  let wlen = 3;
+
+  const fracReplaced = years => {
+    let surv = 1, frac = 0;
+    for (let y = 0; y < years; y++) { frac += surv * FAIL[y]; surv *= 1 - FAIL[y]; }
+    return frac;
+  };
+
+  function draw() {
+    const frac = fracReplaced(wlen);
+    const frac3 = fracReplaced(3);
+    el('fz-frac').textContent = fmt(frac * 100, 2) + '%';
+    el('fz-cost').textContent = '$' + Math.round(10000 * frac * 500).toLocaleString('en-US');
+    el('fz-save').textContent = '$' + Math.round(10000 * (frac3 - frac) * 500).toLocaleString('en-US');
+
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    // survival waterfall across 3 years
+    let surv = 1;
+    const bw = Math.min(150, (w - 140) / 4 - 20);
+    const x0 = 60, base = h - 46, maxH = h - 92;
+    for (let y = 0; y <= 3; y++) {
+      const bx = x0 + y * (bw + 26);
+      const covered = y < wlen;
+      ctx.save();
+      ctx.fillStyle = t.region;
+      ctx.strokeStyle = covered || y === 0 ? t.s1 : t.axis;
+      ctx.lineWidth = 2;
+      const bh = surv * maxH;
+      ctx.fillRect(bx, base - bh, bw, bh);
+      ctx.strokeRect(bx, base - bh, bw, bh);
+      if (y < 3) {
+        const failH = surv * FAIL[y] * maxH;
+        ctx.fillStyle = y < wlen ? t.bad : t.muted;
+        ctx.globalAlpha = 0.5;
+        ctx.fillRect(bx, base - bh, bw, failH);
+        ctx.globalAlpha = 1;
+      }
+      ctx.fillStyle = t.ink2;
+      ctx.font = '600 13px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(y === 3 ? 'survives' : 'year ' + (y + 1) + (y < wlen ? ' (covered)' : ' (not covered)'), bx + bw / 2, base + 20);
+      ctx.fillText(fmt(surv * 100, 1) + '%', bx + bw / 2, base - bh - 8);
+      ctx.restore();
+      if (y < 3) surv *= 1 - FAIL[y];
+    }
+    const st = el('fz-status');
+    st.className = 'status info';
+    st.textContent = wlen === 2 ? 'Exactly slide 66: 14.30% → 7.85% replaced, saving $322 500 per year.' :
+      wlen === 1 ? 'Only first-year failures covered: 3% replaced.' :
+      'Full 3-year coverage replaces 14.30% of all fridges sold.';
+  }
+
+  document.querySelectorAll('#freezco .segwrap button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wlen = +btn.dataset.w;
+      document.querySelectorAll('#freezco .segwrap button').forEach(b => b.classList.toggle('active', b === btn));
+      draw();
+    });
+  });
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGET 5 — HTH first passage (slide 67)
+   ============================================================ */
+(() => {
+  let games = 0, totalTosses = 0;
+
+  function play() {
+    let seq = '';
+    while (!seq.endsWith('HTH')) {
+      seq += Math.random() < 0.5 ? 'H' : 'T';
+      if (seq.length > 400) break;
+    }
+    games++;
+    totalTosses += seq.length;
+    return seq;
+  }
+
+  el('ht-one').addEventListener('click', () => {
+    const seq = play();
+    el('ht-seq').innerHTML = seq.slice(0, -3) + '<b style="color:var(--good)">' + seq.slice(-3) + '</b>';
+    el('ht-n').textContent = games;
+    el('ht-avg').textContent = fmt(totalTosses / games, 2);
+    const st = el('ht-status');
+    st.className = 'status info';
+    st.textContent = 'HTH appeared after ' + seq.length + ' tosses.';
+  });
+
+  el('ht-1000').addEventListener('click', () => {
+    for (let k = 0; k < 1000; k++) play();
+    el('ht-n').textContent = games;
+    el('ht-avg').textContent = fmt(totalTosses / games, 2);
+    const st = el('ht-status');
+    st.className = 'status ok';
+    st.textContent = 'Average over ' + games + ' games: ' + fmt(totalTosses / games, 2) + ' tosses — converging to the first-passage answer of 10.';
+  });
+
+  el('ht-solve').addEventListener('click', () => {
+    el('ht-work').textContent =
+      'States = useful prefix of HTH: ∅, H, HT (and HTH = done).\n' +
+      'μ∅  = 1 + ½·μ∅ + ½·μH        (T keeps you at ∅, H moves you to H)\n' +
+      'μH  = 1 + ½·μH + ½·μHT       (another H stays at H!)\n' +
+      'μHT = 1 + ½·0 + ½·μ∅         (H finishes, T destroys EVERYTHING)\n' +
+      'Solve: μHT = 1 + μ∅/2, μH = 2 + μHT = 3 + μ∅/2, μ∅ = 2 + μH = 5 + μ∅/2 → μ∅ = 10.';
+    const st = el('ht-status');
+    st.className = 'status ok';
+    st.textContent = 'Expected tosses = 10. (For comparison, HTT needs only 8 — the pattern’s self-overlap is what costs extra.)';
+  });
+})();
+</script>
+</body>
+</html>
