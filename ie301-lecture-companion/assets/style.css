@@ -1,5 +1,8 @@
 /* IE301 Interactive Lectures — shared theme and layout.
-   Color roles follow the validated reference palette (see docs/DECISIONS.md ADR-002). */
+   Color roles follow the validated reference palette (see docs/DECISIONS.md ADR-002).
+   Themes are explicit: assets/theme.js stamps data-theme on <html>
+   (light | dark | projector); the initial value follows the OS preference
+   until the user picks one. Canvas code reads these tokens at draw time. */
 
 :root {
   --page: #f9f9f7;
@@ -17,27 +20,52 @@
   --good: #0ca30c;      /* status: feasible / correct                  */
   --critical: #d03b3b;  /* status: infeasible / violation              */
   --region-fill: #cde2fb; /* feasible-region / shape fill (sequential step 100) */
+
+  --viz-font-scale: 1;  /* canvas text multiplier, read by viz.js */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --muted: #898781;
-    --grid: #2c2c2a;
-    --axis: #383835;
-    --border: rgba(255, 255, 255, 0.10);
+:root[data-theme="dark"] {
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
 
-    --s1: #3987e5;
-    --s2: #199e70;
-    --s5: #9085e9;
-    --good: #0ca30c;
-    --critical: #d03b3b;
-    --region-fill: #16334f; /* blue step deepened for the dark surface */
-  }
+  --s1: #3987e5;
+  --s2: #199e70;
+  --s5: #9085e9;
+  --good: #0ca30c;
+  --critical: #d03b3b;
+  --region-fill: #16334f; /* blue step deepened for the dark surface */
 }
+
+/* Projector: high-contrast light theme for washed-out lecture-hall
+   projection — pure white surface, near-black inks, darker series colors
+   (validated ≥3:1 on white), stronger grid and borders, larger type. */
+:root[data-theme="projector"] {
+  --page: #ffffff;
+  --surface: #ffffff;
+  --ink: #000000;
+  --ink-2: #2e2d2a;
+  --muted: #4f4d47;
+  --grid: #c9c8c0;
+  --axis: #7a7870;
+  --border: rgba(0, 0, 0, 0.25);
+
+  --s1: #1c5cab;
+  --s2: #0f8757;
+  --s5: #4a3aa7;
+  --good: #006300;
+  --critical: #b02a2a;
+  --region-fill: #b7d3f6;
+
+  --viz-font-scale: 1.2;
+}
+
+:root[data-theme="projector"] body { font-size: 19px; }
 
 * { box-sizing: border-box; }
 
@@ -60,6 +88,26 @@ header.site {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.theme-switch {
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  display: flex;
+  gap: 6px;
+}
+
+.theme-switch button {
+  font-size: 0.78rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.theme-switch button.active {
+  background: var(--s1);
+  border-color: var(--s1);
+  color: #ffffff;
 }
 
 header.site h1 {

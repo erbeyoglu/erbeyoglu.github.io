@@ -9,6 +9,12 @@ window.VIZ = (() => {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
+  // canvas text multiplier (the projector theme bumps --viz-font-scale)
+  function font(px, bold) {
+    const scale = parseFloat(cssv('--viz-font-scale')) || 1;
+    return (bold ? '600 ' : '') + Math.round(px * scale) + 'px system-ui, sans-serif';
+  }
+
   // Snapshot of the theme tokens, read at draw time (so dark mode "just works").
   function theme() {
     return {
@@ -84,7 +90,7 @@ window.VIZ = (() => {
     ctx.stroke();
     // tick labels
     ctx.fillStyle = t.muted;
-    ctx.font = '13px system-ui, sans-serif';
+    ctx.font = font(13);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     xt.forEach(x => ctx.fillText(String(x), X(x), Y(opts.yAxisAt ?? 0) + 6));
@@ -93,7 +99,7 @@ window.VIZ = (() => {
     yt.forEach(y => ctx.fillText(String(y), X(opts.xAxisAt ?? 0) - 7, Y(y)));
     // axis titles
     ctx.fillStyle = t.ink2;
-    ctx.font = '600 14px system-ui, sans-serif';
+    ctx.font = font(14, true);
     if (opts.xlabel) {
       ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
@@ -171,7 +177,7 @@ window.VIZ = (() => {
   function label(p, text, x, y, color, opts = {}) {
     const { ctx, X, Y } = p;
     ctx.save();
-    ctx.font = (opts.bold ? '600 ' : '') + (opts.size || 14) + 'px system-ui, sans-serif';
+    ctx.font = font(opts.size || 14, opts.bold);
     ctx.fillStyle = color;
     ctx.textAlign = opts.align || 'left';
     ctx.textBaseline = opts.baseline || 'bottom';
@@ -187,8 +193,8 @@ window.VIZ = (() => {
     draw();
   }
 
-  const mq = matchMedia('(prefers-color-scheme: dark)');
-  mq.addEventListener('change', () => drawFns.forEach(d => d()));
+  // theme.js dispatches 'themechange' whenever the user switches themes
+  window.addEventListener('themechange', () => drawFns.forEach(d => d()));
 
   // Pointer position in CSS-pixel canvas coordinates.
   function pointer(canvas, ev) {
