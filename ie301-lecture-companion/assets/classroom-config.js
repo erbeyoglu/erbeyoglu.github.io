@@ -12,7 +12,7 @@
         commit and push.
    Leave the empty string to disable classroom mode entirely — every page
    works exactly as before. */
-window.CLASSROOM_DB = '';
+window.CLASSROOM_DB = 'https://ie301-classroom-default-rtdb.europe-west1.firebasedatabase.app';
 
 /* Public base URL used inside student QR links. Keep pointing at the live
    site — this makes QR codes correct even when a page is opened from a
