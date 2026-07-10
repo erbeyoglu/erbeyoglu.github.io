@@ -13,3 +13,8 @@
    Leave the empty string to disable classroom mode entirely — every page
    works exactly as before. */
 window.CLASSROOM_DB = '';
+
+/* Public base URL used inside student QR links. Keep pointing at the live
+   site — this makes QR codes correct even when a page is opened from a
+   local file (the instructor deck). */
+window.CLASSROOM_PUBLIC_BASE = 'https://erbeyoglu.github.io/ie301-lecture-companion/';

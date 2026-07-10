@@ -393,6 +393,14 @@ button.locked { opacity: 0.45; }
   width: 130px;
 }
 
+/* Embed mode (?embed=<id>): single-widget view for the instructor deck */
+.embed-mode header.site,
+.embed-mode footer.site,
+.embed-mode main > .howto,
+.embed-mode section.widget { display: none; }
+.embed-mode section.widget.embed-target { display: block; margin: 10px auto; }
+.embed-mode main { padding: 6px 14px 24px; }
+
 /* ---------- responsive: phones ---------- */
 @media (max-width: 700px) {
   body { font-size: 15px; }

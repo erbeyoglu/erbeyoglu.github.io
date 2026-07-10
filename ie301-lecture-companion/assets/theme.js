@@ -41,4 +41,16 @@
 
   document.documentElement.dataset.theme = theme; // before first paint
   document.addEventListener('DOMContentLoaded', render);
+
+  // Embed mode: ?embed=<sectionId> strips the page down to a single widget.
+  // Used by the (local, unpublished) instructor deck to interleave activities
+  // between slides.
+  const embedId = new URLSearchParams(location.search).get('embed');
+  if (embedId) {
+    document.documentElement.classList.add('embed-mode');
+    document.addEventListener('DOMContentLoaded', () => {
+      const target = document.getElementById(embedId);
+      if (target) target.classList.add('embed-target');
+    });
+  }
 })();

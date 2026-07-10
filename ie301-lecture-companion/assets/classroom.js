@@ -25,7 +25,11 @@ window.CLASSROOM = (() => {
   }
 
   function sessionUrl(code) {
-    return location.origin + location.pathname + '?class=' + code;
+    // Students must always land on the PUBLIC site, even when this page runs
+    // from a local file inside the instructor deck.
+    const file = location.pathname.split('/').pop();
+    const base = window.CLASSROOM_PUBLIC_BASE || (location.origin + location.pathname.replace(/[^/]*$/, ''));
+    return base.replace(/\/?$/, '/') + file + '?class=' + code;
   }
 
   function betterOf(dir, a, b) {
