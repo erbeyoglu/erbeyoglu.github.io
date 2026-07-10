@@ -51,6 +51,7 @@
     The time in a state must be exponential — it is the ONLY memoryless continuous distribution
     (slides 8–10), and memorylessness is exactly the Markov property in continuous time. E[T_up] = 1/q,
     E[T_down] = 1/μ, so the long-run share of up-time is (1/q)/(1/q + 1/μ) = μ/(q+μ).
+    It is the same memorylessness you tested on <a href="week10.html#memoryless">Week 10’s 10-year-old radio</a>.
   </p>
 </section>
 
@@ -193,6 +194,7 @@ const rexp = rate => -Math.log(1 - Math.random()) / rate;
    ============================================================ */
 (() => {
   const canvas = el('c-bl');
+  VIZ.hint(canvas, '🖱 tap a state circle');
   let preset = 'shop', sel = null;
 
   function config() {
@@ -326,12 +328,12 @@ const rexp = rate => -Math.log(1 - Math.random()) / rate;
       el('bl-r1lab').textContent = 'arrival rate λ';
       el('bl-r2lab').textContent = 'service rate μ';
       el('bl-r1').value = 3; el('bl-r2').value = 4;
-      el('bl-note').textContent = 'Balance equations (slides 20–23): 3π₀ = 4π₁; 7π₁ = 3π₀ + 4π₂; 4π₂ = 3π₁. Solution π = (16/37, 12/37, 9/37); E[customers] = 30/37; P(enter) = 28/37 (slide 24).';
+      el('bl-note').innerHTML = '<details class="spoiler"><summary>spoiler — open after the class has answered</summary>Balance equations (slides 20–23): 3π₀ = 4π₁; 7π₁ = 3π₀ + 4π₂; 4π₂ = 3π₁. Solution π = (16/37, 12/37, 9/37); E[customers] = 30/37; P(enter) = 28/37 (slide 24).</details>';
     } else {
       el('bl-r1lab').textContent = 'breakdown rate λ (per machine)';
       el('bl-r2lab').textContent = 'repair rate μ';
       el('bl-r1').value = 1; el('bl-r2').value = 2;
-      el('bl-note').textContent = 'Slide 26: with both machines running, failures arrive at 2λ = 2; with one down, at λ = 1; the single repairman fixes at μ = 2. Balance gives π = (2/5, 2/5, 1/5) — the shop runs at full capacity only 40% of the time.';
+      el('bl-note').innerHTML = '<details class="spoiler"><summary>spoiler — open after the class has answered</summary>Slide 26: with both machines running, failures arrive at 2λ = 2; with one down, at λ = 1; the single repairman fixes at μ = 2. Balance gives π = (2/5, 2/5, 1/5) — the shop runs at full capacity only 40% of the time.</details>';
     }
     el('bl-status').className = 'status info';
     el('bl-status').textContent = 'Click a state circle.';

@@ -57,11 +57,11 @@
   </div>
   <p class="status info" id="mk-status"></p>
   <div id="mk-tables"></div>
-  <p class="note">
+  <div class="note">
     Same skeleton as Week 8’s resource allocation, but rewards are now <em>expected</em> revenues
     rₜ(g) = Σ P(d)·[2·min(g, d) + 0.5·(g − d)⁺] (slide 10). DP doesn’t care that the reward came from an
-    expectation — that is the whole point of slide 5’s recursion. Optimum: 1, 3, 2.
-  </p>
+    expectation — that is the whole point of slide 5’s recursion. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Optimum: 1, 3, 2.
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 2 : PROBABILISTIC INVENTORY ================= -->
@@ -97,7 +97,7 @@
   <h2>Stay in line or give up? <span class="chip">Slides 26–33</span></h2>
   <p class="howto">
     Sally has 30 minutes and 20 people ahead. Each minute 0, 1 or 2 customers finish (probabilities
-    0.3 / 0.5 / 0.2); reaching the teller pays reward r, and each minute in line costs c. The map shows
+    0.3 / 0.5 / 0.2 — chosen for this demo; slide 27 keeps p(x|n) general); reaching the teller pays reward r, and each minute in line costs c. The map shows
     the DP’s verdict for every (time, queue) state. <b>Move the r and c sliders</b> — watch the give-up
     frontier shift.
   </p>
@@ -141,12 +141,12 @@
   </div>
   <p class="status info" id="rj-status"></p>
   <div id="rj-tables"></div>
-  <p class="note">
+  <div class="note">
     State = do we still need an item (1) or not (0); P(a lot of x yields none acceptable) = 0.5ˣ
     (slides 37–41). Expected cost = run 1 + 0.5^x₁·[run 2 + 0.5^x₂·(run 3 + 0.5^x₃·1600)].
-    DP optimum: lot 2, then 2 or 3, then 3 or 4 → $675 (slide 45). Bigger lots buy insurance;
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>DP optimum: lot 2, then 2 or 3, then 3 or 4 → $675 (slide 45). Bigger lots buy insurance;
     the question is how much insurance is worth $100 a unit.
-  </p>
+  </details></div>
 </section>
 
 </main>

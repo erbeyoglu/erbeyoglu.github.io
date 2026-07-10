@@ -15,7 +15,10 @@
   --border: rgba(11, 11, 11, 0.10);
 
   --s1: #2a78d6;        /* primary series: curves, objective contours */
-  --s2: #1baf7a;        /* secondary series: revealed optimum / truth  */
+  --s2: #0f8757;        /* secondary series: revealed optimum / truth
+                           (darkened from the reference #1baf7a so TEXT
+                           labels in this color clear 3:1 on the light
+                           surface; validated with the palette script) */
   --s5: #4a3aa7;        /* tertiary series: chords, student guesses    */
   --good: #0ca30c;      /* status: feasible / correct                  */
   --critical: #d03b3b;  /* status: infeasible / violation              */
@@ -327,4 +330,82 @@ footer.site {
 footer.site .credit {
   margin-top: 8px;
   font-size: 0.78rem;
+}
+
+/* Spoiler wrapper: final answers hidden until the instructor opens them */
+details.spoiler { margin-top: 6px; }
+details.spoiler summary {
+  cursor: pointer;
+  color: var(--s1);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+details.spoiler[open] summary { color: var(--muted); }
+
+/* Interaction hint badge overlaid on a canvas (inserted by VIZ.hint) */
+.viz-hint { position: relative; height: 0; }
+.viz-hint span {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  z-index: 2;
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 999px;
+  padding: 2px 10px;
+  pointer-events: none;
+}
+
+/* Gated buttons (e.g. run-to-convergence before any manual step) */
+button.locked { opacity: 0.45; }
+
+/* Classroom mode (Firebase-backed live leaderboards) */
+.classroom {
+  margin-top: 12px;
+  border-top: 1px dashed var(--grid);
+  padding-top: 10px;
+}
+.classroom .lb { font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+.classroom .qr { display: block; margin: 8px 0; }
+.class-join {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: var(--surface);
+  border-top: 2px solid var(--s1);
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.class-join input[type="text"] {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--page);
+  color: var(--ink);
+  width: 130px;
+}
+
+/* ---------- responsive: phones ---------- */
+@media (max-width: 700px) {
+  body { font-size: 15px; }
+  header.site { padding: 12px 14px 10px; }
+  header.site h1 { font-size: 1.02rem; }
+  .theme-switch { position: static; margin-top: 8px; }
+  main { padding: 14px 10px 70px; }
+  section.widget { padding: 14px 12px; margin: 16px 0; border-radius: 10px; }
+  section.widget h2 { font-size: 1.12rem; }
+  canvas.viz { max-height: 320px; }
+  input[type="range"] { max-width: 46vw; }
+  .controls { gap: 8px 12px; }
+  .readout { padding: 5px 9px; font-size: 0.88rem; }
+  button { padding: 6px 12px; font-size: 0.88rem; }
+  table.attempts th, table.attempts td { padding: 4px 6px; font-size: 0.85rem; }
 }

@@ -57,11 +57,11 @@
   </div>
   <canvas class="viz" id="c-qg"></canvas>
   <p class="status info" id="qg-status">Drag the violet point.</p>
-  <p class="note">
-    The unconstrained peak (15, 11.25) is <em>outside</em> the region, so the optimum slides down to the
+  <div class="note">
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The unconstrained peak (15, 11.25) is <em>outside</em> the region, so the optimum slides down to the
     boundary: (12, 9) with f = 270, where ∇f = (3, 6) = 3·(1, 2) — parallel to the constraint normal,
     with multiplier u = 3.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 2 : SPOT Q AND C ================= -->
@@ -94,11 +94,11 @@
     <button id="qn-show">Show answer</button>
   </div>
   <p class="status info" id="qn-status"></p>
-  <p class="note">
-    Slide 7’s recipe: qⱼⱼ = −2 × (coefficient of xⱼ²) and qᵢⱼ = qⱼᵢ = −(coefficient of xᵢxⱼ), because the
+  <div class="note">
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Slide 7’s recipe: qⱼⱼ = −2 × (coefficient of xⱼ²) and qᵢⱼ = qⱼᵢ = −(coefficient of xᵢxⱼ), because the
     ½ halves the diagonal and the symmetric pair qᵢⱼ + qⱼᵢ shares the cross term. Q positive semidefinite
     ⇔ f concave ⇔ KKT is necessary AND sufficient (slide 9).
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 3 : MODIFIED SIMPLEX MACHINE ================= -->
@@ -123,12 +123,12 @@
     <canvas class="viz short" id="c-ms" style="flex:1 1 320px;min-width:300px;height:320px"></canvas>
   </div>
   <p class="status info" id="ms-status"></p>
-  <p class="note">
+  <div class="note">
     Complementary pairs: (x₁, y₁), (x₂, y₂), (u₁, v₁), (u₂, v₂). The restricted-entry rule (slide 21)
     keeps xᵀy + uᵀv = 0 at every step, so plain phase-1 simplex quietly solves a <em>nonlinear</em>
-    program. When both artificials hit zero, the tableau’s x is the QPP optimum: (2.5, 3.5), Z = 18.5
+    program. The KKT system it walks through is exactly what <a href="week04.html#kkt">Week 4’s KKT checker</a> verifies point by point. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>When both artificials hit zero, the tableau’s x is the QPP optimum: (2.5, 3.5), Z = 18.5
     (slide 38) — an interior optimum, so u₁ = u₂ = 0.
-  </p>
+  </details></div>
 </section>
 
 </main>
@@ -175,6 +175,7 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
    ============================================================ */
 (() => {
   const canvas = el('c-qg');
+  VIZ.hint(canvas, '🖱 drag the decision point');
   const view = { x0: -1.5, x1: 33, y0: -1, y1: 17.5 };
   const f = (x, y) => 15 * x + 30 * y + 4 * x * y - 2 * x * x - 4 * y * y;
   const C = [15, 11.25];
@@ -250,7 +251,11 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
   canvas.addEventListener('pointerdown', ev => { dragging = true; canvas.setPointerCapture(ev.pointerId); setFromPointer(ev); });
   canvas.addEventListener('pointermove', ev => { if (dragging) setFromPointer(ev); });
   canvas.addEventListener('pointerup', () => dragging = false);
-  el('qg-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  el('qg-reveal').addEventListener('click', () => {
+    revealed = !revealed;
+    el('qg-reveal').textContent = revealed ? 'Hide optimum' : 'Reveal optimum ★';
+    draw();
+  });
   VIZ.register(canvas, draw);
 })();
 

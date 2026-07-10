@@ -53,11 +53,11 @@
   </div>
   <canvas class="viz short" id="c-mt" style="height:180px"></canvas>
   <p class="status info" id="mt-status">Your move. Think backwards: which counts would you hate to face?</p>
-  <p class="note">
-    Working backwards (slides 6–7): facing 1 match you lose; facing 2–4 you win; facing 5 you lose…
+  <div class="note">
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Working backwards (slides 6–7): facing 1 match you lose; facing 2–4 you win; facing 5 you lose…
     the losing counts are 1, 5, 9, 13, 17, 21, 25, 29 — every 4k+1. From 30, taking 1 leaves 29 and you
     can then mirror every opponent move to keep leaving 4k+1. That backward sweep IS dynamic programming.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 2 : NYC-LA NETWORK ================= -->
@@ -81,11 +81,11 @@
   <canvas class="viz" id="c-nw"></canvas>
   <p class="status info" id="nw-status"></p>
   <div id="nw-work" style="font-size:0.92rem;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:pre-line"></div>
-  <p class="note">
+  <div class="note">
     Recursion (slide 25): fₙ(i) = minⱼ { c(i, j) + fₙ₊₁(j) } — the cost of the next leg plus the
-    already-computed best from there. The optimal path 1–2–5–8–10 (2870 miles) never has to look at
+    already-computed best from there. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The optimal path 1–2–5–8–10 (2870 miles) never has to look at
     all 18 routes.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 3 : EFFICIENCY ================= -->
@@ -140,11 +140,11 @@
   <table class="dp" id="iv-plan"></table>
   <p class="status info" id="iv-status"></p>
   <div id="iv-tables"></div>
-  <p class="note">
-    State = starting inventory, stage = month, decision = production (slide 35). The DP answer: produce
+  <div class="note">
+    State = starting inventory, stage = month, decision = production (slide 35). <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The DP answer: produce
     1, 5, 0, 4 for $20 — it over-produces in month 2 to buy its way out of month 3’s setup cost. Greedy
     “produce exactly the demand” pays $22.
-  </p>
+  </details></div>
 </section>
 
 </main>
@@ -256,6 +256,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
    ============================================================ */
 (() => {
   const canvas = el('c-nw');
+  VIZ.hint(canvas, '🖱 tap a highlighted city');
   const NODES = {
     1: { x: 0, y: 2, name: '1 · New York', stage: 1 },
     2: { x: 1, y: 0.7, name: '2', stage: 2 }, 3: { x: 1, y: 2, name: '3', stage: 2 }, 4: { x: 1, y: 3.3, name: '4', stage: 2 },

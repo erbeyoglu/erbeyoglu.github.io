@@ -110,11 +110,11 @@
     <thead><tr><th>#</th><th>x</th><th>y</th><th>z</th><th>metal (m²)</th></tr></thead>
     <tbody></tbody>
   </table>
-  <p class="note">
+  <div class="note">
     Eliminating z turns this into an unconstrained NLP in two variables:
-    min S(x, y) = xy + 20/x + 20/y. Setting both partials to zero gives x = y = ∛20 ≈ 2.71 m and
+    min S(x, y) = xy + 20/x + 20/y. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Setting both partials to zero gives x = y = ∛20 ≈ 2.71 m and
     z ≈ 1.36 m — a square base, half as tall as it is wide. The Hessian test confirms a minimum.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 4 : GRADIENT SEARCH ================= -->
@@ -291,6 +291,7 @@ function quadContours(p, t, Q, cx, cy, levels) {
    ============================================================ */
 (() => {
   const canvas = el('c-pf');
+  VIZ.hint(canvas, '🖱 drag the decision point');
   const MODES = {
     A: {
       html: 'f(q₁, q₂) = (70 − 4q₁)q₁ + (150 − 15q₂)q₂ − 100 − 15(q₁ + q₂)',
@@ -344,7 +345,7 @@ function quadContours(p, t, Q, cx, cy, levels) {
     el('pf-val').textContent = fmt(v, 2);
     el('pf-best').textContent = fmt(best, 2);
     el('pf-formula').innerHTML = m.html;
-    el('pf-note').textContent = m.note;
+    el('pf-note').innerHTML = '<details class="spoiler"><summary>spoiler — open after the class has answered</summary>' + m.note + '</details>';
 
     const st = el('pf-status');
     if (showOpt) {
@@ -386,7 +387,11 @@ function quadContours(p, t, Q, cx, cy, levels) {
 
   el('pf-mA').addEventListener('click', () => setMode('A'));
   el('pf-mB').addEventListener('click', () => setMode('B'));
-  el('pf-reveal').addEventListener('click', () => { showOpt = true; draw(); });
+  el('pf-reveal').addEventListener('click', () => {
+    showOpt = !showOpt;
+    el('pf-reveal').textContent = showOpt ? 'Hide optimum' : 'Reveal optimum ★';
+    draw();
+  });
 
   VIZ.register(canvas, draw);
 })();
@@ -491,6 +496,7 @@ function quadContours(p, t, Q, cx, cy, levels) {
    ============================================================ */
 (() => {
   const canvas = el('c-gs');
+  VIZ.hint(canvas, '🖱 tap to choose a start point');
   const EPS = 0.01;
   const MODES = {
     A: {
@@ -512,7 +518,7 @@ function quadContours(p, t, Q, cx, cy, levels) {
       ticksX: [0, 0.5, 1, 1.5], ticksY: [0, 0.5, 1],
     },
   };
-  let mode = 'A', path, done;
+  let mode = 'A', path, done, manual = false;
 
   // 1-D line search: maximize f(x + t g) over t >= 0 by grid + refinement
   function lineMax(m, x, g) {
@@ -534,6 +540,8 @@ function quadContours(p, t, Q, cx, cy, levels) {
     const m = MODES[mode];
     path = [start ? start.slice() : m.start.slice()];
     done = false;
+    manual = false;
+    el('gs-run').classList.add('locked');
     el('gs-formula').innerHTML = m.html;
     el('gs-status').className = 'status info';
     el('gs-status').textContent = 'Start at (' + fmt(path[0][0], 2) + ', ' + fmt(path[0][1], 2) + '). The arrow shows ∇f — perpendicular to the contour through the point.';
@@ -643,8 +651,11 @@ function quadContours(p, t, Q, cx, cy, levels) {
 
   el('gs-mA').addEventListener('click', () => { mode = 'A'; el('gs-mA').classList.add('active'); el('gs-mB').classList.remove('active'); reset(); });
   el('gs-mB').addEventListener('click', () => { mode = 'B'; el('gs-mB').classList.add('active'); el('gs-mA').classList.remove('active'); reset(); });
-  el('gs-step').addEventListener('click', step);
-  el('gs-run').addEventListener('click', () => { let g = 0; while (!done && g++ < 50) step(); });
+  el('gs-step').addEventListener('click', () => { manual = true; el('gs-run').classList.remove('locked'); step(); });
+  el('gs-run').addEventListener('click', () => {
+    if (!manual) { const st = el('gs-status'); st.className = 'status info'; st.textContent = 'Take at least one step by hand first — predict the direction before automating.'; return; }
+    let g = 0; while (!done && g++ < 50) step();
+  });
   el('gs-reset').addEventListener('click', () => reset());
   reset();
   VIZ.register(canvas, draw);

@@ -202,5 +202,13 @@ window.VIZ = (() => {
     return { px: ev.clientX - rect.left, py: ev.clientY - rect.top };
   }
 
-  return { cssv, theme, setup, plot, axes, curve, dot, star, label, register, pointer };
+  // Small "what can I do here" badge overlaid on an interactive canvas.
+  function hint(canvas, text) {
+    const wrap = document.createElement('div');
+    wrap.className = 'viz-hint';
+    wrap.innerHTML = '<span>' + text + '</span>';
+    canvas.parentNode.insertBefore(wrap, canvas);
+  }
+
+  return { cssv, theme, setup, plot, axes, curve, dot, star, label, register, pointer, hint };
 })();

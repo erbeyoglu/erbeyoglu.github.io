@@ -94,10 +94,10 @@
     <thead><tr><th>#</th><th>x</th><th>y</th><th>z</th><th>area used</th><th>volume</th></tr></thead>
     <tbody></tbody>
   </table>
-  <p class="note">
-    The NLP on slide 10: &nbsp;max V = xyz &nbsp;s.t.&nbsp; 2(xy + yz + xz) ≤ A. Notice at the best
+  <div class="note">
+    The NLP on slide 10: &nbsp;max V = xyz &nbsp;s.t.&nbsp; 2(xy + yz + xz) ≤ A. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Notice at the best
     designs the constraint becomes <em>tight</em> — leftover cardboard is wasted volume.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 3 : LP vs NLP EXPLORER ================= -->
@@ -132,10 +132,10 @@
 
   <canvas class="viz" id="c-explorer"></canvas>
   <p class="status info" id="ex-status"></p>
-  <p class="note">
+  <div class="note">
     Constraints (slide 12): x₁ ≤ 4, &nbsp;2x₂ ≤ 12, &nbsp;3x₁ + 2x₂ ≤ 18, &nbsp;x₁, x₂ ≥ 0.
-    The lesson (slide 16): for an NLP we must consider <em>all</em> feasible points — not just the corners.
-  </p>
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The lesson (slide 16): for an NLP we must consider <em>all</em> feasible points — not just the corners.
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 4 : LOCAL VS GLOBAL HUNT ================= -->
@@ -144,7 +144,7 @@
   <p class="howto">
     The function is <b>hidden</b> and each evaluation is expensive — you have a budget of
     <b>10 probes</b>. Click an x-position to evaluate f(x). As a class: where do you probe next,
-    and when are you convinced you found <em>the</em> maximum?
+    and when are you convinced you found <em>the</em> maximum? <em>(The hidden functions are invented for this game.)</em>
   </p>
   <div class="controls">
     <span class="readout">Probes: <b id="ht-count">0</b> / 10</span>
@@ -318,6 +318,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
    ============================================================ */
 (() => {
   const canvas = el('c-explorer');
+  VIZ.hint(canvas, '🖱 drag / tap to move the probe');
   const view = { x0: -0.45, x1: 7.35, y0: -0.6, y1: 8.75 };
   const VERTS = [[0, 0], [4, 0], [4, 3], [2, 6], [0, 6]];
   const MODES = {
@@ -487,6 +488,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
    ============================================================ */
 (() => {
   const canvas = el('c-sets');
+  VIZ.hint(canvas, '🖱 tap two points inside the set');
   let shapeKey = 'disk';
   let pts = [];          // clicked points in canvas px
   let lastSize = { w: 0, h: 0 };
@@ -674,6 +676,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
    ============================================================ */
 (() => {
   const canvas = el('c-fnlab');
+  VIZ.hint(canvas, '🖱 drag the x′ and x″ handles');
   const FNS = [
     { label: 'f(x) = x²', f: x => x * x, ans: 'convex',
       why: 'f″(x) = 2 ≥ 0 everywhere — the chord never dips below the curve.' },
@@ -974,6 +977,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
    ============================================================ */
 (() => {
   const canvas = el('c-hunt');
+  VIZ.hint(canvas, '🖱 tap an x to evaluate f(x)');
   const view = { x0: -0.3, x1: 10.3, y0: 3, y1: 8.4 };
   const LIMIT = 10;
   const PRESETS = [
@@ -1060,7 +1064,11 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
     draw();
   });
 
-  el('ht-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  el('ht-reveal').addEventListener('click', () => {
+    revealed = !revealed;
+    el('ht-reveal').textContent = revealed ? 'Hide the function' : 'Reveal the function';
+    draw();
+  });
   el('ht-reset').addEventListener('click', () => {
     probes = []; revealed = false;
     el('ht-status').className = 'status info'; el('ht-status').textContent = '';
@@ -1163,7 +1171,11 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   el('rg-a').addEventListener('input', e => { a = +e.target.value; el('rg-aval').textContent = fmt(a); draw(); });
   el('rg-b').addEventListener('input', e => { b = +e.target.value; el('rg-bval').textContent = fmt(b); draw(); });
   el('rg-squares').addEventListener('change', e => { showSquares = e.target.checked; draw(); });
-  el('rg-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  el('rg-reveal').addEventListener('click', () => {
+    revealed = !revealed;
+    el('rg-reveal').textContent = revealed ? 'Hide least-squares fit' : 'Reveal least-squares fit';
+    draw();
+  });
 
   VIZ.register(canvas, draw);
 })();

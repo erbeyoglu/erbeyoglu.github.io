@@ -83,11 +83,11 @@
   </div>
   <canvas class="viz short" id="c-ut"></canvas>
   <p class="status info" id="ut-status"></p>
-  <p class="note">
-    Lagrangian (slide 11): L = a·ln x₁ + (1−a)·ln x₂ + λ(d − c₁x₁ − c₂x₂); setting ∂L = 0 gives
+  <div class="note">
+    Lagrangian (slide 11): L = a·ln x₁ + (1−a)·ln x₂ + λ(d − c₁x₁ − c₂x₂); <details class="spoiler"><summary>spoiler — open after the class has answered</summary>setting ∂L = 0 gives
     x₁* = da/c₁ and x₂* = d(1−a)/c₂. So raising c₁ lowers x₁* — but leaves x₂* <em>completely
     unchanged</em> (slide 12). Try it: move the c₁ slider after revealing.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 3 : ADVERTISING TANGENCY ================= -->
@@ -106,11 +106,11 @@
   </div>
   <canvas class="viz" id="c-ad"></canvas>
   <p class="status info" id="ad-status">Drag the violet point along the budget line.</p>
-  <p class="note">
-    At the optimum x ≈ 2.464, y ≈ 2.607 the budget line is tangent to a contour: ∇R is parallel to
+  <div class="note">
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>At the optimum x ≈ 2.464, y ≈ 2.607 the budget line is tangent to a contour: ∇R is parallel to
     ∇g there — exactly the Lagrange condition. The multiplier λ = 0.25 is the shadow price:
     one more $1000 of budget buys ≈ $250 of extra revenue (slides 18–20).
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 4 : SHADOW PRICES / CHEMICAL MONOPOLIST ================= -->
@@ -144,11 +144,11 @@
   </div>
   <canvas class="viz short" id="c-ch"></canvas>
   <p class="status info" id="ch-status"></p>
-  <p class="note">
+  <div class="note">
     λ₂ is the marginal value of one more ounce of chemical capacity — the slope of the profit curve.
-    It shrinks as b grows and hits 0 at b = 26: beyond that the capacity constraint stops binding
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>It shrinks as b grows and hits 0 at b = 26: beyond that the capacity constraint stops binding
     (complementary slackness, slide 21) and buying rights to more chemical is worthless.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 5 : KKT CHECKER ================= -->
@@ -170,11 +170,11 @@
     <ul id="kk-list" style="flex:1 1 320px;min-width:280px;list-style:none;padding:0;margin:0;font-size:0.95rem;line-height:2"></ul>
   </div>
   <p class="status info" id="kk-status"></p>
-  <p class="note">
-    Slide 36’s deduction chain: λ ≥ 1 &gt; 0 forces the constraint tight; 1/(x₁+1) − 2λ &lt; 0 forces
+  <div class="note">
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Slide 36’s deduction chain: λ ≥ 1 &gt; 0 forces the constraint tight; 1/(x₁+1) − 2λ &lt; 0 forces
     x₁ = 0; hence x₂ = 3 and λ = 1. Since f is concave and g linear, KKT is necessary AND sufficient
     (slide 27) — so the green point is provably optimal.
-  </p>
+  </details></div>
 </section>
 
 </main>
@@ -250,10 +250,11 @@ function quadContours(p, t, Q, cx, cy, levels) {
   el('cu-far').addEventListener('click', () => { view = 'far'; el('cu-far').classList.add('active'); el('cu-near').classList.remove('active'); draw(); });
   el('cu-near').addEventListener('click', () => { view = 'near'; el('cu-near').classList.add('active'); el('cu-far').classList.remove('active'); draw(); });
   el('cu-reveal').addEventListener('click', () => {
-    revealed = true;
+    revealed = !revealed;
+    el('cu-reveal').textContent = revealed ? 'Hide extrema' : 'Reveal extrema';
     const st = el('cu-status');
     st.className = 'status info';
-    st.textContent = 'Two local extrema — yet NO global max or min: the cubic term runs away to ±∞ in the tails.';
+    st.textContent = revealed ? 'Two local extrema — yet NO global max or min: the cubic term runs away to ±∞ in the tails.' : '';
     draw();
   });
   VIZ.register(canvas, draw);
@@ -340,7 +341,11 @@ function quadContours(p, t, Q, cx, cy, levels) {
   el('ut-c1').addEventListener('input', e => { c1 = +e.target.value; upd(); });
   el('ut-c2').addEventListener('input', e => { c2 = +e.target.value; upd(); });
   el('ut-a').addEventListener('input', e => { a = +e.target.value; upd(); });
-  el('ut-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  el('ut-reveal').addEventListener('click', () => {
+    revealed = !revealed;
+    el('ut-reveal').textContent = revealed ? 'Hide optimum' : 'Reveal optimum ★';
+    draw();
+  });
   VIZ.register(canvas, draw);
 })();
 
@@ -351,6 +356,7 @@ function quadContours(p, t, Q, cx, cy, levels) {
    ============================================================ */
 (() => {
   const canvas = el('c-ad');
+  VIZ.hint(canvas, '🖱 drag along the budget line');
   const view = { x0: -0.4, x1: 4.8, y0: -0.6, y1: 11 };
   const R = (x, y) => -2 * x * x - y * y + x * y + 8 * x + 3 * y;
   const C = [19 / 7, 20 / 7];
@@ -424,7 +430,11 @@ function quadContours(p, t, Q, cx, cy, levels) {
   canvas.addEventListener('pointerdown', ev => { dragging = true; canvas.setPointerCapture(ev.pointerId); setFromPointer(ev); });
   canvas.addEventListener('pointermove', ev => { if (dragging) setFromPointer(ev); });
   canvas.addEventListener('pointerup', () => dragging = false);
-  el('ad-reveal').addEventListener('click', () => { revealed = true; draw(); });
+  el('ad-reveal').addEventListener('click', () => {
+    revealed = !revealed;
+    el('ad-reveal').textContent = revealed ? 'Hide optimum' : 'Reveal optimum ★';
+    draw();
+  });
   VIZ.register(canvas, draw);
 })();
 
@@ -518,6 +528,7 @@ function quadContours(p, t, Q, cx, cy, levels) {
    ============================================================ */
 (() => {
   const canvas = el('c-kk');
+  VIZ.hint(canvas, '🖱 drag the candidate point');
   const view = { x0: -0.15, x1: 1.9, y0: -0.2, y1: 3.5 };
   let pt = { x: 0.7, y: 1.0 };
   let dragging = false, lastPlot = null;

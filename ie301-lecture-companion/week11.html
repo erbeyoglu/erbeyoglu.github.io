@@ -58,7 +58,7 @@
   <p class="note">
     Slide 28: by n = 5 both rows of Pⁿ are (0.75, 0.25) — the probability of rain five days ahead no
     longer depends on today. The Markov property (slide 10) only ever looks one step back; iterating it
-    washes out even that.
+    washes out even that. The limiting values (0.75, 0.25) become <a href="week13.html#steady">Week 13’s steady-state story</a>.
   </p>
 </section>
 
@@ -179,12 +179,12 @@
     <button id="in-show">Show answer</button>
   </div>
   <p class="status info" id="in-status"></p>
-  <p class="note">
-    The trick: next year’s state is (last year, this year) — the oldest year falls off. From NN you can
+  <div class="note">
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The trick: next year’s state is (last year, this year) — the oldest year falls off. From NN you can
     only reach NN or NY; a row like NN→YY must be 0 because the “year before” of the next state is
     forced. Premiums (250/400/800) attach to states — the long-run average premium is Week 13’s
     steady-state story.
-  </p>
+  </details></div>
 </section>
 
 </main>
@@ -405,6 +405,7 @@ const matPow = (P, n) => { let R = P; for (let k = 1; k < n; k++) R = matMul(R, 
    ============================================================ */
 (() => {
   const canvas = el('c-cl');
+  VIZ.hint(canvas, '🖱 tap a state circle');
   const PRESETS = {
     A: {
       names: ['$0', '$1', '$2', '$3', '$4'],

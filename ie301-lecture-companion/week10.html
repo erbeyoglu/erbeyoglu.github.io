@@ -51,11 +51,11 @@
   </div>
   <canvas class="viz short" id="c-by" style="height:300px"></canvas>
   <p class="status info" id="by-status"></p>
-  <p class="note">
+  <div class="note">
     Bayes’ rule (slides 10–12): P(sick | +) = P(+|sick)P(sick) / [P(+|sick)P(sick) + P(+|healthy)P(healthy)].
-    At the slide’s numbers it is only 9.02% — the 1% false-positive rate applied to 9 990 healthy people
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>At the slide’s numbers it is only 9.02% — the 1% false-positive rate applied to 9 990 healthy people
     swamps the handful of true positives. Rare condition ⇒ the prior dominates.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 2 : VOTER POLL ================= -->
@@ -74,11 +74,11 @@
   </div>
   <canvas class="viz short" id="c-vt" style="height:280px"></canvas>
   <p class="status info" id="vt-status"></p>
-  <p class="note">
+  <div class="note">
     Bar width = population share P(Sᵢ); the filled part = supporters P(support | Sᵢ)·P(Sᵢ). Bayes just asks:
-    what fraction of the total filled area is in each state? The answer is A, not B — B has the highest
+    what fraction of the total filled area is in each state? <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The answer is A, not B — B has the highest
     support <em>rate</em>, but A’s bigger population wins: P(A|support) = 0.423, P(B|support) = 0.317.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 3 : MEMORYLESSNESS ================= -->
@@ -136,11 +136,11 @@
     <span class="readout">Nat won <b id="rc-freq">—</b></span>
   </div>
   <p class="status info" id="rc-status"></p>
-  <p class="note">
+  <div class="note">
     P(X₁ &lt; X₂) = λ₁/(λ₁ + λ₂) (slide 30) — rates compete in proportion. And min(X₁, X₂) is again
     exponential with rate λ₁ + λ₂ (slide 31): the first-to-finish clock ticks at the combined rate.
-    At the slide’s numbers: (1/20)/(1/20 + 1/15) = 3/7 ≈ 0.4286.
-  </p>
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>At the slide’s numbers: (1/20)/(1/20 + 1/15) = 3/7 ≈ 0.4286.
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 5 : POISSON PROCESS ================= -->
@@ -219,12 +219,13 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
     const cols = 125, rows = 80;
     const cw = (w - 220) / cols, ch = (h - 20) / rows;
     // cell categories laid out contiguously: sick-TP, sick-FN, healthy-FP, healthy-TN
+    // color semantics: violet = sick & caught, red/yellow = the TEST'S errors
     for (let i = 0; i < N; i++) {
       const col = i % cols, row = Math.floor(i / cols);
       let color, alpha = 1;
-      if (i < tp) color = t.bad;                       // true positive (actually sick)
-      else if (i < sick) { color = t.ink2; alpha = 0.8; } // sick but missed
-      else if (i < sick + fpN) color = t.s3 || '#eda100'; // false positive
+      if (i < tp) color = t.s5;                        // true positive (sick, caught)
+      else if (i < sick) color = t.bad;                // false negative (sick, MISSED)
+      else if (i < sick + fpN) color = '#eda100';      // false positive (healthy, flagged)
       else { color = t.grid; alpha = 0.8; }            // healthy, negative
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -235,13 +236,13 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
     // legend
     const lx = w - 195;
     const items = [
-      [t.bad, 'sick & positive: ' + tp],
-      [t.ink2, 'sick & missed: ' + (sick - tp)],
+      [t.s5, 'sick & positive: ' + tp],
+      [t.bad, 'sick & MISSED: ' + (sick - tp)],
       ['#eda100', 'healthy & positive: ' + fpN],
       [t.grid, 'healthy & negative'],
     ];
     ctx.save();
-    ctx.font = '13px system-ui, sans-serif';
+    ctx.font = '600 13px system-ui, sans-serif';
     items.forEach(([c, txt], i) => {
       ctx.fillStyle = c;
       ctx.fillRect(lx, 24 + i * 26, 14, 14);

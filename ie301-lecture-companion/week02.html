@@ -84,10 +84,10 @@
     <thead><tr><th>#</th><th>r</th><th>h</th><th>volume</th><th>cost</th></tr></thead>
     <tbody></tbody>
   </table>
-  <p class="note">
+  <div class="note">
     The NLP: min 2πr² + 8πr² + 2(2πrh) = 10πr² + 4πrh &nbsp;s.t.&nbsp; πr²h ≥ 20, h ≤ 4r, r, h ≥ 0.
-    At the optimum <em>both</em> constraints are tight — wasted volume and a stubby shape both cost money.
-  </p>
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>At the optimum <em>both</em> constraints are tight — wasted volume and a stubby shape both cost money.
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 3 : BISECTION METHOD ================= -->
@@ -155,7 +155,7 @@
   <p class="howto">
     This f(x) on [0, 10] is not concave and not differentiable everywhere. <b>Click every point</b> that
     could be a local max or min: stationary points (f′ = 0), points where f′ doesn’t exist, and the
-    endpoints. Then check your answer.
+    endpoints. Then check your answer. <em>(This f is an illustrative instance — slide 32 keeps f general.)</em>
   </p>
   <div class="controls">
     <span class="readout">found: <b id="ec-found">0</b> / 4</span>
@@ -164,11 +164,11 @@
   </div>
   <canvas class="viz short" id="c-ec"></canvas>
   <p class="status info" id="ec-status"></p>
-  <p class="note">
+  <div class="note">
     The three candidate types (slide 33): stationary points a &lt; x &lt; b with f′(x) = 0; points where
-    f′(x) does not exist (kinks); and the endpoints a, b. The global optimum is the best candidate —
+    f′(x) does not exist (kinks); and the endpoints a, b. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The global optimum is the best candidate —
     and here it hides at an endpoint, where the derivative never vanishes.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 6 : MONOPOLIST ================= -->
@@ -190,10 +190,10 @@
   </div>
   <canvas class="viz short" id="c-mp" style="height:330px"></canvas>
   <p class="status info" id="mp-status"></p>
-  <p class="note">
-    Candidate check (slide 36): P′(x) = 5 − 2x = 0 gives x = 2.5 with P = 6.25; P′ exists everywhere;
+  <div class="note">
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Candidate check (slide 36): P′(x) = 5 − 2x = 0 gives x = 2.5 with P = 6.25; P′ exists everywhere;
     endpoints give P(0) = 0 and P(10) = −50. The stationary point wins.
-  </p>
+  </details></div>
 </section>
 
 </main>
@@ -215,6 +215,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
    ============================================================ */
 (() => {
   const canvas = el('c-wh');
+  VIZ.hint(canvas, '🖱 drag the warehouse');
   const CUST = [
     { x: 5, y: 10, w: 200 }, { x: 10, y: 5, w: 150 },
     { x: 0, y: 12, w: 200 }, { x: 12, y: 0, w: 300 },
@@ -302,7 +303,11 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   });
   canvas.addEventListener('pointerup', () => dragging = false);
 
-  el('wh-reveal').addEventListener('click', () => { showOpt = true; draw(); });
+  el('wh-reveal').addEventListener('click', () => {
+    showOpt = !showOpt;
+    el('wh-reveal').textContent = showOpt ? 'Hide optimum' : 'Reveal optimum ★';
+    draw();
+  });
   el('wh-reset').addEventListener('click', () => { wh = { x: 6, y: 6 }; best = null; showOpt = false; draw(); });
 
   VIZ.register(canvas, draw);
@@ -431,11 +436,13 @@ const XSTAR2 = 0.836920; // root of f' on [0,2]
   const canvas = el('c-bi');
   const view = { x0: -0.08, x1: 2.08, y0: -15, y1: 10.5 };
   const EPS = 0.001;
-  let rows, done;
+  let rows, done, manual = false;
 
   function reset() {
     rows = [{ i: 0, fp: null, lo: 0, hi: 2, xp: 1, f: F2(1), err: 2 }];
     done = false;
+    manual = false;
+    el('bi-run').classList.add('locked');
     renderTable();
     el('bi-status').className = 'status info';
     el('bi-status').textContent = 'Initial bracket [0, 2], first midpoint x′ = 1.';
@@ -505,8 +512,11 @@ const XSTAR2 = 0.836920; // root of f' on [0,2]
     }
   }
 
-  el('bi-step').addEventListener('click', step);
-  el('bi-run').addEventListener('click', () => { let g = 0; while (!done && g++ < 60) step(); });
+  el('bi-step').addEventListener('click', () => { manual = true; el('bi-run').classList.remove('locked'); step(); });
+  el('bi-run').addEventListener('click', () => {
+    if (!manual) { const st = el('bi-status'); st.className = 'status info'; st.textContent = 'Step at least once by hand first — the class should predict each move before automating.'; return; }
+    let g = 0; while (!done && g++ < 60) step();
+  });
   el('bi-reset').addEventListener('click', reset);
   reset();
   VIZ.register(canvas, draw);
@@ -519,11 +529,13 @@ const XSTAR2 = 0.836920; // root of f' on [0,2]
   const canvas = el('c-nw');
   const view = { x0: -0.08, x1: 2.35, y0: -15, y1: 10.5 };
   const EPS = 0.001;
-  let x0 = 2, pts, done;
+  let x0 = 2, pts, done, manual = false;
 
   function reset() {
     pts = [x0];
     done = false;
+    manual = false;
+    el('nw-run').classList.add('locked');
     renderTable();
     el('nw-status').className = 'status info';
     el('nw-status').textContent = 'Starting at x₀ = ' + fmt(x0, 2) + '. The dashed parabola is the 2nd-order Taylor fit; Newton jumps to its peak.';
@@ -608,8 +620,11 @@ const XSTAR2 = 0.836920; // root of f' on [0,2]
   }
 
   el('nw-x0').addEventListener('input', e => { x0 = +e.target.value; el('nw-x0val').textContent = fmt(x0); reset(); });
-  el('nw-step').addEventListener('click', step);
-  el('nw-run').addEventListener('click', () => { let g = 0; while (!done && g++ < 60) step(); });
+  el('nw-step').addEventListener('click', () => { manual = true; el('nw-run').classList.remove('locked'); step(); });
+  el('nw-run').addEventListener('click', () => {
+    if (!manual) { const st = el('nw-status'); st.className = 'status info'; st.textContent = 'Step at least once by hand first — watch where the parabola sends you.'; return; }
+    let g = 0; while (!done && g++ < 60) step();
+  });
   el('nw-reset').addEventListener('click', reset);
   reset();
   VIZ.register(canvas, draw);
@@ -622,6 +637,7 @@ const XSTAR2 = 0.836920; // root of f' on [0,2]
    ============================================================ */
 (() => {
   const canvas = el('c-ec');
+  VIZ.hint(canvas, '🖱 tap every candidate point');
   const view = { x0: -0.4, x1: 10.5, y0: 0, y1: 11.2 };
   const f = x => x < 4 ? -0.5 * (x - 2) ** 2 + 5 : x < 7 ? 3 + 1.2 * (x - 4) : 6.6 + 0.9 * (x - 7) + 0.05 * (x - 7) ** 2;
   const CAND = [
@@ -736,11 +752,12 @@ const XSTAR2 = 0.836920; // root of f' on [0,2]
 
   el('mp-x').addEventListener('input', e => { x = +e.target.value; draw(); });
   el('mp-reveal').addEventListener('click', () => {
-    revealed = true;
+    revealed = !revealed;
+    el('mp-reveal').textContent = revealed ? 'Hide the analysis' : 'Reveal the analysis';
     const st = el('mp-status');
     st.className = 'status info';
-    st.textContent = 'P′(x) = 5 − 2x = 0 → x = 2.5 (P = 6.25). Endpoints: P(0) = 0, P(10) = −50. ' +
-      'Producing more means slashing the price for EVERY unit — that is why profit collapses.';
+    st.textContent = revealed ? 'P′(x) = 5 − 2x = 0 → x = 2.5 (P = 6.25). Endpoints: P(0) = 0, P(10) = −50. ' +
+      'Producing more means slashing the price for EVERY unit — that is why profit collapses.' : '';
     draw();
   });
 

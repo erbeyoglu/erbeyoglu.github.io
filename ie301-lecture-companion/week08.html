@@ -58,11 +58,11 @@
   <canvas class="viz short" id="c-ww" style="height:250px"></canvas>
   <p class="status info" id="ww-status"></p>
   <div id="ww-work" style="font-size:0.92rem;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:pre-line"></div>
-  <p class="note">
+  <div class="note">
     Recursion (slide 8): fₜ = minⱼ { cₜⱼ + fₜ₊ⱼ₊₁ } with cₜⱼ = K + c·(covered demand) + h·(weighted
     carry). Variable cost is $2 × 1270 = $2540 under EVERY feasible plan — only setups and holding
-    trade off. Optimum: setups in 1, 2, 3, 5 → produce 220, 280, 500, 0, 270 for $3680.
-  </p>
+    trade off. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Optimum: setups in 1, 2, 3, 5 → produce 220, 280, 500, 0, 270 for $3680.
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 2 : MEDICAL TEAMS ================= -->
@@ -90,11 +90,11 @@
   </div>
   <p class="status info" id="tm-status"></p>
   <div id="tm-tables"></div>
-  <p class="note">
+  <div class="note">
     State = teams still available, stage = country (slide 15). The stage-2 table (slides 20–21) is where
-    the work happens; the answer is 1, 3, 1 → 170 thousand person-years. Note f₂(2) has TWO optimal
+    the work happens; <details class="spoiler"><summary>spoiler — open after the class has answered</summary>the answer is 1, 3, 1 → 170 thousand person-years. Note f₂(2) has TWO optimal
     decisions — DP happily reports ties.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 3 : GLUECO ================= -->
@@ -122,11 +122,11 @@
   </div>
   <p class="status info" id="gl-status"></p>
   <div id="gl-tables"></div>
-  <p class="note">
+  <div class="note">
     The recursion is fₜ(s) = maxₓ { pₓ · fₜ₊₁(s−x) } — multiplication, not addition (slide 29). DP
-    handles it because the objective still decomposes stage by stage. Optimum: 0, 1, 1 → 0.6 × 0.7 ×
+    handles it because the objective still decomposes stage by stage. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Optimum: 0, 1, 1 → 0.6 × 0.7 ×
     0.55 = 0.231. Region 1 gets nothing: its no-rep probability was already the highest.
-  </p>
+  </details></div>
 </section>
 
 <!-- ================= WIDGET 4 : FISHERY ================= -->
@@ -134,7 +134,7 @@
   <h2>The fishery: now versus later <span class="chip">Slides 31–37</span></h2>
   <p class="howto">
     10 000 bass at the start; whatever you leave grows 20% by next year: b<sub>t+1</sub> = 1.2(b<sub>t</sub> − x<sub>t</sub>).
-    Choose what fraction to catch each year over 5 years and maximize the <b>total catch</b>. Every early
+    Choose what fraction to catch each year over 5 years and maximize the <b>total catch</b> <em>(a demo objective — slides 31–36 keep r and c general)</em>. Every early
     fish you take never gets to compound…
   </p>
   <div class="controls" id="fs-sliders">
@@ -150,12 +150,12 @@
   </div>
   <canvas class="viz short" id="c-fs" style="height:280px"></canvas>
   <p class="status info" id="fs-status"></p>
-  <p class="note">
+  <div class="note">
     The DP skeleton (slides 35–36): decision 0 ≤ xₜ ≤ bₜ, reward r(xₜ) − c(xₜ, bₜ), state transition
-    bₜ₊₁ = 1.2(bₜ − xₜ), recursion fₜ(bₜ) = max { r − c + fₜ₊₁(1.2(bₜ − xₜ)) }. With pure revenue and no
+    bₜ₊₁ = 1.2(bₜ − xₜ), recursion fₜ(bₜ) = max { r − c + fₜ₊₁(1.2(bₜ − xₜ)) }. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>With pure revenue and no
     catching costs the recursion says: wait and take everything in year 5 (20 736). Real r and c bend
     that answer — but the state equation is what carries “the future” into today’s decision.
-  </p>
+  </details></div>
 </section>
 
 </main>
