@@ -6,6 +6,9 @@
 <title>IE301 · Week 9 — Probabilistic Dynamic Programming (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
 <style>
   table.dp { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; margin: 8px 0 14px; }
   table.dp th, table.dp td { border: 1px solid var(--grid); padding: 4px 10px; text-align: right; }
@@ -59,7 +62,7 @@
   <div id="mk-tables"></div>
   <div class="note">
     Same skeleton as Week 8’s resource allocation, but rewards are now <em>expected</em> revenues
-    rₜ(g) = Σ P(d)·[2·min(g, d) + 0.5·(g − d)⁺] (slide 10). DP doesn’t care that the reward came from an
+    \(r_t(g) = \sum_d P(d)\left[\,2\min(g,d) + 0.5\,(g-d)^+\right]\) (slide 10). DP doesn’t care that the reward came from an
     expectation — that is the whole point of slide 5’s recursion. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Optimum: 1, 3, 2.
   </details></div>
 </section>

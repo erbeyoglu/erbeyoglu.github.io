@@ -6,6 +6,9 @@
 <title>IE301 · Week 8 — Deterministic Dynamic Programming, Part 2 (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
 <style>
   table.dp { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; margin: 8px 0 14px; }
   table.dp th, table.dp td { border: 1px solid var(--grid); padding: 4px 10px; text-align: right; }
@@ -59,8 +62,7 @@
   <p class="status info" id="ww-status"></p>
   <div id="ww-work" style="font-size:0.92rem;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:pre-line"></div>
   <div class="note">
-    Recursion (slide 8): fₜ = minⱼ { cₜⱼ + fₜ₊ⱼ₊₁ } with cₜⱼ = K + c·(covered demand) + h·(weighted
-    carry). Variable cost is $2 × 1270 = $2540 under EVERY feasible plan — only setups and holding
+    Recursion (slide 8): \(f_t = \min_j \{\, c_{tj} + f_{t+j+1} \,\}\) with \(c_{tj} = K + c\cdot(\text{covered demand}) + h\cdot(\text{weighted carry})\). Variable cost is $2 × 1270 = $2540 under EVERY feasible plan — only setups and holding
     trade off. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Optimum: setups in 1, 2, 3, 5 → produce 220, 280, 500, 0, 270 for $3680.
   </details></div>
 </section>

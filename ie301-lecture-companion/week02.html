@@ -6,6 +6,9 @@
 <title>IE301 · Week 2 — Modeling and NLP in One Variable (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
 </head>
 <body>
 
@@ -122,7 +125,7 @@
   <h2>Newton’s method: ride the parabola <span class="chip">Slides 23–28</span></h2>
   <p class="howto">
     Same problem. Newton fits a <b>quadratic</b> (2nd-order Taylor) at the current point and jumps to its peak:
-    x<sub>i+1</sub> = x<sub>i</sub> − f′(x<sub>i</sub>)/f″(x<sub>i</sub>). The dashed parabola shows the
+    \(x_{i+1} = x_i - \frac{f'(x_i)}{f''(x_i)}\). The dashed parabola shows the
     approximation; the hollow dot is where the next step lands. Try different starting points — compare
     the iteration count with bisection’s.
   </p>

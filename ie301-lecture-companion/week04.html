@@ -6,6 +6,9 @@
 <title>IE301 · Week 4 — Nonlinear Optimization, KKT (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
 </head>
 <body>
 
@@ -84,8 +87,8 @@
   <canvas class="viz short" id="c-ut"></canvas>
   <p class="status info" id="ut-status"></p>
   <div class="note">
-    Lagrangian (slide 11): L = a·ln x₁ + (1−a)·ln x₂ + λ(d − c₁x₁ − c₂x₂); <details class="spoiler"><summary>spoiler — open after the class has answered</summary>setting ∂L = 0 gives
-    x₁* = da/c₁ and x₂* = d(1−a)/c₂. So raising c₁ lowers x₁* — but leaves x₂* <em>completely
+    Lagrangian (slide 11): \(L = a\ln x_1 + (1-a)\ln x_2 + \lambda(d - c_1x_1 - c_2x_2)\); <details class="spoiler"><summary>spoiler — open after the class has answered</summary>setting ∂L = 0 gives
+    \(x_1^* = \frac{da}{c_1}\) and \(x_2^* = \frac{d(1-a)}{c_2}\). So raising c₁ lowers x₁* — but leaves x₂* <em>completely
     unchanged</em> (slide 12). Try it: move the c₁ slider after revealing.
   </details></div>
 </section>

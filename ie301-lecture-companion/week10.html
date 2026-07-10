@@ -6,6 +6,9 @@
 <title>IE301 · Week 10 — Probability Review (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
 </head>
 <body>
 
@@ -172,7 +175,7 @@
   <p class="status info" id="ps-status"></p>
   <p class="note">
     N(t) ~ Poisson(λt) ⟺ gaps ~ exponential(λ) (slide 46). The highway answer is P(N = 0 in 10 s) =
-    e^(−3·10/60) = e^(−0.5) ≈ 0.61 — and because increments are independent, it does not matter when you
+    \(e^{-3\cdot 10/60} = e^{-0.5} \approx 0.61\) — and because increments are independent, it does not matter when you
     start crossing. The time of the n-th arrival is Erlang (slide 47).
   </p>
 </section>

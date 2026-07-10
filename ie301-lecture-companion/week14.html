@@ -6,6 +6,9 @@
 <title>IE301 · Week 14 — Continuous-Time Markov Chains (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
 </head>
 <body>
 
@@ -50,7 +53,7 @@
   <p class="note">
     The time in a state must be exponential — it is the ONLY memoryless continuous distribution
     (slides 8–10), and memorylessness is exactly the Markov property in continuous time. E[T_up] = 1/q,
-    E[T_down] = 1/μ, so the long-run share of up-time is (1/q)/(1/q + 1/μ) = μ/(q+μ).
+    E[T_down] = 1/μ, so the long-run share of up-time is \(\frac{1/q}{1/q + 1/\mu} = \frac{\mu}{q+\mu}\).
     It is the same memorylessness you tested on <a href="week10.html#memoryless">Week 10’s 10-year-old radio</a>.
   </p>
 </section>

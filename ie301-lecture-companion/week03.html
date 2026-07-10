@@ -6,6 +6,9 @@
 <title>IE301 · Week 3 — NLP in Multiple Variables (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
 </head>
 <body>
 
@@ -112,7 +115,7 @@
   </table>
   <div class="note">
     Eliminating z turns this into an unconstrained NLP in two variables:
-    min S(x, y) = xy + 20/x + 20/y. <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Setting both partials to zero gives x = y = ∛20 ≈ 2.71 m and
+    \(\min\, S(x, y) = xy + \frac{20}{x} + \frac{20}{y}\). <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Setting both partials to zero gives x = y = ∛20 ≈ 2.71 m and
     z ≈ 1.36 m — a square base, half as tall as it is wide. The Hessian test confirms a minimum.
   </details></div>
 </section>
