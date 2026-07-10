@@ -219,8 +219,9 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
     const { ctx, w, h } = VIZ.setup(canvas);
     const t = VIZ.theme();
     ctx.clearRect(0, 0, w, h);
+    const narrow = w < 640; // phones: legend moves below the grid
     const cols = 125, rows = 80;
-    const cw = (w - 220) / cols, ch = (h - 20) / rows;
+    const cw = (w - (narrow ? 20 : 220)) / cols, ch = (h - (narrow ? 96 : 20)) / rows;
     // cell categories laid out contiguously: sick-TP, sick-FN, healthy-FP, healthy-TN
     // color semantics: violet = sick & caught, red/yellow = the TEST'S errors
     for (let i = 0; i < N; i++) {
@@ -236,8 +237,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
       ctx.fillRect(10 + col * cw, 10 + row * ch, Math.max(1, cw - 1), Math.max(1, ch - 1));
       ctx.restore();
     }
-    // legend
-    const lx = w - 195;
+    // legend: right column on wide screens, two rows below the grid on phones
     const items = [
       [t.s5, 'sick & positive: ' + tp],
       [t.bad, 'sick & MISSED: ' + (sick - tp)],
@@ -245,12 +245,14 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
       [t.grid, 'healthy & negative'],
     ];
     ctx.save();
-    ctx.font = '600 13px system-ui, sans-serif';
+    ctx.font = '600 12px system-ui, sans-serif';
     items.forEach(([c, txt], i) => {
+      const lx = narrow ? 12 + (i % 2) * (w / 2 - 6) : w - 195;
+      const ly = narrow ? h - 62 + Math.floor(i / 2) * 24 : 24 + i * 26;
       ctx.fillStyle = c;
-      ctx.fillRect(lx, 24 + i * 26, 14, 14);
+      ctx.fillRect(lx, ly, 13, 13);
       ctx.fillStyle = t.ink2;
-      ctx.fillText(txt, lx + 22, 36 + i * 26);
+      ctx.fillText(txt, lx + 20, ly + 11);
     });
     ctx.restore();
 
