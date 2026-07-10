@@ -500,5 +500,12 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   VIZ.register(canvas, draw);
 })();
 </script>
+<script src="assets/classroom-config.js"></script>
+<script src="assets/qrcode.js"></script>
+<script src="assets/classroom.js"></script>
+<script>
+CLASSROOM.register('ww', { label: 'total cost ($)', dir: 'min', digits: 0,
+  get: () => parseFloat(el('ww-total').textContent.replace('$', '')) });
+</script>
 </body>
 </html>

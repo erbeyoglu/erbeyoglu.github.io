@@ -767,5 +767,14 @@ const XSTAR2 = 0.836920; // root of f' on [0,2]
   VIZ.register(canvas, draw);
 })();
 </script>
+<script src="assets/classroom-config.js"></script>
+<script src="assets/qrcode.js"></script>
+<script src="assets/classroom.js"></script>
+<script>
+CLASSROOM.register('warehouse', { label: 'weighted distance', dir: 'min', digits: 0,
+  get: () => parseFloat(el('wh-total').textContent) });
+CLASSROOM.register('tank', { label: 'cost ($)', dir: 'min', digits: 2,
+  get: () => (el('tk-ratio').textContent === 'OK' && parseFloat(el('tk-vol').textContent) >= 19.995) ? parseFloat(el('tk-cost').textContent) : null });
+</script>
 </body>
 </html>

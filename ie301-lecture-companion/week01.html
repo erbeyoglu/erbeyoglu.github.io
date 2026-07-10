@@ -1297,5 +1297,14 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   VIZ.register(canvas, draw);
 })();
 </script>
+<script src="assets/classroom-config.js"></script>
+<script src="assets/qrcode.js"></script>
+<script src="assets/classroom.js"></script>
+<script>
+CLASSROOM.register('regression', { label: 'SSE', dir: 'min', digits: 2,
+  get: () => parseFloat(el('rg-sse').textContent) });
+CLASSROOM.register('box', { label: 'volume (cm³)', dir: 'max', digits: 0,
+  get: () => parseFloat(el('bx-area').textContent) <= 600.001 ? parseFloat(el('bx-vol').textContent) : null });
+</script>
 </body>
 </html>

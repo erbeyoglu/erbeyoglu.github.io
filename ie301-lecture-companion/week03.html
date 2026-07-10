@@ -664,5 +664,12 @@ function quadContours(p, t, Q, cx, cy, levels) {
   VIZ.register(canvas, draw);
 })();
 </script>
+<script src="assets/classroom-config.js"></script>
+<script src="assets/qrcode.js"></script>
+<script src="assets/classroom.js"></script>
+<script>
+CLASSROOM.register('openbox', { label: 'metal (m²)', dir: 'min', digits: 2,
+  get: () => parseFloat(el('ob-metal').textContent) });
+</script>
 </body>
 </html>

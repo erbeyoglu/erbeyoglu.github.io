@@ -534,5 +534,12 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   update();
 })();
 </script>
+<script src="assets/classroom-config.js"></script>
+<script src="assets/qrcode.js"></script>
+<script src="assets/classroom.js"></script>
+<script>
+CLASSROOM.register('inventory', { label: 'total cost ($)', dir: 'min', digits: 2,
+  get: () => el('iv-cost').textContent.startsWith('$') ? parseFloat(el('iv-cost').textContent.slice(1)) : null });
+</script>
 </body>
 </html>

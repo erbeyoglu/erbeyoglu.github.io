@@ -452,5 +452,12 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   update();
 })();
 </script>
+<script src="assets/classroom-config.js"></script>
+<script src="assets/qrcode.js"></script>
+<script src="assets/classroom.js"></script>
+<script>
+CLASSROOM.register('reject', { label: 'expected cost ($)', dir: 'min', digits: 2,
+  get: () => parseFloat(el('rj-cost').textContent.replace('$', '')) });
+</script>
 </body>
 </html>
