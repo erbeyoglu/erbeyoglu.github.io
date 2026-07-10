@@ -6,6 +6,9 @@
 <title>IE301 · Week 13 — Discrete-Time Markov Chains, Part 2 (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
 <style>
   table.dp { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; margin: 8px 0 14px; }
   table.dp th, table.dp td { border: 1px solid var(--grid); padding: 4px 10px; text-align: right; }
@@ -21,9 +24,10 @@
   <nav class="widgets">
     <a href="#steady">1 · Reaching steady state</a>
     <a href="#premium">2 · Long-run premium</a>
-    <a href="#accounts">3 · Accounts receivable</a>
-    <a href="#freezco">4 · Freezco warranty</a>
-    <a href="#hth">5 · The HTH game</a>
+    <a href="#camera">3 · Camera store</a>
+    <a href="#accounts">4 · Accounts receivable</a>
+    <a href="#freezco">5 · Freezco warranty</a>
+    <a href="#hth">6 · The HTH game</a>
   </nav>
 </header>
 
@@ -85,7 +89,43 @@
   </details></div>
 </section>
 
-<!-- ================= WIDGET 3 : ACCOUNTS RECEIVABLE ================= -->
+<!-- ================= WIDGET 3 : CAMERA STORE ================= -->
+<section class="widget" id="camera">
+  <h2>The camera store: cost per week &amp; time to stockout <span class="chip">Slides 28–33, 37–47</span></h2>
+  <p class="howto">
+    Weekly demand is Poisson(1); whenever the week ends empty, the store orders 3 cameras (cost 10 + 25z);
+    each unmet demand costs $50. The chain below is fully computed from that policy. Vote first:
+    starting the week with 3 cameras, how long until the first stockout — 2, 3½, or 5 weeks?
+  </p>
+  <div class="controls">
+    <span class="readout">long-run average cost: <b id="cm-cost">—</b> / week</span>
+    <span class="segwrap" id="cm-starts">
+      <button class="seg" data-i="1">start with 1</button>
+      <button class="seg" data-i="2">start with 2</button>
+      <button class="seg active" data-i="3">start with 3</button>
+    </span>
+    <span class="readout">expected weeks to stockout μ<sub>i0</sub> = <b id="cm-mu">—</b></span>
+    <button id="cm-sim" class="primary">Simulate 1000 stockouts 🎲</button>
+    <span class="readout">simulated average: <b id="cm-simv">—</b></span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+    <div>
+      <table class="dp" id="cm-matrix"></table>
+      <table class="dp" id="cm-pi"></table>
+    </div>
+    <div id="cm-work" style="font-size:0.92rem;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:pre-line;flex:1 1 300px;min-width:260px"></div>
+  </div>
+  <p class="status info" id="cm-status"></p>
+  <div class="note">
+    Two of the slides’ workhorse ideas in one example: the steady-state costs
+    k(i) weight the π’s into a long-run $/week (slides 32–33), and the mean first passage times
+    \(\mu_{i0} = 1 + \sum_{j \ne 0} p_{ij}\,\mu_{j0}\) (slide 43) answer “how long until we run out?”.
+    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>
+    μ₃₀ = 3.50 weeks (slide 47), μ₂₀ ≈ 2.51, μ₁₀ ≈ 1.58; the long-run cost is ≈ $31.46/week.
+  </details></div>
+</section>
+
+<!-- ================= WIDGET 4 : ACCOUNTS RECEIVABLE ================= -->
 <section class="widget" id="accounts">
   <h2>Paid or written off? <span class="chip">Slides 55–61</span></h2>
   <p class="howto">
@@ -425,6 +465,103 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
       'Yearly write-off at $100 000 sales/month: 12 × 100 000 × 0.036 = $43 200 (slide 61).';
   });
   VIZ.register(canvas, draw);
+})();
+
+
+/* ============================================================
+   WIDGET 3 — camera store (slides 28-33, 37-47)
+   Demand ~ Poisson(1); order up to 3 whenever the week ends empty.
+   ============================================================ */
+(() => {
+  // Poisson(1) pmf
+  const FACT = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600];
+  const pois = k => k < FACT.length ? Math.exp(-1) / FACT[k] : 0;
+  const pge = k => 1 - [...Array(k).keys()].reduce((s, i) => s + pois(i), 0);
+
+  // transition matrix over states 0..3 (stock at week end)
+  const rowFrom = s => { // s = stock at week start (3 if reordered)
+    const r = [0, 0, 0, 0];
+    for (let d = 0; d < s; d++) r[s - d] += pois(d);
+    r[0] = pge(s);
+    return r;
+  };
+  const P = [rowFrom(3), rowFrom(1), rowFrom(2), rowFrom(3)];
+
+  // steady state by power iteration
+  let piv = [0.25, 0.25, 0.25, 0.25];
+  for (let k = 0; k < 500; k++) piv = [0, 1, 2, 3].map(j => piv.reduce((s, v, i) => s + v * P[i][j], 0));
+
+  // expected shortage cost 50*E[max(D - s, 0)] given week starts with s
+  const shortage = s => 50 * [...Array(13).keys()].reduce((sum, d) => sum + Math.max(0, d - s) * pois(d), 0);
+  const k0 = 10 + 25 * 3 + shortage(3);
+  const kc = [k0, shortage(1), shortage(2), shortage(3)];
+  const avgCost = piv.reduce((s, v, i) => s + v * kc[i], 0);
+
+  // mean first passage times to 0: mu_i = 1 + sum_{j>0} p_ij mu_j (solve 3x3)
+  function solveMu() {
+    // unknowns mu1, mu2, mu3
+    let mu = [0, 2, 3, 4];
+    for (let it = 0; it < 500; it++) {
+      const nx = [0, 0, 0, 0];
+      for (let i = 1; i <= 3; i++) {
+        nx[i] = 1 + P[i][1] * mu[1] + P[i][2] * mu[2] + P[i][3] * mu[3];
+      }
+      mu = nx;
+    }
+    return mu;
+  }
+  const MU = solveMu();
+  let start = 3;
+
+  function render() {
+    el('cm-cost').textContent = '$' + fmt(avgCost, 2);
+    el('cm-matrix').innerHTML =
+      '<thead><tr><th>P</th><th>0</th><th>1</th><th>2</th><th>3</th></tr></thead><tbody>' +
+      P.map((row, i) => '<tr><td>' + i + '</td>' + row.map(v => '<td>' + fmt(v, 3) + '</td>').join('') + '</tr>').join('') +
+      '</tbody>';
+    el('cm-pi').innerHTML =
+      '<thead><tr><th></th><th>0</th><th>1</th><th>2</th><th>3</th></tr></thead><tbody>' +
+      '<tr><td>π</td>' + piv.map(v => '<td>' + fmt(v, 3) + '</td>').join('') + '</tr>' +
+      '<tr><td>k(i) $</td>' + kc.map(v => '<td>' + fmt(v, 1) + '</td>').join('') + '</tr></tbody>';
+    el('cm-mu').textContent = fmt(MU[start], 2) + ' weeks';
+    el('cm-work').textContent =
+      'First passage equations to state 0 (slide 43):\n' +
+      [1, 2, 3].map(i =>
+        'μ' + i + '₀ = 1 + ' + [1, 2, 3].map(j => fmt(P[i][j], 3) + '·μ' + j + '₀').join(' + ') + ' = ' + fmt(MU[i], 2)
+      ).join('\n') +
+      '\n(rows 0 and 3 coincide: an empty week reorders up to 3.)';
+  }
+
+  document.querySelectorAll('#cm-starts button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      start = +btn.dataset.i;
+      document.querySelectorAll('#cm-starts button').forEach(b => b.classList.toggle('active', b === btn));
+      render();
+    });
+  });
+
+  el('cm-sim').addEventListener('click', () => {
+    const sample = () => {
+      let s = start, weeks = 0, guard = 0;
+      while (guard++ < 500) {
+        // demand this week
+        let u = Math.random(), acc = 0, d = 0;
+        while (true) { acc += pois(d); if (u <= acc || d > 11) break; d++; }
+        s = Math.max(0, s - d);
+        weeks++;
+        if (s === 0) return weeks;
+      }
+      return weeks;
+    };
+    let tot = 0;
+    for (let r = 0; r < 1000; r++) tot += sample();
+    el('cm-simv').textContent = fmt(tot / 1000, 2) + ' weeks';
+    const st = el('cm-status');
+    st.className = 'status ok';
+    st.textContent = '1000 simulated runs from stock ' + start + ' averaged ' + fmt(tot / 1000, 2) + ' weeks to the first empty shelf — the equations said ' + fmt(MU[start], 2) + '.';
+  });
+
+  render();
 })();
 
 /* ============================================================
