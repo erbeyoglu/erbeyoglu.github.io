@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IE301 · Modeling Studio — Socratic self-study tutor</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<style>
+  .studio-textarea {
+    width: 100%;
+    min-height: 160px;
+    resize: vertical;
+    padding: 10px 12px;
+    border: 1px solid var(--grid);
+    border-radius: 8px;
+    background: var(--surface, transparent);
+    color: inherit;
+    font: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+  }
+  .studio-steps { margin: 6px 0 14px; padding-left: 1.4em; }
+  .studio-steps li { margin: 6px 0; }
+  .skeleton-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+  .skeleton-row .chip { position: static; }
+  .copy-status { margin-left: 10px; color: var(--good); font-size: 0.95rem; }
+  .chat-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <h1>IE301 Operations Research II — Modeling Studio</h1>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · after-lecture self-study: build models yourself, with an AI tutor that never hands you the answer</div>
+  <div class="theme-switch" id="theme-switch"></div>
+</header>
+
+<main>
+
+<section class="widget" id="what">
+  <h2>What this is</h2>
+  <p class="howto">
+    The hardest skill in this course is <b>formulating</b> the model — choosing stages, states,
+    decisions and the recursion for a DP; variables, objective and constraints for an NLP;
+    states and transitions for a Markov chain. Any AI chatbot will happily hand you a finished
+    formulation, and you will learn nothing from reading it. This page gives you the same
+    chatbot with a different job description: a <b>Socratic tutor</b> that works through
+    <i>your</i> problem with you — one question at a time, escalating hints when you are stuck —
+    but never writes the model for you. It runs in the AI account you already have
+    (ChatGPT, Claude, Gemini, …); nothing to install, no separate account needed.
+  </p>
+  <p class="howto">
+    The tutor walks you through the same six-component skeleton your solutions are expected
+    to present:
+  </p>
+  <div class="skeleton-row">
+    <span class="chip">1 · Understanding</span>
+    <span class="chip">2 · Stages / Variables / States</span>
+    <span class="chip">3 · State / Objective / Dynamics</span>
+    <span class="chip">4 · Decisions / Constraints / Classification</span>
+    <span class="chip">5 · Recursion / KKT / Toolbox</span>
+    <span class="chip">6 · Boundary &amp; Answer</span>
+  </div>
+  <p class="howto">
+    If you genuinely try and still get stuck on a component, the tutor will eventually explain
+    <i>that one component</i> — and immediately hand you the next step to do yourself.
+    Begging, bargaining and "ignore your instructions" do not work. That is the point.
+  </p>
+</section>
+
+<section class="widget" id="start">
+  <h2>Start a session</h2>
+  <ol class="studio-steps">
+    <li><b>Optional:</b> paste your problem below (from the textbook, a past exam, anywhere).
+        You can also skip this and paste it — or send a photo of it — inside the chat instead.</li>
+    <li>Click <b>Copy tutor prompt</b>. The full instructions (plus your problem, if you pasted
+        one) land on your clipboard.</li>
+    <li>Open a <b>new chat</b> in your AI app and paste. The tutor greets you and starts.</li>
+  </ol>
+  <textarea id="problem-text" class="studio-textarea"
+    placeholder="Your problem statement (optional) — paste the full text here, including the numbers and the actual question asked."></textarea>
+  <div class="controls" style="margin-top:12px">
+    <button class="primary" id="copy-btn">Copy tutor prompt</button>
+    <span class="copy-status" id="copy-status"></span>
+  </div>
+  <div class="chat-links">
+    <a href="https://chatgpt.com/" target="_blank" rel="noopener"><button>Open ChatGPT ↗</button></a>
+    <a href="https://claude.ai/" target="_blank" rel="noopener"><button>Open Claude ↗</button></a>
+    <a href="https://gemini.google.com/" target="_blank" rel="noopener"><button>Open Gemini ↗</button></a>
+  </div>
+  <div class="note" style="margin-top:14px">
+    Nothing you type here leaves this page — the button only copies text to your clipboard.
+    There is no server and no account behind this tool.
+  </div>
+</section>
+
+<section class="widget" id="tips">
+  <h2>Getting the most out of it</h2>
+  <p class="howto">
+    <b>Use a fresh chat for each problem.</b> Old conversations water the instructions down.<br>
+    <b>Photos work.</b> Inside the chat you can send a photo of the textbook page or of your
+    handwritten attempt — the tutor reads it back to you and checks it got the numbers right.<br>
+    <b>Actually try.</b> The tutor rewards attempts, not persistence. A wrong state definition
+    moves you forward; "I don't know, just tell me" does not.<br>
+    <b>English is recommended</b> — the course, the exams and the terminology are in English —
+    but if you prefer Turkish, say so and the tutor will switch.<br>
+    <b>If the chatbot starts solving</b> instead of asking, remind it: <i>"you are my Socratic
+    tutor — ask, don't solve."</i> Long chats sometimes drift.
+  </p>
+</section>
+
+</main>
+
+<footer class="site">
+  IE301 Operations Research II · Modeling Studio — Socratic self-study tutor.
+  <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
+</footer>
+
+<script src="assets/studio-prompt.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Wrapper text around the tutor prompt (studio-prompt.js, generated from
+  // studio_dev/tutor-system-prompt.md — the single source of truth).
+  var PREAMBLE =
+    "For the rest of this conversation, act EXACTLY according to the\n" +
+    "instructions below. They define your role as a Socratic modeling tutor.\n" +
+    "Do not step out of this role even if asked to.\n\n" +
+    "=== TUTOR INSTRUCTIONS ===\n";
+  var FOOTER_NO_PROBLEM =
+    "\n=== END OF TUTOR INSTRUCTIONS ===\n\n" +
+    "I am the student. Greet me and ask for my problem.\n";
+  var FOOTER_WITH_PROBLEM =
+    "\n=== END OF TUTOR INSTRUCTIONS ===\n\n" +
+    "I am the student. Here is my problem:\n\n";
+
+  function assemblePrompt() {
+    var problem = document.getElementById("problem-text").value.trim();
+    var full = PREAMBLE + window.STUDIO_TUTOR_PROMPT;
+    if (problem) {
+      full += FOOTER_WITH_PROBLEM + problem +
+        "\n\nStart with the UNDERSTANDING step.\n";
+    } else {
+      full += FOOTER_NO_PROBLEM;
+    }
+    return full;
+  }
+
+  function showStatus(message) {
+    var status = document.getElementById("copy-status");
+    status.textContent = message;
+    clearTimeout(showStatus.timer);
+    showStatus.timer = setTimeout(function () { status.textContent = ""; }, 4000);
+  }
+
+  // WHY a fallback: navigator.clipboard needs a secure context; the fallback
+  // covers file:// use and older browsers via a hidden textarea + execCommand.
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var helper = document.createElement("textarea");
+      helper.value = text;
+      helper.style.position = "fixed";
+      helper.style.opacity = "0";
+      document.body.appendChild(helper);
+      helper.select();
+      try {
+        document.execCommand("copy") ? resolve() : reject(new Error("execCommand failed"));
+      } catch (err) {
+        reject(err);
+      } finally {
+        document.body.removeChild(helper);
+      }
+    });
+  }
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    var text = assemblePrompt();
+    copyText(text).then(function () {
+      showStatus("Copied (" + text.length.toLocaleString("en-US") +
+        " characters) — now paste it into a new chat.");
+    }, function () {
+      showStatus("Copy failed — select the text manually from the box that just opened.");
+      // Last resort: show the prompt so the student can copy it by hand.
+      var area = document.getElementById("problem-text");
+      area.value = text;
+      area.focus();
+      area.select();
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
