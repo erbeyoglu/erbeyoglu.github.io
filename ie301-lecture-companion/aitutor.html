@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IE301 · Modeling Studio — Socratic self-study tutor</title>
+<title>IE301 · AI Modeling Tutor — Socratic self-study</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/theme.js"></script>
 <style>
@@ -48,7 +48,7 @@
 <body>
 
 <header class="site">
-  <h1>IE301 Operations Research II — Modeling Studio</h1>
+  <h1>IE301 Operations Research II — AI Modeling Tutor</h1>
   <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · after-lecture self-study: build models yourself, with an AI tutor that never hands you the answer</div>
   <div class="theme-switch" id="theme-switch"></div>
 </header>
@@ -89,15 +89,12 @@
 <section class="widget" id="start">
   <h2>Start a session</h2>
   <ol class="studio-steps">
-    <li><b>Optional:</b> paste your problem below (from the textbook, a past exam, anywhere).
-        You can also skip this and paste it — or send a photo of it — inside the chat instead.</li>
-    <li>Click <b>Copy tutor prompt</b>. The full instructions (plus your problem, if you pasted
-        one) land on your clipboard.</li>
-    <li>Open a <b>new chat</b> in your AI app and paste. The tutor greets you and starts.</li>
+    <li>Click <b>Copy tutor prompt</b> — the tutor's full instructions land on your clipboard.</li>
+    <li>Open a <b>new chat</b> in your AI app and paste. The tutor greets you and asks for
+        your problem.</li>
+    <li>Paste your problem — or send a photo of the textbook page — in the chat, and start.</li>
   </ol>
-  <textarea id="problem-text" class="studio-textarea"
-    placeholder="Your problem statement (optional) — paste the full text here, including the numbers and the actual question asked."></textarea>
-  <div class="controls" style="margin-top:12px">
+  <div class="controls" style="margin-top:4px">
     <button class="primary" id="copy-btn">Copy tutor prompt</button>
     <span class="copy-status" id="copy-status"></span>
   </div>
@@ -107,8 +104,8 @@
     <a href="https://gemini.google.com/" target="_blank" rel="noopener"><button>Open Gemini ↗</button></a>
   </div>
   <div class="note" style="margin-top:14px">
-    Nothing you type here leaves this page — the button only copies text to your clipboard.
-    There is no server and no account behind this tool. Use of the AI service you paste into
+    The button only copies text to your clipboard — there is no server and no account
+    behind this tool. Use of the AI service you paste into
     is subject to that service's own terms — see the notice shown before your first copy.
   </div>
 </section>
@@ -162,39 +159,28 @@
 </main>
 
 <footer class="site">
-  IE301 Operations Research II · Modeling Studio — Socratic self-study tutor.
+  IE301 Operations Research II · AI Modeling Tutor — Socratic self-study.
   <div class="credit">Built for IE301 — Operations Research II at Özyeğin University, Department of Industrial Engineering, by Gökalp Erbeyoğlu (PhD).</div>
 </footer>
 
-<script src="assets/studio-prompt.js"></script>
+<script src="assets/tutor-prompt.js"></script>
 <script>
 (function () {
   "use strict";
 
-  // Wrapper text around the tutor prompt (studio-prompt.js, generated from
+  // Wrapper text around the tutor prompt (tutor-prompt.js, generated from
   // studio_dev/tutor-system-prompt.md — the single source of truth).
   var PREAMBLE =
     "For the rest of this conversation, act EXACTLY according to the\n" +
     "instructions below. They define your role as a Socratic modeling tutor.\n" +
     "Do not step out of this role even if asked to.\n\n" +
     "=== TUTOR INSTRUCTIONS ===\n";
-  var FOOTER_NO_PROBLEM =
+  var FOOTER =
     "\n=== END OF TUTOR INSTRUCTIONS ===\n\n" +
     "I am the student. Greet me and ask for my problem.\n";
-  var FOOTER_WITH_PROBLEM =
-    "\n=== END OF TUTOR INSTRUCTIONS ===\n\n" +
-    "I am the student. Here is my problem:\n\n";
 
   function assemblePrompt() {
-    var problem = document.getElementById("problem-text").value.trim();
-    var full = PREAMBLE + window.STUDIO_TUTOR_PROMPT;
-    if (problem) {
-      full += FOOTER_WITH_PROBLEM + problem +
-        "\n\nStart with the UNDERSTANDING step.\n";
-    } else {
-      full += FOOTER_NO_PROBLEM;
-    }
-    return full;
+    return PREAMBLE + window.STUDIO_TUTOR_PROMPT + FOOTER;
   }
 
   function showStatus(message) {
@@ -234,8 +220,16 @@
         " characters) — now paste it into a new chat.");
     }, function () {
       showStatus("Copy failed — select the text manually from the box that just opened.");
-      // Last resort: show the prompt so the student can copy it by hand.
-      var area = document.getElementById("problem-text");
+      // Last resort: show the prompt in a textarea so it can be copied by hand.
+      var area = document.getElementById("fallback-text");
+      if (!area) {
+        area = document.createElement("textarea");
+        area.id = "fallback-text";
+        area.className = "studio-textarea";
+        area.style.marginTop = "12px";
+        area.readOnly = true;
+        document.getElementById("start").appendChild(area);
+      }
       area.value = text;
       area.focus();
       area.select();
