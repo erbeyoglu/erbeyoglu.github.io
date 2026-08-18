@@ -25,7 +25,10 @@
   .skeleton-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
   .skeleton-row .chip { position: static; }
   .copy-status { margin-left: 10px; color: var(--good); font-size: 0.95rem; }
-  .chat-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .chat-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  /* Slightly smaller than the page's default button so all three fit on one
+     line inside the narrow steps column. */
+  .chat-links button { padding: 5px 11px; font-size: 0.87rem; }
   .modal-overlay {
     position: fixed; inset: 0; z-index: 50;
     background: rgba(0,0,0,0.55);
@@ -45,7 +48,7 @@
   .modal-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
   .start-grid {
     display: grid;
-    grid-template-columns: 5fr 7fr;
+    grid-template-columns: 4fr 7fr;
     gap: 8px 30px;
     align-items: start;
   }
@@ -55,7 +58,9 @@
   .warnings li { margin: 8px 0; color: var(--ink-2); font-size: 0.93rem; }
   .warnings li b { color: inherit; }
   .warn-critical { color: var(--critical); font-weight: 700; }
-  @media (max-width: 700px) {
+  /* Below this width the two columns get too narrow for the chat buttons,
+     so the notice moves under the steps instead. */
+  @media (max-width: 950px) {
     .start-grid { grid-template-columns: 1fr; }
     .warnings-col { border-left: none; padding-left: 0; margin-top: 10px; }
   }
