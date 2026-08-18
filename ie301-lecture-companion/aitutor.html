@@ -43,6 +43,22 @@
   .modal-box li { margin: 8px 0; color: var(--ink-2); }
   .modal-box li b { color: inherit; }
   .modal-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+  .start-grid {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 8px 28px;
+    align-items: start;
+  }
+  .warnings-col { border-left: 1px solid var(--grid); padding-left: 22px; }
+  .warnings-col h3 { margin: 2px 0 4px; font-size: 1.02rem; }
+  .warnings { margin: 6px 0 0; padding-left: 1.2em; }
+  .warnings li { margin: 8px 0; color: var(--ink-2); font-size: 0.93rem; }
+  .warnings li b { color: inherit; }
+  .warn-critical { color: var(--critical); font-weight: 700; }
+  @media (max-width: 700px) {
+    .start-grid { grid-template-columns: 1fr; }
+    .warnings-col { border-left: none; padding-left: 0; margin-top: 10px; }
+  }
 </style>
 </head>
 <body>
@@ -88,25 +104,55 @@
 
 <section class="widget" id="start">
   <h2>Start a session</h2>
-  <ol class="studio-steps">
-    <li>Click <b>Copy tutor prompt</b> — the tutor's full instructions land on your clipboard.</li>
-    <li>Open a <b>new chat</b> in your AI app and paste. The tutor greets you and asks for
-        your problem.</li>
-    <li>Paste your problem — or send a photo of the textbook page — in the chat, and start.</li>
-  </ol>
-  <div class="controls" style="margin-top:4px">
-    <button class="primary" id="copy-btn">Copy tutor prompt</button>
-    <span class="copy-status" id="copy-status"></span>
-  </div>
-  <div class="chat-links">
-    <a href="https://chatgpt.com/" target="_blank" rel="noopener"><button>Open ChatGPT ↗</button></a>
-    <a href="https://claude.ai/" target="_blank" rel="noopener"><button>Open Claude ↗</button></a>
-    <a href="https://gemini.google.com/" target="_blank" rel="noopener"><button>Open Gemini ↗</button></a>
-  </div>
-  <div class="note" style="margin-top:14px">
-    The button only copies text to your clipboard — there is no server and no account
-    behind this tool. Use of the AI service you paste into
-    is subject to that service's own terms — see the notice shown before your first copy.
+  <div class="start-grid">
+
+    <div>
+      <ol class="studio-steps">
+        <li>Click <b>Copy tutor prompt</b> — the tutor's full instructions land on your clipboard.</li>
+        <li>Open a <b>new chat</b> in your AI app and paste. The tutor greets you and asks for
+            your problem.</li>
+        <li>Paste your problem — or send a photo of the textbook page — in the chat, and start.</li>
+      </ol>
+      <div class="controls" style="margin-top:4px">
+        <button class="primary" id="copy-btn">Copy tutor prompt</button>
+        <span class="copy-status" id="copy-status"></span>
+      </div>
+      <div class="chat-links">
+        <a href="https://chatgpt.com/" target="_blank" rel="noopener"><button>Open ChatGPT ↗</button></a>
+        <a href="https://claude.ai/" target="_blank" rel="noopener"><button>Open Claude ↗</button></a>
+        <a href="https://gemini.google.com/" target="_blank" rel="noopener"><button>Open Gemini ↗</button></a>
+      </div>
+      <div class="note" style="margin-top:14px">
+        The button only copies text to your clipboard — there is no server and no account
+        behind this tool.
+      </div>
+    </div>
+
+    <!-- Single source of truth for the notice: the modal clones this list. -->
+    <div class="warnings-col">
+      <h3>Please read</h3>
+      <ul class="warnings" id="warnings-list">
+        <li><b>AI makes mistakes — sometimes confidently.</b> It can slip on arithmetic,
+            misread numbers or handwriting in a photo, and state a wrong step with full
+            confidence. Double-check the numbers yourself, and treat the tutor as a study
+            partner, not an authority. <span class="warn-critical">The authoritative sources
+            for this course are the lecture slides, the recitations, and your instructor —
+            if the tutor and the slides disagree, the slides win; bring anything you are
+            unsure about to class or office hours.</span></li>
+        <li><b>This is a voluntary study aid.</b> It is not required, not graded, and not a
+            substitute for lectures or recitations.</li>
+        <li><b>Academic integrity rules still apply.</b> This tool is for practicing.
+            Whether and how AI may be used in graded work (homework, projects, exams) is
+            governed by the course syllabus and university policy — checking is your
+            responsibility.</li>
+        <li><b>Do not paste personal information</b> — yours or anyone else's — into an AI
+            chat.</li>
+        <li><b>You are about to use a third-party AI service</b> (ChatGPT, Claude, Gemini, …)
+            under your own account. That service's terms of use, privacy policy and usage
+            limits apply. This page stores and transmits nothing.</li>
+      </ul>
+    </div>
+
   </div>
 </section>
 
@@ -114,26 +160,9 @@
 <div class="modal-overlay" id="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
   <div class="modal-box">
     <h3 id="disclaimer-title">Before you copy — please read</h3>
-    <ul>
-      <li><b>AI makes mistakes — sometimes confidently.</b> It can slip on arithmetic,
-          misread numbers or handwriting in a photo, and state a wrong step with full
-          confidence. Double-check the numbers yourself, and treat the tutor as a study
-          partner, not an authority. The authoritative sources for this course are the
-          lecture slides, the recitations, and your instructor — if the tutor and the
-          slides disagree, the slides win; bring anything you are unsure about to class
-          or office hours.</li>
-      <li><b>This is a voluntary study aid.</b> It is not required, not graded, and not a
-          substitute for lectures or recitations.</li>
-      <li><b>Academic integrity rules still apply.</b> This tool is for practicing.
-          Whether and how AI may be used in graded work (homework, projects, exams) is
-          governed by the course syllabus and university policy — checking is your
-          responsibility.</li>
-      <li><b>Do not paste personal information</b> — yours or anyone else's — into an AI
-          chat.</li>
-      <li><b>You are about to use a third-party AI service</b> (ChatGPT, Claude, Gemini, …)
-          under your own account. That service's terms of use, privacy policy and usage
-          limits apply. This page stores and transmits nothing.</li>
-    </ul>
+    <!-- Filled at load time by cloning #warnings-list, so the notice text
+         exists in exactly one place in the markup. -->
+    <ul id="modal-warnings"></ul>
     <div class="modal-actions">
       <button id="disclaimer-cancel">Cancel</button>
       <button class="primary" id="disclaimer-accept">I have read and understood — copy the prompt</button>
@@ -240,6 +269,10 @@
   // is remembered per browser so returning students are not re-prompted.
   var CONSENT_KEY = "studio-disclaimer-accepted";
   var modal = document.getElementById("disclaimer-modal");
+
+  // Mirror the always-visible notice into the modal (one source of truth).
+  document.getElementById("modal-warnings").innerHTML =
+    document.getElementById("warnings-list").innerHTML;
 
   function hasConsent() {
     try { return localStorage.getItem(CONSENT_KEY) === "1"; }
