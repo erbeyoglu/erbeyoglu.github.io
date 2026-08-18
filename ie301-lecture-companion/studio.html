@@ -26,6 +26,23 @@
   .skeleton-row .chip { position: static; }
   .copy-status { margin-left: 10px; color: var(--good); font-size: 0.95rem; }
   .chat-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,0.55);
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    max-width: 620px; max-height: 85vh; overflow-y: auto;
+    background: var(--surface); color: inherit;
+    border: 1px solid var(--grid); border-radius: 12px;
+    padding: 20px 24px; box-sizing: border-box;
+  }
+  .modal-box h3 { margin: 0 0 10px; }
+  .modal-box ul { margin: 8px 0 16px; padding-left: 1.3em; }
+  .modal-box li { margin: 8px 0; color: var(--ink-2); }
+  .modal-box li b { color: inherit; }
+  .modal-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
 </style>
 </head>
 <body>
@@ -91,9 +108,41 @@
   </div>
   <div class="note" style="margin-top:14px">
     Nothing you type here leaves this page — the button only copies text to your clipboard.
-    There is no server and no account behind this tool.
+    There is no server and no account behind this tool. Use of the AI service you paste into
+    is subject to that service's own terms — see the notice shown before your first copy.
   </div>
 </section>
+
+<!-- Disclaimer modal: shown before the first copy; consent remembered per browser. -->
+<div class="modal-overlay" id="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
+  <div class="modal-box">
+    <h3 id="disclaimer-title">Before you copy — please read</h3>
+    <ul>
+      <li><b>AI makes mistakes — sometimes confidently.</b> It can slip on arithmetic,
+          misread numbers or handwriting in a photo, and state a wrong step with full
+          confidence. Double-check the numbers yourself, and treat the tutor as a study
+          partner, not an authority. The authoritative sources for this course are the
+          lecture slides, the recitations, and your instructor — if the tutor and the
+          slides disagree, the slides win; bring anything you are unsure about to class
+          or office hours.</li>
+      <li><b>This is a voluntary study aid.</b> It is not required, not graded, and not a
+          substitute for lectures or recitations.</li>
+      <li><b>Academic integrity rules still apply.</b> This tool is for practicing.
+          Whether and how AI may be used in graded work (homework, projects, exams) is
+          governed by the course syllabus and university policy — checking is your
+          responsibility.</li>
+      <li><b>Do not paste personal information</b> — yours or anyone else's — into an AI
+          chat.</li>
+      <li><b>You are about to use a third-party AI service</b> (ChatGPT, Claude, Gemini, …)
+          under your own account. That service's terms of use, privacy policy and usage
+          limits apply. This page stores and transmits nothing.</li>
+    </ul>
+    <div class="modal-actions">
+      <button id="disclaimer-cancel">Cancel</button>
+      <button class="primary" id="disclaimer-accept">I have read and understood — copy the prompt</button>
+    </div>
+  </div>
+</div>
 
 <section class="widget" id="tips">
   <h2>Getting the most out of it</h2>
@@ -178,7 +227,7 @@
     });
   }
 
-  document.getElementById("copy-btn").addEventListener("click", function () {
+  function doCopy() {
     var text = assemblePrompt();
     copyText(text).then(function () {
       showStatus("Copied (" + text.length.toLocaleString("en-US") +
@@ -191,6 +240,43 @@
       area.focus();
       area.select();
     });
+  }
+
+  // Disclaimer gate: the first copy requires explicit consent; the consent
+  // is remembered per browser so returning students are not re-prompted.
+  var CONSENT_KEY = "studio-disclaimer-accepted";
+  var modal = document.getElementById("disclaimer-modal");
+
+  function hasConsent() {
+    try { return localStorage.getItem(CONSENT_KEY) === "1"; }
+    catch (err) { return false; } // storage blocked -> ask every time
+  }
+
+  function rememberConsent() {
+    try { localStorage.setItem(CONSENT_KEY, "1"); } catch (err) { /* best effort */ }
+  }
+
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    if (hasConsent()) { doCopy(); return; }
+    modal.classList.add("open");
+  });
+
+  document.getElementById("disclaimer-accept").addEventListener("click", function () {
+    rememberConsent();
+    modal.classList.remove("open");
+    doCopy();
+  });
+
+  document.getElementById("disclaimer-cancel").addEventListener("click", function () {
+    modal.classList.remove("open");
+  });
+
+  modal.addEventListener("click", function (event) {
+    if (event.target === modal) { modal.classList.remove("open"); }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") { modal.classList.remove("open"); }
   });
 })();
 </script>
