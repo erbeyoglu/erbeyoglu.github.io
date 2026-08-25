@@ -53,4 +53,24 @@
       if (target) target.classList.add('embed-target');
     });
   }
+
+  // Class mode: a student who scanned the QR arrives with ?class=CODE&w=<id>.
+  // The phone shows ONLY the activity being played in class — no other
+  // widgets, no answer keys (classroom.js strips those). Set before first
+  // paint so the full page never flashes.
+  const q = new URLSearchParams(location.search);
+  const classCode = q.get('class');
+  const classWidget = q.get('w');
+  if (classCode) {
+    document.documentElement.classList.add('class-mode');
+    if (classWidget) {
+      document.documentElement.classList.add('class-focus');
+      document.addEventListener('DOMContentLoaded', () => {
+        const target = document.getElementById(classWidget);
+        if (target) target.classList.add('class-target');
+        // Unknown widget id (stale QR): fall back to showing the whole page.
+        else document.documentElement.classList.remove('class-focus');
+      });
+    }
+  }
 })();

@@ -24,12 +24,14 @@ window.CLASSROOM = (() => {
     return location.pathname.split('/').pop().replace('.html', '') + ':' + widgetId;
   }
 
-  function sessionUrl(code) {
+  function sessionUrl(code, widgetId) {
     // Students must always land on the PUBLIC site, even when this page runs
-    // from a local file inside the instructor deck.
+    // from a local file inside the instructor deck. `w` pins the phone to the
+    // one activity being played, so students do not have to scroll past the
+    // week's other widgets.
     const file = location.pathname.split('/').pop();
     const base = window.CLASSROOM_PUBLIC_BASE || (location.origin + location.pathname.replace(/[^/]*$/, ''));
-    return base.replace(/\/?$/, '/') + file + '?class=' + code;
+    return base.replace(/\/?$/, '/') + file + '?class=' + code + '&w=' + encodeURIComponent(widgetId);
   }
 
   function betterOf(dir, a, b) {
@@ -80,7 +82,7 @@ window.CLASSROOM = (() => {
       const code = Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
       const live = document.createElement('div');
       live.className = 'class-live';
-      const url = sessionUrl(code);
+      const url = sessionUrl(code, w.id);
       const qr = qrcode(0, 'M');
       qr.addData(url);
       qr.make();
@@ -104,31 +106,86 @@ window.CLASSROOM = (() => {
     });
   }
 
+  // A joined student gets a phone-shaped experience instead of the desktop
+  // widget chrome: a context bar at the top and a thumb-reachable submit dock
+  // pinned to the bottom of the screen.
+  function classBar(w) {
+    if (document.querySelector('.class-bar')) return;
+    const bar = document.createElement('div');
+    bar.className = 'class-bar';
+    const title = (document.getElementById(w.id)?.querySelector('h2')?.childNodes[0]?.textContent || '').trim();
+    bar.innerHTML = '<span class="code">CLASS ' + joinCode + '</span>' +
+      (title ? '<span class="what">' + title.replace(/[<>&]/g, '') + '</span>' : '');
+    document.body.insertBefore(bar, document.body.firstChild);
+  }
+
+  // The phone is a competition device during class: no answer keys on it.
+  // Reveal buttons are marked by their label (each classroom activity has
+  // exactly one, always starting with "Reveal"); spoilers are hidden by CSS.
+  function stripAnswerKeys(scope) {
+    scope.querySelectorAll('button').forEach(b => {
+      if (/^\s*(reveal|show the answer|show answer|solution)/i.test(b.textContent || '')) {
+        b.classList.add('answer-key');
+      }
+    });
+  }
+
   function studentUI(box, w) {
-    const name0 = lsGet('classroom-name') || '';
-    box.innerHTML +=
-      '<div class="class-student">' +
-      '<input type="text" id="cl-name-' + w.id + '" placeholder="your name" maxlength="18" value="' + name0.replace(/"/g, '') + '" ' +
-      'style="font:inherit;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--page);color:var(--ink);width:150px"> ' +
-      '<button class="primary" id="cl-sub-' + w.id + '">Submit my result → class ' + joinCode + '</button> ' +
-      '<span class="readout" id="cl-fb-' + w.id + '">—</span></div>';
-    document.getElementById('cl-sub-' + w.id).addEventListener('click', async () => {
-      const fb = document.getElementById('cl-fb-' + w.id);
-      const name = document.getElementById('cl-name-' + w.id).value.trim() || 'anon';
+    const name0 = (lsGet('classroom-name') || '').replace(/"/g, '');
+    const bestPrev = parseFloat(lsGet('best:' + pageKey(w.id)));
+
+    // The dock replaces the in-widget panel: keep the widget area clean.
+    box.remove();
+    classBar(w);
+
+    const dock = document.createElement('div');
+    dock.className = 'class-dock';
+    dock.innerHTML =
+      '<div class="row">' +
+      '<input type="text" id="cl-name-' + w.id + '" placeholder="your name" maxlength="18" ' +
+      'autocomplete="name" enterkeyhint="send" value="' + name0 + '">' +
+      '<button class="primary send" id="cl-sub-' + w.id + '">Submit</button>' +
+      '</div>' +
+      '<div class="meta">' +
+      '<span>your best: <b id="cl-best-' + w.id + '">' +
+      (isNaN(bestPrev) ? '—' : bestPrev.toFixed(w.digits)) + '</b></span>' +
+      '<span class="fb" id="cl-fb-' + w.id + '">play, then submit your ' + w.label + '</span>' +
+      '</div>';
+    document.body.appendChild(dock);
+
+    const fb = dock.querySelector('#cl-fb-' + w.id);
+    const nameEl = dock.querySelector('#cl-name-' + w.id);
+    const btn = dock.querySelector('#cl-sub-' + w.id);
+
+    const say = (msg, kind) => {
+      fb.textContent = msg;
+      fb.className = 'fb' + (kind ? ' ' + kind : '');
+    };
+
+    const submit = async () => {
+      const name = nameEl.value.trim() || 'anon';
       lsSet('classroom-name', name);
       const v = w.get();
       if (v === null || v === undefined || isNaN(v)) {
-        fb.textContent = 'current attempt is not valid/feasible';
+        say('no valid attempt yet — play the activity first', 'err');
         return;
       }
+      btn.disabled = true;
+      say('sending…');
       try {
         await dbPost('/sessions/' + joinCode + '/' + w.id, { n: name, v: +v.toFixed(w.digits) });
-        fb.textContent = 'sent: ' + v.toFixed(w.digits) + ' ✓';
+        say('sent ' + v.toFixed(w.digits) + ' ✓', 'ok');
+        btn.textContent = 'Submit again';
         updateBest(w, v);
       } catch {
-        fb.textContent = 'could not send — check connection';
+        say('could not send — check your connection', 'err');
+      } finally {
+        btn.disabled = false;
       }
-    });
+    };
+
+    btn.addEventListener('click', submit);
+    nameEl.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
   }
 
   function updateBest(w, v) {
@@ -147,6 +204,11 @@ window.CLASSROOM = (() => {
   // submit UI) or just browse the plain page (no classroom UI at all).
   const isHost = params.get('embed') !== null || params.get('host') !== null;
 
+  // ?w=<id> pins the student's phone to the single activity being played, so
+  // the other widgets on the week page must not build a submit dock of their
+  // own (theme.js hides them visually; this keeps their JS out of the way).
+  const focusId = params.get('w');
+
   function register(sectionId, w) {
     // w: {id, label, dir: 'min'|'max', digits, get}
     w.id = w.id || sectionId;
@@ -159,6 +221,7 @@ window.CLASSROOM = (() => {
     // A plain public visitor (no join code, not the host) sees nothing.
     if (!joinCode && !isHost) return;
     if (!enabled && !joinCode) return; // classroom mode fully off: no UI at all
+    if (joinCode && focusId && focusId !== w.id) return; // not the pinned activity
 
     const box = document.createElement('div');
     box.className = 'classroom';
@@ -172,8 +235,12 @@ window.CLASSROOM = (() => {
       box.innerHTML += '<span style="color:var(--muted)">classroom mode is not configured on this site</span>';
       return;
     }
-    if (joinCode) studentUI(box, w);
-    else instructorUI(box, w);
+    if (joinCode) {
+      stripAnswerKeys(document);
+      studentUI(box, w);
+    } else {
+      instructorUI(box, w);
+    }
   }
 
   // record local bests even outside sessions: expose for widgets that want it

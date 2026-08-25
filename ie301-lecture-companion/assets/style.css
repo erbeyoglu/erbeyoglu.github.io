@@ -369,7 +369,42 @@ button.locked { opacity: 0.45; }
 }
 .classroom .lb { font-variant-numeric: tabular-nums; font-size: 0.95rem; }
 .classroom .qr { display: block; margin: 8px 0; }
-.class-join {
+/* ---------- class mode (?class=CODE&w=<id>): the student's phone ---------- */
+
+/* Only the activity being played in class is shown … */
+.class-focus header.site,
+.class-focus footer.site,
+.class-focus main > .howto,
+.class-focus section.widget { display: none; }
+.class-focus section.widget.class-target { display: block; margin: 0 auto; }
+.class-focus main { padding: 6px 12px 24px; }
+
+/* … and the answer keys are stripped, in every widget on the page. */
+.class-mode .answer-key,
+.class-mode details.spoiler { display: none !important; }
+
+/* Slim context bar: which session, which activity. */
+.class-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  background: var(--surface);
+  border-bottom: 2px solid var(--s1);
+  padding: 9px 14px;
+}
+.class-bar .code {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--s1);
+}
+.class-bar .what { color: var(--ink-2); font-size: 0.92rem; }
+
+/* Submit dock, pinned to the bottom of the phone screen. */
+.class-dock {
   position: fixed;
   left: 0;
   right: 0;
@@ -377,21 +412,42 @@ button.locked { opacity: 0.45; }
   z-index: 50;
   background: var(--surface);
   border-top: 2px solid var(--s1);
-  padding: 10px 16px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.10);
+}
+.class-mode body { padding-bottom: 132px; }
+.class-dock .row { display: flex; gap: 8px; align-items: stretch; }
+.class-dock input[type="text"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: 1rem;
+  padding: 10px 12px;
+  min-height: 44px;
+  border: 1px solid var(--grid);
+  border-radius: 10px;
+  background: var(--page, var(--surface));
+  color: var(--ink);
+}
+.class-dock button.send {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.class-dock .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
+  gap: 4px 14px;
+  justify-content: space-between;
+  margin-top: 7px;
+  font-size: 0.9rem;
+  color: var(--ink-2);
 }
-.class-join input[type="text"] {
-  font: inherit;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--page);
-  color: var(--ink);
-  width: 130px;
-}
+.class-dock .meta b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.class-dock .fb.ok { color: var(--good); }
+.class-dock .fb.err { color: var(--critical); }
 
 /* Embed mode (?embed=<id>): single-widget view for the instructor deck */
 .embed-mode header.site,
