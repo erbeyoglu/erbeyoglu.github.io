@@ -473,6 +473,15 @@ button.locked { opacity: 0.45; }
   .readout { padding: 5px 9px; font-size: 0.88rem; }
   button { padding: 6px 12px; font-size: 0.88rem; }
   table.attempts th, table.attempts td { padding: 4px 6px; font-size: 0.85rem; }
+  /* Wide result tables (DP stage tables, attempt logs) scroll inside their own
+     box instead of making the whole page scroll sideways on a phone. */
+  section.widget table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  section.widget table th, section.widget table td { white-space: nowrap; }
   /* flex side-by-side blocks (tableau + map, list + canvas) stack full-width */
   .widget [style*="min-width"] { min-width: 0 !important; }
 }
