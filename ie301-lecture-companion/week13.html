@@ -28,6 +28,7 @@
     <a href="#accounts">4 · Accounts receivable</a>
     <a href="#freezco">5 · Freezco warranty</a>
     <a href="#hth">6 · The HTH game</a>
+    <a href="#board">7 · The board game (extra)</a>
   </nav>
 </header>
 
@@ -198,6 +199,66 @@
     (slide 43): μ∅ = 1 + ½μ∅ + ½μ_H, μ_H = 1 + ½μ_H + ½μ_HT, μ_HT = 1 + ½μ∅. Solving: μ∅ = 10.
     (The sneaky part: from HT, a tail throws you ALL the way back to ∅.)
   </details></div>
+</section>
+
+
+<!-- ================= WIDGET 7 : BOARD-GAME CHAIN (extra) ================= -->
+<section class="widget" id="board">
+  <h2>The board game: which square do you land on most? <span class="chip">Extra · long-run behaviour</span></h2>
+  <p class="howto">
+    A loop of <b>40 squares</b> — the layout you know from Monopoly. Each turn you roll two dice and
+    move that many squares forward. One square breaks the symmetry: land on <b>GO TO JAIL</b> (30) and
+    you are sent straight to <b>JAIL</b> (10). The state is the square you end your turn on, and the
+    question is the one from the recitation: <i>what fraction of the time is each state occupied?</i>
+    <b>First guess</b>: click the square you think is visited most often, then reveal the exact answer.
+  </p>
+
+  <div class="controls">
+    <div class="group">
+      <label><input type="checkbox" id="bd-jail" checked> go-to-jail rule</label>
+    </div>
+    <div class="segwrap">
+      <button class="seg active" id="bd-view-exact">exact &pi;</button>
+      <button class="seg" id="bd-view-sim">your simulation</button>
+    </div>
+    <button id="bd-run">Roll 200 turns</button>
+    <button id="bd-run5k">Roll 5000 turns</button>
+    <button id="bd-reset">Reset rolls</button>
+  </div>
+
+  <div class="controls">
+    <span class="readout">turns rolled: <b id="bd-turns">0</b></span>
+    <span class="readout">square <b id="bd-sel">10</b>: &pi; = <b id="bd-pi">—</b></span>
+    <span class="readout">you land there every <b id="bd-return">—</b> turns on average</span>
+  </div>
+
+  <canvas class="viz" id="c-board" style="height:440px"></canvas>
+  <p class="status info" id="bd-status">Click a square to guess the most-visited one.</p>
+
+  <div class="controls">
+    <button id="bd-reveal" class="primary">Reveal the exact answer</button>
+  </div>
+  <div id="bd-answer" style="display:none">
+    <p class="howto" style="margin-top:8px">
+      With the go-to-jail rule switched <b>off</b>, every square is visited equally often:
+      \( \pi_i = 1/40 = 2.5\% \). The dice move you a random amount around a closed loop, so no
+      square is special — the transition matrix is doubly stochastic and the uniform distribution
+      is stationary.
+    </p>
+    <p class="howto">
+      Switch the rule <b>on</b> and the picture changes in three ways at once. Square 30 becomes
+      impossible to end a turn on, so \( \pi_{30} = 0 \). <b>JAIL</b> now collects its own visitors
+      <i>plus</i> everyone sent there, landing at exactly \( \pi_{10} = 5\% \) — double any ordinary
+      square. And the rest is no longer flat: the squares a dice roll <i>after</i> jail are the
+      busiest ordinary ones (16–20, about 2.7–2.8%), while those just after the go-to-jail corner
+      are the quietest (37–39, about 2.2%), because one of their feeder squares now sends nobody.
+    </p>
+    <div class="note">
+      Expected return time follows directly from \( \mu_{ii} = 1/\pi_i \): you end a turn in jail
+      about every <b>20 turns</b>, on a busy square every ~36, and on square 37 only every ~45.
+      Same formula as the camera store's \( \mu_{30} \) — on a board you already know.
+    </div>
+  </div>
 </section>
 
 </main>
@@ -681,6 +742,227 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
     st.className = 'status ok';
     st.textContent = 'Expected tosses = 10. (For comparison, HTT needs only 8 — the pattern’s self-overlap is what costs extra.)';
   });
+})();
+
+/* ---------------- WIDGET 7 : board-game chain (extra) ---------------- */
+(() => {
+  const el = id => document.getElementById(id);
+  const N = 40, JAIL = 10, GOTO_JAIL = 30, SIDE = 11;
+  const NAMES = { 0: 'GO', 10: 'JAIL', 20: 'FREE', 30: 'GO TO JAIL' };
+
+  // Two dice: P(sum = s) for s = 2..12.
+  const DICE = [];
+  for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) DICE.push(a + b);
+
+  let useJail = true, view = 'exact', selected = JAIL, guess = null, revealed = false;
+  let counts = new Array(N).fill(0), turns = 0, pos = 0;
+  let pi = new Array(N).fill(1 / N);
+
+  function step(from, roll) {
+    let to = (from + roll) % N;
+    if (useJail && to === GOTO_JAIL) to = JAIL;
+    return to;
+  }
+
+  // Exact stationary distribution by power iteration on the 40-state chain.
+  function computePi() {
+    let v = new Array(N).fill(1 / N);
+    for (let it = 0; it < 600; it++) {
+      const nv = new Array(N).fill(0);
+      for (let i = 0; i < N; i++) {
+        if (v[i] === 0) continue;
+        for (const r of DICE) nv[step(i, r)] += v[i] / 36;
+      }
+      v = nv;
+    }
+    const s = v.reduce((a, b) => a + b, 0);
+    pi = v.map(x => x / s);
+  }
+
+  function roll(times) {
+    for (let k = 0; k < times; k++) {
+      pos = step(pos, DICE[(Math.random() * 36) | 0]);
+      counts[pos]++;
+      turns++;
+    }
+    view = 'sim';
+    setSeg();
+    render();
+  }
+
+  function reset() {
+    counts = new Array(N).fill(0);
+    turns = 0; pos = 0;
+    render();
+  }
+
+  function values() {
+    if (view === 'sim') return turns ? counts.map(c => c / turns) : new Array(N).fill(0);
+    return pi;
+  }
+
+  // --- board geometry: index 0 bottom-right, running counter-clockwise ---
+  function cellOf(i) {
+    if (i <= 10) return { c: 10 - i, r: 10 };
+    if (i <= 20) return { c: 0, r: 10 - (i - 10) };
+    if (i <= 30) return { c: i - 20, r: 0 };
+    return { c: 10, r: i - 30 };
+  }
+
+  const cv = el('c-board');
+  let geom = null;
+
+  function draw() {
+    const t = VIZ.theme();
+    const s = VIZ.setup(cv);
+    const ctx = s.ctx;
+    ctx.clearRect(0, 0, s.w, s.h);
+    const size = Math.min(s.w, s.h) - 8;
+    const cell = size / SIDE;
+    const ox = (s.w - size) / 2, oy = (s.h - size) / 2;
+    geom = { ox: ox, oy: oy, cell: cell };
+
+    const v = values();
+    // Jail dwarfs everything, so it gets its own colour and the blue ramp is
+    // stretched over the ORDINARY squares — otherwise the interesting 2.2%
+    // vs 2.8% structure is invisible next to a 5% outlier.
+    const ordinary = v.filter((_, i) => !(useJail && (i === JAIL || i === GOTO_JAIL)));
+    const lo = Math.min(...ordinary), hi = Math.max(...ordinary);
+    const flat = hi - lo < 1e-9;
+
+    for (let i = 0; i < N; i++) {
+      const g = cellOf(i);
+      const x = ox + g.c * cell, y = oy + g.r * cell;
+      const isJail = useJail && i === JAIL;
+      const isDead = useJail && i === GOTO_JAIL && v[i] === 0;
+      const frac = flat ? 0.5 : Math.max(0, Math.min(1, (v[i] - lo) / (hi - lo)));
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x + 1, y + 1, cell - 2, cell - 2);
+      ctx.fillStyle = t.surface;
+      ctx.fill();
+      if (isJail) {
+        ctx.fillStyle = t.s2;                    // the answer: jail collects everyone
+        ctx.fill();
+      } else if (!isDead) {
+        ctx.globalAlpha = 0.10 + 0.85 * frac;    // heat across the ordinary squares
+        ctx.fillStyle = t.s1;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = i === selected ? 3 : 1;
+      ctx.strokeStyle = i === selected ? t.s5 : t.grid;
+      ctx.stroke();
+      if (guess === i && !revealed) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = t.s2;
+        ctx.stroke();
+      }
+      ctx.fillStyle = (isJail || frac > 0.62) ? t.surface : (isDead ? t.muted : t.ink2);
+      ctx.font = (cell < 42 ? '600 10px' : '600 12px') + ' system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const nm = NAMES[i];
+      if (nm && cell >= 34) {
+        nm.split(' ').forEach((w, k, arr) =>
+          ctx.fillText(w, x + cell / 2, y + cell / 2 + (k - (arr.length - 1) / 2) * 11));
+      } else {
+        ctx.fillText(String(i), x + cell / 2, y + cell / 2);
+      }
+      ctx.restore();
+    }
+
+    // centre caption
+    ctx.save();
+    ctx.fillStyle = t.ink2;
+    ctx.textAlign = 'center';
+    ctx.font = '600 15px system-ui, sans-serif';
+    ctx.fillText(view === 'sim' ? 'simulated frequencies' : 'exact stationary \u03c0',
+      s.w / 2, s.h / 2 - 8);
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.fillText(view === 'sim' ? turns + ' turns rolled' :
+      (useJail ? 'go-to-jail rule ON' : 'no jail rule \u2014 uniform'), s.w / 2, s.h / 2 + 14);
+    // legend: what the shading means
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.fillStyle = t.muted;
+    ctx.fillText(flat ? 'every square identical: 2.50%'
+      : 'darker = visited more often' + (useJail ? ' \u00b7 jail shown apart' : ''),
+      s.w / 2, s.h / 2 + 38);
+    ctx.restore();
+  }
+
+  function render() {
+    const v = values();
+    el('bd-turns').textContent = turns;
+    el('bd-sel').textContent = selected + (NAMES[selected] ? ' (' + NAMES[selected] + ')' : '');
+    el('bd-pi').textContent = (v[selected] * 100).toFixed(2) + '%';
+    el('bd-return').textContent = v[selected] > 0 ? (1 / v[selected]).toFixed(1) : '\u221e';
+    draw();
+  }
+
+  function setSeg() {
+    el('bd-view-exact').classList.toggle('active', view === 'exact');
+    el('bd-view-sim').classList.toggle('active', view === 'sim');
+  }
+
+  cv.addEventListener('click', ev => {
+    if (!geom) return;
+    const p = VIZ.pointer(cv, ev);
+    for (let i = 0; i < N; i++) {
+      const g = cellOf(i);
+      const x = geom.ox + g.c * geom.cell, y = geom.oy + g.r * geom.cell;
+      if (p.px >= x && p.px <= x + geom.cell && p.py >= y && p.py <= y + geom.cell) {
+        selected = i;
+        if (guess === null && !revealed) {
+          guess = i;
+          el('bd-status').textContent = 'Guess locked on square ' + i +
+            (NAMES[i] ? ' (' + NAMES[i] + ')' : '') + '. Now reveal the exact answer.';
+        }
+        render();
+        return;
+      }
+    }
+  });
+
+  el('bd-jail').addEventListener('change', e => {
+    useJail = e.target.checked;
+    computePi(); reset();
+    el('bd-status').textContent = useJail
+      ? 'Jail rule on \u2014 the loop is no longer symmetric.'
+      : 'Jail rule off \u2014 nothing distinguishes the squares any more.';
+  });
+  el('bd-view-exact').addEventListener('click', () => { view = 'exact'; setSeg(); render(); });
+  el('bd-view-sim').addEventListener('click', () => { view = 'sim'; setSeg(); render(); });
+  el('bd-run').addEventListener('click', () => roll(200));
+  el('bd-run5k').addEventListener('click', () => roll(5000));
+  el('bd-reset').addEventListener('click', reset);
+
+  el('bd-reveal').addEventListener('click', () => {
+    const box = el('bd-answer');
+    const open = box.style.display === 'none';
+    box.style.display = open ? 'block' : 'none';
+    el('bd-reveal').textContent = open ? 'Hide the exact answer' : 'Reveal the exact answer';
+    if (!open) return;
+    revealed = true;
+    view = 'exact'; setSeg();
+    const order = pi.map((v, i) => ({ i: i, v: v })).sort((a, b) => b.v - a.v);
+    const top = order[0], bottom = order[order.length - 1];
+    let msg = 'Most visited: square ' + top.i + (NAMES[top.i] ? ' (' + NAMES[top.i] + ')' : '') +
+      ' at ' + (top.v * 100).toFixed(2) + '% \u2014 once every ' + (1 / top.v).toFixed(1) +
+      ' turns. Least visited: square ' + bottom.i + ' at ' + (bottom.v * 100).toFixed(2) + '%.';
+    if (guess !== null) {
+      const rank = order.findIndex(o => o.i === guess) + 1;
+      msg += ' Your guess (square ' + guess + ') ranks ' + rank + ' of 40.';
+    }
+    el('bd-status').textContent = msg;
+    selected = top.i;
+    render();
+  });
+
+  computePi();
+  setSeg();
+  VIZ.register(cv, draw);
+  render();
 })();
 </script>
 </body>

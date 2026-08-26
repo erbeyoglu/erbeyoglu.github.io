@@ -28,6 +28,7 @@
     <a href="#pinv">2 · Inventory under uncertainty</a>
     <a href="#sally">3 · Sally’s stopping rule</a>
     <a href="#reject">4 · Reject allowances</a>
+    <a href="#offers">5 · Sell the laptop (extra)</a>
   </nav>
 </header>
 
@@ -154,6 +155,78 @@
 
 <p class="howto" style="margin-top:26px">Studying after class? Open the <a href="aitutor.html">AI Modeling Tutor</a> —
 a Socratic AI tutor that coaches you through formulating models on your own problems, without giving away the answer.</p>
+
+
+<!-- ================= WIDGET 5 : OFFER / STOPPING GAME (extra) ================= -->
+<section class="widget" id="offers">
+  <h2>Sell the laptop: when do you stop? <span class="chip">Extra · stopping rules</span></h2>
+  <p class="howto">
+    You are selling an old laptop and can collect bids for <b>at most 3 days</b>. Each day exactly one
+    offer arrives: <b>1500&nbsp;TL</b> with probability 0.30, <b>2000&nbsp;TL</b> with 0.50, or
+    <b>2500&nbsp;TL</b> with 0.20. Accept and the sale is done; reject and that offer is gone for good.
+    On day 3 you must take whatever comes. Play <b>10 independent rounds</b> — highest total in class wins.
+    Everyone in the same class session gets the <i>same</i> offers, so this compares decisions, not luck.
+  </p>
+
+  <div class="controls">
+    <span class="readout">round <b id="of-round">1</b> / 10</span>
+    <span class="readout">day <b id="of-day">1</b> / 3</span>
+    <span class="readout">today&#39;s offer: <b id="of-offer">&mdash;</b> TL</span>
+  </div>
+
+  <div class="controls">
+    <button class="primary" id="of-accept">Accept</button>
+    <button id="of-reject">Reject &amp; wait</button>
+    <button id="of-new">New game</button>
+  </div>
+
+  <div class="controls">
+    <span class="readout">your total: <b id="of-you">0</b> TL</span>
+    <span class="readout">optimal policy, same offers: <b id="of-opt">0</b> TL</span>
+    <span class="readout">take-day-1 policy: <b id="of-naive">0</b> TL</span>
+  </div>
+
+  <canvas class="viz short" id="c-offers" style="height:300px"></canvas>
+  <p class="status info" id="of-status">Round 1, day 1 &mdash; accept this offer, or gamble on tomorrow?</p>
+  <div class="runlog" id="of-log"></div>
+
+  <div class="controls">
+    <button id="of-reveal">Reveal the DP solution</button>
+  </div>
+  <div id="of-dp" style="display:none">
+    <p class="howto" style="margin-top:8px">
+      Work backwards. Let \( f_n \) be the expected earnings from day \( n \) onward when you play well.
+    </p>
+    <table class="dp">
+      <thead><tr><th>day n</th><th>\( f_n^* \)</th><th>accept an offer if &hellip;</th></tr></thead>
+      <tbody>
+        <tr><td>3</td><td>1950</td><td>always (nothing follows)</td></tr>
+        <tr><td>2</td><td>2085</td><td>offer &ge; 1950 &rarr; take 2000 or 2500</td></tr>
+        <tr class="best"><td>1</td><td>2168</td><td>offer &ge; 2085 &rarr; take only 2500</td></tr>
+      </tbody>
+    </table>
+    <p class="howto">
+      \( f_3 = 0.3(1500)+0.5(2000)+0.2(2500) = 1950 \). On day 2 you compare each offer with 1950,
+      which gives \( f_2 = 0.3(1950)+0.5(2000)+0.2(2500) = 2085 \). On day 1 you compare with 2085,
+      so only 2500 is worth taking, and \( f_1 = 0.8(2085)+0.2(2500) = 2168 \).
+    </p>
+    <div class="note">
+      The rule is a <b>threshold that drops as time runs out</b>: picky on day 1, less picky on day 2,
+      forced on day 3. Holding out early is worth about 11% more per round than grabbing whatever
+      arrives first (2168 vs 1950).
+    </div>
+    <p class="howto" style="margin-top:10px">
+      Ten rounds is a small sample — roughly one class in twelve, the take-day-1 player gets lucky
+      and finishes ahead. That does not make the rule wrong: it maximises the <i>average</i>, not
+      every single round. Watch the averages settle:
+    </p>
+    <div class="controls">
+      <button id="of-sim">Simulate 2000 rounds of both policies</button>
+      <span class="readout">optimal, per round: <b id="of-sim-opt">—</b></span>
+      <span class="readout">take-day-1, per round: <b id="of-sim-naive">—</b></span>
+    </div>
+  </div>
+</section>
 
 </main>
 
@@ -454,11 +527,175 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   ['rj-x1', 'rj-x2', 'rj-x3'].forEach(id => el(id).addEventListener('input', update));
   update();
 })();
+
+/* ---------------- WIDGET 5 : offer / stopping game (extra) ---------------- */
+(() => {
+  const el = id => document.getElementById(id);
+  const OFFERS = [1500, 2000, 2500];
+  const PROB = [0.30, 0.50, 0.20];
+  const ROUNDS = 10, DAYS = 3;
+  // f3 = 1950 and f2 = 2085, so the optimal rule is "accept if offer >= next f".
+  const THRESH = [2085, 1950, 0];   // day 1, day 2, day 3
+
+  // Everyone in a class session must see the SAME offers, otherwise the
+  // leaderboard ranks luck instead of decisions: seed the RNG from the code.
+  const seedOf = s => {
+    let h = 2166136261;
+    for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  };
+  const rngFrom = seed => {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  const drawOffer = r => {
+    const u = r();
+    return u < PROB[0] ? OFFERS[0] : u < PROB[0] + PROB[1] ? OFFERS[1] : OFFERS[2];
+  };
+
+  let seq = [], round = 0, day = 0;
+  let youTotal = 0, optTotal = 0, naiveTotal = 0;
+  let youPts = [0], optPts = [0], log = [], done = false;
+
+  function buildSequences() {
+    const code = new URLSearchParams(location.search).get('class');
+    const seed = code ? seedOf(code.toUpperCase()) : (Math.random() * 4294967296) >>> 0;
+    const r = rngFrom(seed);
+    seq = Array.from({ length: ROUNDS }, () =>
+      Array.from({ length: DAYS }, () => drawOffer(r)));
+  }
+
+  // What the DP-optimal player and the naive day-1 player earn on the SAME offers.
+  function benchmarks(offers) {
+    let opt = offers[DAYS - 1];
+    for (let d = 0; d < DAYS; d++) if (offers[d] >= THRESH[d]) { opt = offers[d]; break; }
+    return { opt: opt, naive: offers[0] };
+  }
+
+  function newGame() {
+    buildSequences();
+    round = 0; day = 0;
+    youTotal = optTotal = naiveTotal = 0;
+    youPts = [0]; optPts = [0]; log = []; done = false;
+    el('of-log').textContent = '';
+    el('of-status').textContent = 'Round 1, day 1 \u2014 accept this offer, or gamble on tomorrow?';
+    render();
+  }
+
+  function finishRound(taken) {
+    const b = benchmarks(seq[round]);
+    youTotal += taken; optTotal += b.opt; naiveTotal += b.naive;
+    youPts.push(youTotal); optPts.push(optTotal);
+    log.unshift('round ' + (round + 1) + ': you ' + taken + ' \u00b7 optimal ' + b.opt +
+      ' \u00b7 offers were ' + seq[round].join(' \u2192 '));
+    el('of-log').textContent = log.slice(0, 6).join('\n');
+    round++; day = 0;
+    if (round >= ROUNDS) {
+      done = true;
+      const gap = youTotal - optTotal;
+      el('of-status').textContent = 'Done. You earned ' + youTotal + ' TL; the optimal policy earned ' +
+        optTotal + ' TL on the same offers (' +
+        (gap === 0 ? 'a tie \u2014 you played the rule exactly' :
+         gap > 0 ? 'you are ' + gap + ' ahead \u2014 the rule maximises the average, not every round' :
+         (-gap) + ' behind') + '). Taking every day-1 offer would have earned ' + naiveTotal + ' TL.';
+    } else {
+      el('of-status').textContent = 'Round ' + (round + 1) + ', day 1 \u2014 a fresh buyer, same rules.';
+    }
+    render();
+  }
+
+  function act(accept) {
+    if (done) return;
+    if (accept) { finishRound(seq[round][day]); return; }
+    if (day === DAYS - 1) return;             // day 3 is forced
+    day++;
+    el('of-status').textContent = day === DAYS - 1
+      ? 'Last day \u2014 whatever arrived now, you have to take it.'
+      : 'Rejected. Tomorrow\u2019s offer is on the table.';
+    render();
+  }
+
+  function render() {
+    el('of-round').textContent = Math.min(round + 1, ROUNDS);
+    el('of-day').textContent = day + 1;
+    el('of-offer').textContent = done ? '\u2014' : seq[round][day];
+    el('of-you').textContent = youTotal;
+    el('of-opt').textContent = optTotal;
+    el('of-naive').textContent = naiveTotal;
+    el('of-accept').disabled = done;
+    el('of-reject').disabled = done || day === DAYS - 1;
+    draw();
+  }
+
+  const cv = el('c-offers');
+  function draw() {
+    const t = VIZ.theme();
+    const maxY = Math.max(optTotal, youTotal, 2200);
+    const p = VIZ.plot(cv, { x0: 0, x1: ROUNDS, y0: 0, y1: maxY * 1.15, padL: 64, padB: 42 });
+    const ctx = p.ctx, X = p.X, Y = p.Y;
+    ctx.clearRect(0, 0, p.w, p.h);
+    VIZ.axes(p, t, {
+      xticks: Array.from({ length: ROUNDS + 1 }, (_, i) => i),
+      yticks: [0, Math.round(maxY / 2), Math.round(maxY)],
+      xlabel: 'rounds played', ylabel: 'cumulative TL'
+    });
+    const line = (pts, color, width) => {
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath();
+      pts.forEach((v, i) => i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v)));
+      ctx.stroke(); ctx.restore();
+    };
+    line(optPts, t.s2, 2.5);
+    line(youPts, t.s5, 3);
+    if (youPts.length > 1) {
+      VIZ.dot(p, youPts.length - 1, youTotal, t.s5, 5);
+      VIZ.label(p, 'optimal policy', optPts.length - 1, optTotal, t.s2,
+        { align: 'right', bold: true, dy: -10 });
+      VIZ.label(p, 'you', youPts.length - 1, youTotal, t.s5,
+        { align: 'right', bold: true, dy: 20 });
+    }
+  }
+
+  el('of-accept').addEventListener('click', () => act(true));
+  el('of-reject').addEventListener('click', () => act(false));
+  el('of-new').addEventListener('click', newGame);
+  el('of-reveal').addEventListener('click', () => {
+    const box = el('of-dp');
+    const open = box.style.display === 'none';
+    box.style.display = open ? 'block' : 'none';
+    el('of-reveal').textContent = open ? 'Hide the DP solution' : 'Reveal the DP solution';
+  });
+
+  // Long-run check: ten rounds are noisy, 2000 are not. The averages must
+  // settle near f1 = 2168 (optimal) and 1950 (take whatever day 1 brings).
+  el('of-sim').addEventListener('click', () => {
+    const r = rngFrom((Math.random() * 4294967296) >>> 0);
+    const N = 2000;
+    let so = 0, sn = 0;
+    for (let i = 0; i < N; i++) {
+      const offers = Array.from({ length: DAYS }, () => drawOffer(r));
+      const b = benchmarks(offers);
+      so += b.opt; sn += b.naive;
+    }
+    el('of-sim-opt').textContent = (so / N).toFixed(0);
+    el('of-sim-naive').textContent = (sn / N).toFixed(0);
+  });
+
+  VIZ.register(cv, draw);
+  newGame();
+  window.OFFER_TOTAL = () => youTotal;
+})();
 </script>
 <script src="assets/classroom-config.js"></script>
 <script src="assets/qrcode.js"></script>
 <script src="assets/classroom.js"></script>
 <script>
+CLASSROOM.register('offers', { label: 'total TL (10 rounds)', dir: 'max', digits: 0,
+  get: () => (window.OFFER_TOTAL ? window.OFFER_TOTAL() : null) });
 CLASSROOM.register('reject', { label: 'expected cost ($)', dir: 'min', digits: 2,
   get: () => parseFloat(el('rj-cost').textContent.replace('$', '')) });
 </script>
