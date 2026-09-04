@@ -186,11 +186,20 @@ window.VIZ = (() => {
   }
 
   // Register a widget's draw callback: run now, on resize, and on theme flips.
+  // WHY the size guard: embed mode (instructor deck) and class mode (student
+  // phone) hide every section until DOMContentLoaded, and hidden tab panels
+  // keep their canvas at 0x0. Drawing at zero size can produce negative
+  // radii (week02 tank, week01 explorer) and throw, which aborts the rest of
+  // the page's widget script. The ResizeObserver redraws as soon as the
+  // canvas gets a real size, so skipping loses nothing.
   function register(canvas, draw) {
-    drawFns.push(draw);
-    const ro = new ResizeObserver(() => draw());
+    const drawIfVisible = () => {
+      if (canvas.clientWidth > 0 && canvas.clientHeight > 0) draw();
+    };
+    drawFns.push(drawIfVisible);
+    const ro = new ResizeObserver(drawIfVisible);
     ro.observe(canvas);
-    draw();
+    drawIfVisible();
   }
 
   // theme.js dispatches 'themechange' whenever the user switches themes

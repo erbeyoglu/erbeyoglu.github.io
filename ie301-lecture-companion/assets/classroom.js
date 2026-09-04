@@ -228,7 +228,10 @@ window.CLASSROOM = (() => {
     const bestPrev = parseFloat(lsGet('best:' + pageKey(w.id)));
     box.innerHTML = '<span class="readout">your device best: <b id="cl-best-' + w.id + '">' +
       (isNaN(bestPrev) ? '—' : bestPrev.toFixed(w.digits)) + '</b></span> ';
-    const note = section.querySelector('.note, div.note');
+    // WHY direct children only: a widget may keep a .note inside a nested
+    // panel (week09 #offers); insertBefore throws for such a node and the
+    // exception would abort every later register() call on the page.
+    const note = section.querySelector(':scope > .note');
     section.insertBefore(box, note || null);
 
     if (!enabled) {
