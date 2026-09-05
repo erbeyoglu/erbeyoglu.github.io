@@ -65,6 +65,8 @@
     .warnings-col { border-left: none; padding-left: 0; margin-top: 10px; }
   }
 </style>
+<script src="assets/course-nav.js"></script>
+<link rel="stylesheet" href="assets/learning.css">
 </head>
 <body>
 
@@ -213,12 +215,6 @@
 <script>
 (function () {
   "use strict";
-  var week = new URLSearchParams(location.search).get('week');
-  if (/^week(01|02|03|04|05|07|08|09|10|11|13|14)$/.test(week || '')) {
-    var back = document.createElement('p'), link = document.createElement('a');
-    link.href = week + '.html'; link.textContent = '← Week ' + Number(week.slice(4)) + ' activities';
-    back.appendChild(link); document.querySelector('main').prepend(back);
-  }
 
   // Wrapper text around the tutor prompt (tutor-prompt.js, generated from
   // studio_dev/tutor-system-prompt.md — the single source of truth).

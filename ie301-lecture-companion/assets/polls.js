@@ -22,7 +22,7 @@
   let selectionPinned = !!MODELING.get(selected), hostRestored = false;
   if (!MODELING.get(selected) || MODELING.get(selected).week !== week) selected = MODELING.forWeek(week)[0].id;
   let choice = null, savedChoice = null, busy = false, ready = false, offline = false;
-  let renderKey = '', generation = 0, practiceRevealed = false, timer;
+  let renderKey = '', generation = 0, timer;
   const serverTime = () => ({'.sv':'timestamp'});
   const path = suffix => '/sessions/' + code + '/poll/' + suffix;
 
@@ -58,8 +58,9 @@
     return {counts,choices,total:Object.keys(choices).length};
   }
   const labels = q => [...q.options, 'Not sure yet'];
-  function questionHTML(q, answerButtons) {
-    return `<div class="learning-eyebrow">Week ${Number(q.week.slice(4))} · ${q.optional ? 'Reserve' : 'Core'} checkpoint</div>
+  function questionHTML(q, answerButtons, practice = false) {
+    const label=practice ? `Question ${MODELING.forWeek(q.week).findIndex(x=>x.id===q.id)+1} of 3` : `${q.optional ? 'Reserve' : 'Core'} checkpoint`;
+    return `<div class="learning-eyebrow">Week ${Number(q.week.slice(4))} · ${label}</div>
       <h2>${escape(q.title)}</h2><p class="learning-context">${escape(q.context)}</p>
       <p><strong>${escape(q.prompt)}</strong></p><div class="learning-choices">` +
       labels(q).map((label,i) => answerButtons
@@ -267,19 +268,67 @@
     } catch(error){offline=true;status(error.message+' Retrying…',true);renderHost();if($('poll-submit'))$('poll-submit').disabled=true;}
   }
   function schedule() {clearTimeout(timer);timer=setTimeout(async()=>{await refresh();schedule();},2000);}
+
+  const practiceTopics = {
+    week01:'NLP foundations', week02:'One-variable NLP', week03:'Multivariable NLP',
+    week04:'KKT conditions', week05:'Quadratic programming',
+    week07:'DP: state and recursion', week08:'DP: resource allocation', week09:'Probabilistic DP',
+    week10:'Probability review', week11:'DTMC: states and transitions',
+    week13:'DTMC: long-run and first passage', week14:'Continuous-time Markov chains'
+  };
+  const practiceCache=new Map();
+  let practiceStorageOK=true;
+  function practiceRecord(q) {
+    if(practiceCache.has(q.id))return practiceCache.get(q.id);
+    let record={choice:null,revealed:false};
+    try {
+      const value=JSON.parse(localStorage.getItem('ie301-practice-v1:'+q.id) || 'null');
+      if(value && Number.isInteger(value.choice) && value.choice>=0 && value.choice<=q.options.length)
+        record={choice:value.choice,revealed:value.revealed===true};
+    } catch {practiceStorageOK=false;}
+    practiceCache.set(q.id,record);return record;
+  }
+  const practiceURL = q => 'polls.html?week='+q.week+'&q='+encodeURIComponent(q.id);
+  const reviewedCount = w => MODELING.forWeek(w).filter(q=>practiceRecord(q).revealed).length;
   function setupPractice() {
-    $('poll-controls').innerHTML=`<h2>Practice a modeling checkpoint</h2><p class="learning-muted">Choose before opening the explanation. These are self-study questions.</p><p><a href="${week}.html">← Week ${Number(week.slice(4))} activities</a></p>
-      <label for="poll-week">Week</label><select id="poll-week">${MODELING.weeks.map(w=>`<option value="${w}">Week ${Number(w.slice(4))}</option>`).join('')}</select>${selectorHTML()}`;
-    $('poll-week').value=week;$('poll-select').value=selected;
-    $('poll-week').onchange=()=>{location.search='?week='+$('poll-week').value;};
-    $('poll-select').onchange=()=>{selected=$('poll-select').value;practiceRevealed=false;renderPractice();};
-    renderPractice();status('Practice mode · works offline');
+    document.body.classList.add('poll-practice');
+    document.querySelector('.learning-header h1').textContent='IE301 · Modeling practice';
+    document.title='IE301 · Modeling practice';
+    $('poll-connection').hidden=true;
+    if(!MODELING.weeks.includes(params.get('week'))) {
+      $('poll-controls').innerHTML='<div class="learning-eyebrow">Self-study</div><h2>Choose a week</h2><p class="learning-context">Three short questions per week. Make a choice, compare the reasoning, then move to the next question.</p>'+
+        [['Nonlinear programming',MODELING.weeks.slice(0,5)],['Dynamic programming',MODELING.weeks.slice(5,8)],['Probability & Markov chains',MODELING.weeks.slice(8)]].map(([family,weeks])=>
+          `<section class="practice-family"><h3>${escape(family)}</h3><div class="practice-week-grid">${weeks.map(w=>`<a class="practice-week" href="polls.html?week=${w}"><span class="learning-eyebrow">Week ${Number(w.slice(4))}</span><strong>${escape(practiceTopics[w])}</strong><span class="learning-muted">3 questions${reviewedCount(w)?' · '+reviewedCount(w)+' reviewed':''}</span><span class="practice-week-arrow" aria-hidden="true">→</span></a>`).join('')}</div></section>`).join('');
+      return;
+    }
+    const all=MODELING.forWeek(week);
+    $('poll-controls').innerHTML=`<div class="learning-eyebrow">Week ${Number(week.slice(4))}</div><h2>${escape(practiceTopics[week])}</h2>
+      <nav class="practice-steps" aria-label="Questions in this week">${all.map((q,i)=>`<a data-practice-question="${q.id}" href="${practiceURL(q)}" ${q.id===selected?'aria-current="page"':''}><span class="practice-step-number">${i+1}</span><span>${escape(q.title)}</span><span class="practice-step-status" aria-label="${practiceRecord(q).revealed?'Explanation reviewed':''}">${practiceRecord(q).revealed?'✓':''}</span></a>`).join('')}</nav>`;
+    const navigation=document.createElement('nav');navigation.id='practice-navigation';navigation.setAttribute('aria-label','Previous and next question');
+    $('poll-app').appendChild(navigation);
+    renderPractice();
   }
   function renderPractice() {
-    const q=MODELING.get(selected);choice=null;
+    const all=MODELING.forWeek(week), q=MODELING.get(selected), index=all.findIndex(x=>x.id===selected);
+    const record=practiceRecord(q);choice=null;
     $('poll-question').hidden=false;$('poll-results').hidden=true;
-    $('poll-question').innerHTML=questionHTML(q,true)+'<button id="poll-submit" class="primary" disabled>Compare with the explanation</button>';
-    bindChoices();$('poll-submit').onclick=()=>{practiceRevealed=true;showResults(q,null);};
+    $('poll-question').innerHTML=questionHTML(q,true,true)+'<button id="poll-submit" class="primary" disabled>Compare reasoning</button>';
+    $('practice-navigation').innerHTML=`<p id="practice-progress" class="learning-muted" role="status"></p><div class="practice-paging">${index>0?`<a class="practice-page-link" rel="prev" href="${practiceURL(all[index-1])}">← Previous question</a>`:'<span></span>'}${index<all.length-1?`<a class="practice-page-link practice-next" rel="next" href="${practiceURL(all[index+1])}">Next question →</a>`:`<a class="practice-page-link practice-next" href="${week}.html">Back to Week ${Number(week.slice(4))} →</a>`}</div>`;
+    const updateProgress=()=>{
+      // Count reviewed explanations, not correct answers or independent mastery.
+      $('practice-progress').textContent=reviewedCount(week)+' of '+all.length+' explanations reviewed · '+(practiceStorageOK?'saved in this browser':'browser storage unavailable');
+      const mark=document.querySelector(`[data-practice-question="${q.id}"] .practice-step-status`);
+      mark.textContent=record.revealed?'✓':'';mark.setAttribute('aria-label',record.revealed?'Explanation reviewed':'');
+    };
+    const persist=()=>{try{localStorage.setItem('ie301-practice-v1:'+q.id,JSON.stringify(record));}catch{practiceStorageOK=false;}updateProgress();};
+    document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{
+      choose(Number(b.dataset.choice));record.choice=choice;record.revealed=false;
+      $('poll-results').hidden=true;persist();
+    });
+    $('poll-submit').onclick=()=>{record.revealed=true;persist();showResults(q,null);};
+    if(record.choice!==null)choose(record.choice);
+    if(record.revealed)showResults(q,null);
+    updateProgress();
   }
   window.addEventListener('message',event=>{
     if(isHost && event.source===parent && event.data?.type==='ie301-poll-return') {

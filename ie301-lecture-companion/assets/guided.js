@@ -25,15 +25,14 @@
   function count(){return activity.steps.filter(s=>reviewed(state.steps[s.id])).length;}
   function render() {
     const done=count(),atEnd=state.index===activity.steps.length;
-    app.innerHTML=`<p><a href="${activity.week}.html">← Week ${Number(activity.week.slice(4))} activities</a> · <a href="guided.html">All guided activities</a></p>
-      <section class="widget"><div class="learning-eyebrow">Week ${Number(activity.week.slice(4))} · ${escape(activity.family)}</div><h2>${escape(activity.title)}</h2><p class="learning-context">${escape(activity.intro)}</p>
+    app.innerHTML=`<section class="widget"><div class="learning-eyebrow">Week ${Number(activity.week.slice(4))} · ${escape(activity.family)}</div><h2>${escape(activity.title)}</h2><p class="learning-context">${escape(activity.intro)}</p>
       <details id="story" ${state.index===0?'open':''}><summary>Problem statement and data</summary>${activity.story}</details>
       <details><summary>Your first model draft</summary><p>Write here or on paper before looking at checkpoints. These notes are saved but are not automatically graded.</p><label for="initial-draft">My initial formulation</label><textarea id="initial-draft">${escape(state.draft)}</textarea></details>
       <p id="storage-note" class="learning-muted">${storageWorks?'Progress and notes are saved in this browser. No answers are sent to a server.':'Browser storage is unavailable. Download your work before leaving.'}</p>
       <progress class="learning-progress" max="${activity.steps.length}" value="${done}" aria-label="Reviewed components"></progress><p>${done} of ${activity.steps.length} components checked or reviewed</p>
       <nav class="learning-step-nav" aria-label="Model components">${activity.steps.map((s,i)=>`<button data-step="${i}" ${i===state.index?'aria-current="step"':''}>${reviewed(state.steps[s.id])?'✓ ':''}${i+1}</button>`).join('')}<button data-step="${activity.steps.length}" ${atEnd?'aria-current="step"':''}>Your complete model</button></nav></section>
       <section class="widget" id="guided-step"></section>
-      <div class="learning-actions no-print"><button id="guided-download">Download my work</button><button id="guided-restart">Start over</button><a href="aitutor.html?week=${activity.week}">Help with your own problem: AI Modeling Tutor</a></div>`;
+      <div class="learning-actions no-print"><button id="guided-download">Download my work</button><button id="guided-restart">Start over</button></div>`;
     $('initial-draft').oninput=e=>{state.draft=e.target.value;persist();};
     app.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{state.index=Number(b.dataset.step);persist();render();$('guided-step').scrollIntoView({block:'start'});});
     $('guided-restart').onclick=()=>{if(confirm('Clear this activity’s saved draft and progress on this browser?')){state={index:0,draft:'',steps:{},twist:'',twistAttempted:false,twistRevealed:false};persist();render();}};
