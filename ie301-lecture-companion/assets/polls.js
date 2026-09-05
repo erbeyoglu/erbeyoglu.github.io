@@ -92,12 +92,18 @@
     return `<label for="poll-select">Question</label><select id="poll-select">${MODELING.forWeek(week).map(q => `<option value="${q.id}">${q.optional?'Reserve · ':''}${escape(q.title)}</option>`).join('')}</select>`;
   }
   function setupHost() {
-    $('poll-controls').innerHTML = `<div class="learning-eyebrow">Instructor · Week ${Number(week.slice(4))}</div><p id="poll-host-count" role="status" aria-live="polite"></p>
-      <div class="learning-actions"><button id="poll-start" class="primary">Start lesson session</button><button id="poll-end" hidden>End session</button><button id="poll-local">Practice / offline explanation</button></div>
-      <div id="poll-join" hidden></div>${selectorHTML()}
-      <div class="learning-actions"><button id="poll-open" class="primary">Open voting</button><button id="poll-close">Close voting</button><button id="poll-reveal">Reveal results</button><button id="poll-next">Next core question</button><button id="poll-wait">Continue to lesson</button></div>
-      <button id="poll-history-load">Review past rounds</button><div id="poll-history"></div>
+    const toggle=document.createElement('button');toggle.id='poll-panel-toggle';toggle.textContent='Hide QR panel';toggle.setAttribute('aria-expanded','true');
+    document.querySelector('.learning-header').appendChild(toggle);
+    toggle.onclick=()=>{const hidden=document.body.classList.toggle('poll-panel-hidden');toggle.textContent=hidden?'Show QR panel':'Hide QR panel';toggle.setAttribute('aria-expanded',String(!hidden));};
+    $('poll-controls').innerHTML = `<div class="learning-eyebrow">Instructor · Week ${Number(week.slice(4))}</div><div id="poll-join" hidden></div><p id="poll-host-count" role="status" aria-live="polite"></p>
+      <button id="poll-start" class="primary">Start lesson session</button>
+      <details id="poll-settings"><summary>Session &amp; question controls</summary>${selectorHTML()}
+      <div class="learning-actions"><button id="poll-next">Next core question</button><button id="poll-end" hidden>End session</button><button id="poll-local">Practice / offline explanation</button></div>
+      <button id="poll-history-load">Review past rounds</button><div id="poll-history"></div></details>
       <dialog id="poll-qr-dialog" class="learning-qr-dialog"><button id="poll-qr-dismiss">Back to question</button><h2 id="poll-big-code"></h2><div id="poll-big-qr"></div><p>Scan once. Keep the page open for this lesson.</p></dialog>`;
+    const voting=document.createElement('div');voting.id='poll-voting-controls';voting.className='learning-actions';
+    voting.innerHTML='<button id="poll-open" class="primary">Open voting</button><button id="poll-close">Close voting</button><button id="poll-reveal">Reveal results</button><button id="poll-wait">Continue to lesson</button>';
+    $('poll-app').insertBefore(voting,$('poll-question'));
     $('poll-qr-dismiss').onclick=()=>$('poll-qr-dialog').close();
     $('poll-select').value=selected;
     $('poll-select').onchange=() => {selected=$('poll-select').value; selectionPinned=true; if (!meta || ['waiting','ended'].includes(meta.phase)) renderQuestion(true);};
@@ -155,7 +161,7 @@
     renderKey=key; $('poll-results').hidden=true;
     if (!isHost && meta && ['waiting','ended'].includes(phase)) {
       $('poll-question').hidden=false;
-      $('poll-question').innerHTML=phase==='ended' ? '<h2>This lesson session has ended.</h2><p>Your instructor can share a new code for the next lesson.</p>' : '<h2>You’re connected.</h2><p>Keep this page open. The next question will appear here when your instructor opens it.</p>';
+      $('poll-question').innerHTML=phase==='ended' ? '<h2>This lesson session has ended.</h2><p>Scan your instructor’s QR for the next lesson.</p>' : '<h2>You’re connected.</h2><p>Keep this page open. The next question will appear here when your instructor opens it.</p>';
       return;
     }
     if(!q) { $('poll-question').hidden=true; return; }
@@ -262,13 +268,11 @@
   }
   function schedule() {clearTimeout(timer);timer=setTimeout(async()=>{await refresh();schedule();},2000);}
   function setupPractice() {
-    $('poll-controls').innerHTML=`<h2>Try a modeling checkpoint</h2><p class="learning-muted">Choose before opening the explanation. To join a live lesson, enter your instructor’s code.</p>
-      <form id="poll-join-form" class="learning-actions"><label for="poll-code">Session code</label><input id="poll-code" maxlength="8" autocomplete="off" autocapitalize="characters" required pattern="[A-Za-z0-9]{4,8}" size="9"><button>Join lesson</button></form>
+    $('poll-controls').innerHTML=`<h2>Practice a modeling checkpoint</h2><p class="learning-muted">Choose before opening the explanation. These are self-study questions.</p><p><a href="${week}.html">← Week ${Number(week.slice(4))} activities</a></p>
       <label for="poll-week">Week</label><select id="poll-week">${MODELING.weeks.map(w=>`<option value="${w}">Week ${Number(w.slice(4))}</option>`).join('')}</select>${selectorHTML()}`;
     $('poll-week').value=week;$('poll-select').value=selected;
     $('poll-week').onchange=()=>{location.search='?week='+$('poll-week').value;};
     $('poll-select').onchange=()=>{selected=$('poll-select').value;practiceRevealed=false;renderPractice();};
-    $('poll-join-form').onsubmit=e=>{e.preventDefault();location.search='?session='+encodeURIComponent($('poll-code').value.trim().toUpperCase());};
     renderPractice();status('Practice mode · works offline');
   }
   function renderPractice() {
@@ -297,7 +301,7 @@
     else status(DB ? 'Ready to start this week’s lesson.' : 'Live voting is not configured. Offline practice is available.',!DB);
   } else if(code) {
     document.body.classList.add('poll-live');
-    $('poll-controls').innerHTML='<p>Keep this page open · <a href="polls.html">Change session code</a></p>';
+    $('poll-controls').innerHTML='<p>Keep this page open. To switch lessons, scan the QR on your instructor’s screen.</p>';
     ready=true;status('Joining session '+code+'…');refresh();
   } else setupPractice();
   schedule();

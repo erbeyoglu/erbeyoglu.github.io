@@ -46,12 +46,20 @@
   // Embed mode: ?embed=<sectionId> strips the page down to a single widget.
   // Used by the (local, unpublished) instructor deck to interleave activities
   // between slides.
-  const embedId = new URLSearchParams(location.search).get('embed');
+  const viewId = new URLSearchParams(location.search).get('view');
+  const embedId = new URLSearchParams(location.search).get('embed') || viewId;
   if (embedId) {
     document.documentElement.classList.add('embed-mode');
     document.addEventListener('DOMContentLoaded', () => {
       const target = document.getElementById(embedId);
       if (target) target.classList.add('embed-target');
+      else if (viewId) document.documentElement.classList.remove('embed-mode');
+      if (viewId && target) {
+        const back = document.createElement('a');
+        back.href = location.pathname.split('/').pop() + '#' + encodeURIComponent(viewId);
+        back.textContent = '← Week activities'; back.className = 'activity-view-back';
+        target.prepend(back);
+      }
     });
   }
 

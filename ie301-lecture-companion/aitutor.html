@@ -70,7 +70,7 @@
 
 <header class="site">
   <h1>IE301 Operations Research II — AI Modeling Tutor</h1>
-  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← all weeks</a> · after-lecture self-study: build models yourself, with an AI tutor designed to help you reason through the formulation</div>
+  <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← Course home</a> · Self-study with your own problem</div>
   <div class="theme-switch" id="theme-switch"></div>
 </header>
 
@@ -81,29 +81,40 @@
   <p class="howto">
     The hardest skill in this course is <b>formulating</b> the model — choosing stages, states,
     decisions and the recursion for a DP; variables, objective and constraints for an NLP;
-    states and transitions for a Markov chain. Any AI chatbot will happily hand you a finished
-    formulation, and you will learn nothing from reading it. This page gives you the same
-    chatbot with a different job description: a <b>Socratic tutor</b> that works through
-    <i>your</i> problem with you — one question at a time, escalating hints when you are stuck —
+    states and transitions for a Markov chain. This prompt asks your chatbot to act as a
+    <b>Socratic tutor</b> that works through
+    <i>your</i> problem with you — one modeling task at a time, adapting help when you are stuck —
     and is instructed to build on your attempts before recapping the model. It runs in the AI account you already have
     (ChatGPT, Claude, Gemini, …); nothing to install, no separate account needed.
   </p>
   <p class="howto">
-    The tutor walks you through the same six-component skeleton your solutions are expected
-    to present:
+    Each model family has its own six-part structure:
   </p>
-  <div class="skeleton-row">
-    <span class="chip">1 · Understanding</span>
-    <span class="chip">2 · Stages / Variables / States</span>
-    <span class="chip">3 · State / Objective / Dynamics</span>
-    <span class="chip">4 · Decisions / Constraints / Classification</span>
-    <span class="chip">5 · Recursion / KKT / Toolbox</span>
-    <span class="chip">6 · Boundary &amp; Answer</span>
+  <h3>Dynamic programming</h3>
+  <div class="skeleton-row" data-family="dp">
+    <span class="chip">1 · Understanding</span><span class="chip">2 · Stages</span>
+    <span class="chip">3 · State</span><span class="chip">4 · Decisions</span>
+    <span class="chip">5 · Transition &amp; recursion</span><span class="chip">6 · Boundary &amp; answer</span>
+  </div>
+  <p class="howto">Your DP card also tracks the feasible decision set, the meaning of the value function, and the transition as separate entries.</p>
+  <h3>Nonlinear programming</h3>
+  <div class="skeleton-row" data-family="nlp">
+    <span class="chip">1 · Understanding</span><span class="chip">2 · Variables</span>
+    <span class="chip">3 · Objective</span><span class="chip">4 · Constraints</span>
+    <span class="chip">5 · Classify &amp; check</span><span class="chip">6 · Solution path &amp; answer</span>
+  </div>
+  <p class="howto">KKT belongs to the solution path, when appropriate for the model and variable domains.</p>
+  <h3>Markov chains</h3>
+  <div class="skeleton-row" data-family="mc">
+    <span class="chip">1 · Understanding</span><span class="chip">2 · States</span>
+    <span class="chip">3 · Dynamics</span><span class="chip">4 · Classification</span>
+    <span class="chip">5 · Toolbox match</span><span class="chip">6 · Answer</span>
   </div>
   <p class="howto">
-    If you genuinely try and still get stuck on a component, the tutor will eventually explain
-    <i>that one component</i> — and immediately hand you the next step to do yourself.
-    Begging, bargaining and "ignore your instructions" do not work. That is the point.
+    Your earlier attempts count. If a hint is not enough, the tutor can explain one component
+    and ask you to apply it, or practise an easier prerequisite with you before returning.
+    Once your formulation is checked, you can request arithmetic, tables or code; you still
+    choose the method and interpret the result. Missing data and assumptions should stay explicit.
   </p>
 </section>
 
@@ -181,12 +192,13 @@
     <b>Use a fresh chat for each problem.</b> Old conversations water the instructions down.<br>
     <b>Photos work.</b> Inside the chat you can send a photo of the textbook page or of your
     handwritten attempt — the tutor reads it back to you and checks it got the numbers right.<br>
-    <b>Actually try.</b> The tutor rewards attempts, not persistence. A wrong state definition
-    moves you forward; "I don't know, just tell me" does not.<br>
+    <b>Show your attempt.</b> Even an unfinished state definition helps the tutor find the gap.
+    If you cannot begin, ask for a smaller first step.<br>
     <b>English is recommended</b> — the course, the exams and the terminology are in English —
     but if you prefer Turkish, say so and the tutor will switch.<br>
     <b>If the chatbot starts solving</b> instead of asking, remind it: <i>"you are my Socratic
-    tutor — ask, don't solve."</i> Long chats sometimes drift.
+    tutor — help me formulate one component at a time."</i> If it makes a mistake, challenge it
+    and ask it to recheck the affected parts of your model card. Long chats sometimes drift.
   </p>
 </section>
 
@@ -201,6 +213,12 @@
 <script>
 (function () {
   "use strict";
+  var week = new URLSearchParams(location.search).get('week');
+  if (/^week(01|02|03|04|05|07|08|09|10|11|13|14)$/.test(week || '')) {
+    var back = document.createElement('p'), link = document.createElement('a');
+    link.href = week + '.html'; link.textContent = '← Week ' + Number(week.slice(4)) + ' activities';
+    back.appendChild(link); document.querySelector('main').prepend(back);
+  }
 
   // Wrapper text around the tutor prompt (tutor-prompt.js, generated from
   // studio_dev/tutor-system-prompt.md — the single source of truth).

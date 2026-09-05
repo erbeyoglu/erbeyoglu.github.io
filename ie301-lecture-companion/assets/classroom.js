@@ -67,6 +67,7 @@ window.CLASSROOM = (() => {
   }
 
   function instructorUI(box, w) {
+    box.classList.add('classroom-host');
     const btn = document.createElement('button');
     btn.textContent = 'Start class session 📱';
     box.appendChild(btn);
@@ -83,15 +84,13 @@ window.CLASSROOM = (() => {
       const live = document.createElement('div');
       live.className = 'class-live';
       const url = sessionUrl(code, w.id);
-      const qr = qrcode(0, 'M');
-      qr.addData(url);
-      qr.make();
       live.innerHTML =
-        '<p style="margin:10px 0 4px"><b>Session ' + code + '</b> — students scan or open:<br>' +
-        '<span style="font-size:0.85rem;color:var(--ink-2);word-break:break-all">' + url + '</span></p>' +
-        '<div class="qr">' + qr.createSvgTag({ cellSize: 4, margin: 2 }) + '</div>' +
+        '<div class="qr"></div><p><b>Session ' + code + '</b></p>' +
+        '<p>Scan, try the activity, then submit your result.</p>' +
+        '<a href="' + url + '" target="_blank" rel="noopener">Open student activity</a>' +
         '<div class="lb">waiting for the first submission…</div>';
       box.appendChild(live);
+      addQR(live.querySelector('.qr'), url);
       btn.textContent = 'End session';
       const lb = live.querySelector('.lb');
       const poll = async () => {
@@ -105,6 +104,49 @@ window.CLASSROOM = (() => {
       timer = setInterval(poll, 3000);
     });
   }
+
+  // Keep participation beside the instructor's material. Enlarging the QR is
+  // optional; normal use leaves both the activity and the QR visible.
+  function addQR(target, url) {
+    const qr = qrcode(0, 'M'); qr.addData(url); qr.make();
+    const button = document.createElement('button');
+    button.className = 'activity-qr-enlarge'; button.setAttribute('aria-label', 'Enlarge activity QR');
+    button.innerHTML = qr.createSvgTag({cellSize:4, margin:16});
+    target.appendChild(button);
+    button.onclick = () => {
+      let dialog = document.getElementById('activity-qr-dialog');
+      if (!dialog) {
+        dialog = document.createElement('dialog'); dialog.id = 'activity-qr-dialog';
+        dialog.innerHTML = '<button>Back to activity</button><div></div><p>Scan to open this activity on your phone.</p>';
+        dialog.querySelector('button').onclick = () => dialog.close();
+        document.body.appendChild(dialog);
+      }
+      dialog.querySelector('div').innerHTML = qr.createSvgTag({cellSize:8, margin:32});
+      dialog.showModal();
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const id = params.get('embed'), target = id && document.getElementById(id);
+    if (!target) return;
+    if (!widgets.some(w => w.id === id)) {
+      const box = document.createElement('aside'); box.className = 'classroom classroom-host';
+      box.innerHTML = '<strong>Try on your phone</strong><div class="qr"></div><p>Scan and explore while we discuss the model.</p><p>No result submission for this activity.</p>';
+      const file = location.pathname.split('/').pop();
+      const base = window.CLASSROOM_PUBLIC_BASE || new URL('.', location.href).href;
+      const url = base.replace(/\/?$/, '/') + file + '?view=' + encodeURIComponent(id);
+      addQR(box.querySelector('.qr'), url); target.prepend(box);
+    }
+    const button = document.createElement('button'); button.id = 'activity-panel-toggle';
+    button.textContent = 'Hide QR panel'; button.setAttribute('aria-expanded', 'true');
+    button.onclick = () => {
+      const hidden = document.documentElement.classList.toggle('activity-panel-hidden');
+      button.textContent = hidden ? 'Show QR panel' : 'Hide QR panel';
+      button.setAttribute('aria-expanded', String(!hidden));
+      window.dispatchEvent(new Event('resize'));
+    };
+    document.body.appendChild(button);
+  });
 
   // A joined student gets a phone-shaped experience instead of the desktop
   // widget chrome: a context bar at the top and a thumb-reachable submit dock
@@ -220,19 +262,17 @@ window.CLASSROOM = (() => {
     // Show a classroom panel only to a joined student or the instructor host.
     // A plain public visitor (no join code, not the host) sees nothing.
     if (!joinCode && !isHost) return;
+    if (isHost && params.get('embed') && params.get('embed') !== sectionId) return;
     if (!enabled && !joinCode) return; // classroom mode fully off: no UI at all
     if (joinCode && focusId && focusId !== w.id) return; // not the pinned activity
 
     const box = document.createElement('div');
     box.className = 'classroom';
     const bestPrev = parseFloat(lsGet('best:' + pageKey(w.id)));
-    box.innerHTML = '<span class="readout">your device best: <b id="cl-best-' + w.id + '">' +
-      (isNaN(bestPrev) ? '—' : bestPrev.toFixed(w.digits)) + '</b></span> ';
-    // WHY direct children only: a widget may keep a .note inside a nested
-    // panel (week09 #offers); insertBefore throws for such a node and the
-    // exception would abort every later register() call on the page.
-    const note = section.querySelector(':scope > .note');
-    section.insertBefore(box, note || null);
+    box.innerHTML = joinCode ? '<span class="readout">your device best: <b id="cl-best-' + w.id + '">' +
+      (isNaN(bestPrev) ? '—' : bestPrev.toFixed(w.digits)) + '</b></span> ' : '<strong>Class activity</strong><p>Show the QR while you explain the task.</p>';
+    // Keep the host panel a direct child; nested notes are not insertion anchors.
+    section.prepend(box);
 
     if (!enabled) {
       box.innerHTML += '<span style="color:var(--muted)">classroom mode is not configured on this site</span>';
