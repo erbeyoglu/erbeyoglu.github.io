@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IE301 · Week 7 — Deterministic Dynamic Programming, Part 1 (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/learning.css">
 <script src="assets/theme.js"></script>
 <style>
   table.dp {
@@ -35,6 +36,7 @@
 </header>
 
 <main>
+<aside class="learning-banner" aria-label="Modeling practice"><strong>Build the model:</strong> <a href="polls.html?week=week07">Week 7 checkpoints / join a lesson</a> &middot; <a href="guided.html?activity=machine">After class: Machine replacement</a></aside>
 
 <!-- ================= WIDGET 1 : MATCH PUZZLE ================= -->
 <section class="widget" id="matches">
@@ -159,6 +161,7 @@ a Socratic AI tutor that coaches you through formulating models on your own prob
 </footer>
 
 <script src="assets/viz.js"></script>
+<script src="assets/inputs.js"></script>
 <script>
 const el = id => document.getElementById(id);
 const fmt = (v, d = 2) => Number(v).toFixed(d);
@@ -483,7 +486,13 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   }
 
   function update() {
-    const xs = [1, 2, 3, 4].map(i => +el('iv-x' + i).value);
+    const xs = COURSE_INPUT.integers([1, 2, 3, 4].map(i => 'iv-x' + i), 0, 5);
+    if (!xs) {
+      el('iv-cost').textContent = 'invalid'; el('iv-plan').innerHTML = '';
+      el('iv-status').className = 'status bad';
+      el('iv-status').textContent = 'Enter a whole number from 0 to 5 for each month.';
+      return;
+    }
     const r = evaluate(xs);
     const table = el('iv-plan');
     table.innerHTML = '<thead><tr><th>month</th><th>start inv</th><th>produce</th><th>demand</th><th>end inv</th><th>cost</th></tr></thead><tbody>' +

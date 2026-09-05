@@ -10,7 +10,8 @@
   const LABELS = { light: 'Light', dark: 'Dark', projector: 'Projector' };
 
   const urlTheme = new URLSearchParams(location.search).get('theme');
-  const stored = localStorage.getItem(KEY);
+  let stored = null;
+  try { stored = localStorage.getItem(KEY); } catch {}
   let theme =
     THEMES.includes(urlTheme) ? urlTheme :
     THEMES.includes(stored) ? stored :
@@ -32,7 +33,7 @@
       btn.textContent = LABELS[t];
       btn.classList.toggle('active', t === theme);
       btn.addEventListener('click', () => {
-        localStorage.setItem(KEY, t);
+        try { localStorage.setItem(KEY, t); } catch {}
         apply(t);
       });
       host.appendChild(btn);

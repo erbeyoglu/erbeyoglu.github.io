@@ -166,7 +166,7 @@ window.CLASSROOM = (() => {
       const name = nameEl.value.trim() || 'anon';
       lsSet('classroom-name', name);
       const v = w.get();
-      if (v === null || v === undefined || isNaN(v)) {
+      if (!Number.isFinite(v)) {
         say('no valid attempt yet — play the activity first', 'err');
         return;
       }

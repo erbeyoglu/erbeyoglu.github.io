@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IE301 · Week 9 — Probabilistic Dynamic Programming (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/learning.css">
 <script src="assets/theme.js"></script>
 <link rel="stylesheet" href="assets/katex/katex.min.css">
 <script defer src="assets/katex/katex.min.js"></script>
@@ -33,6 +34,7 @@
 </header>
 
 <main>
+<aside class="learning-banner" aria-label="Modeling practice"><strong>Build the model:</strong> <a href="polls.html?week=week09">Week 9 checkpoints / join a lesson</a> &middot; <a href="guided.html?activity=reservations">After class: Reservation decisions</a></aside>
 
 <!-- ================= WIDGET 1 : MILK ALLOCATION ================= -->
 <section class="widget" id="milk">
@@ -237,6 +239,7 @@ a Socratic AI tutor that coaches you through formulating models on your own prob
 </footer>
 
 <script src="assets/viz.js"></script>
+<script src="assets/inputs.js"></script>
 <script>
 const el = id => document.getElementById(id);
 const fmt = (v, d = 2) => Number(v).toFixed(d);
@@ -257,7 +260,13 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   };
 
   function update() {
-    const xs = [1, 2, 3].map(i => +el('mk-x' + i).value);
+    const xs = COURSE_INPUT.integers([1, 2, 3].map(i => 'mk-x' + i), 0, 6);
+    if (!xs) {
+      el('mk-used').textContent = '\u2014'; el('mk-rev').textContent = '\u2014'; el('mk-prof').textContent = '\u2014';
+      el('mk-status').className = 'status bad';
+      el('mk-status').textContent = 'This activity allocates whole gallons: enter an integer from 0 to 6 for each store.';
+      return;
+    }
     const used = xs[0] + xs[1] + xs[2];
     el('mk-used').textContent = used;
     const st = el('mk-status');
@@ -494,7 +503,12 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   let best = null;
 
   function update() {
-    const xs = [1, 2, 3].map(i => +el('rj-x' + i).value);
+    const xs = COURSE_INPUT.integers([1, 2, 3].map(i => 'rj-x' + i), 0, 5);
+    if (!xs) {
+      el('rj-cost').textContent = '\u2014'; el('rj-status').className = 'status bad';
+      el('rj-status').textContent = 'Lot sizes count items: enter a whole number from 0 to 5 for each run.';
+      return;
+    }
     const e = expCost(...xs) * 100;
     el('rj-cost').textContent = '$' + fmt(e, 2);
     if (best === null || e < best) best = e;
@@ -600,7 +614,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
       const gap = youTotal - optTotal;
       el('of-status').textContent = 'Done. You earned ' + youTotal + ' TL; the optimal policy earned ' +
         optTotal + ' TL on the same offers (' +
-        (gap === 0 ? 'a tie \u2014 you played the rule exactly' :
+        (gap === 0 ? 'a tie in payoff \u2014 different decisions can give the same payoff' :
          gap > 0 ? 'you are ' + gap + ' ahead \u2014 the rule maximises the average, not every round' :
          (-gap) + ' behind') + '). Taking every day-1 offer would have earned ' + naiveTotal + ' TL.';
     } else {
