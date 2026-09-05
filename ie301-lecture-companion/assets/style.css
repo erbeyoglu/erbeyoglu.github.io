@@ -85,6 +85,10 @@ body {
 }
 
 header.site {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 16px;
+  align-items: start;
   padding: 20px 24px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -94,12 +98,18 @@ header.site {
 }
 
 .theme-switch {
-  position: absolute;
-  top: 14px;
-  right: 20px;
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.theme-options {
   display: flex;
   gap: 6px;
 }
+
+.theme-switch .theme-toggle { display: none; }
+.theme-toggle svg { width: 20px; height: 20px; }
 
 .theme-switch button {
   font-size: 0.78rem;
@@ -114,12 +124,16 @@ header.site {
 }
 
 header.site h1 {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
 }
 
-header.site .sub { color: var(--ink-2); font-size: 0.95rem; }
+header.site .sub { grid-column: 1 / -1; color: var(--ink-2); font-size: 0.95rem; }
+header.site nav.widgets { grid-column: 1 / -1; }
 
 nav.widgets {
   display: flex;
@@ -476,7 +490,10 @@ button.locked { opacity: 0.45; }
   body { font-size: 15px; }
   header.site { padding: 12px 14px 10px; }
   header.site h1 { font-size: 1.02rem; }
-  .theme-switch { position: static; margin-top: 8px; }
+  .theme-switch .theme-toggle { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; }
+  .theme-options { display: none; position: absolute; right: 0; top: calc(100% + 6px); padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 6px 20px #0002; z-index: 20; }
+  .theme-switch[data-open] .theme-options { display: flex; }
+  .theme-options button { min-height: 40px; }
   main { padding: 14px 10px 70px; }
   section.widget { padding: 14px 12px; margin: 16px 0; border-radius: 10px; }
   section.widget h2 { font-size: 1.12rem; }

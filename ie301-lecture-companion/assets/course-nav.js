@@ -1,4 +1,4 @@
-/* One hierarchy for self-study: Course -> Week -> Activity.
+/* Weekly self-study: Course -> Week -> Activity. The shared tutor belongs to Course.
    QR/host views stay focused on the instructor's current activity. */
 (() => {
   'use strict';
@@ -24,7 +24,7 @@
     };
     item('Course','../ie301-lecture-companion.html');
     const activity=window.GUIDED?.find(a=>a.id===params.get('activity'));
-    const activeWeek=validWeek(week)?week:activity?.week;
+    const activeWeek=file==='aitutor.html'?null:(validWeek(week)?week:activity?.week);
     if(activeWeek)item('Week '+Number(activeWeek.slice(4)),weekly&&!toolsView?null:activeWeek+'.html');
     if(weekly) {
       if(toolsView)item('Lecture tools');
@@ -34,8 +34,7 @@
         menu.innerHTML='<h2>Choose how to study this week</h2><div class="week-study-grid">'+
           card('polls.html?week='+week,'Practice questions','Make one modeling choice at a time, then compare the reasoning.','3 short questions')+
           (guided[week]?card('guided.html?activity='+guided[week],'Guided modeling','Build a new model with hints, then try a changed assumption.','20–25 minutes'):'')+
-          card(file+'?tools=1','Lecture tools','Explore the graphs, simulations and examples from the lecture.','Interactive examples')+
-          card('aitutor.html?week='+week,'AI Modeling Tutor','Bring your own problem and work through its formulation.','Your own AI account')+'</div>';
+          card(file+'?tools=1','Lecture tools','Explore the graphs, simulations and examples from the lecture.','Interactive examples')+'</div>';
         document.querySelector('main').prepend(menu);
       }
     } else if(file==='polls.html')item(activeWeek?'Practice questions':'Practice library');
