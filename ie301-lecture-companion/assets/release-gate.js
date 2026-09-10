@@ -2,10 +2,12 @@
 (() => {
   'use strict';
 
-  const schedule = window.IE301_RELEASE_SCHEDULE || {
+  let schedule = window.IE301_RELEASE_SCHEDULE || {
     timeZone: 'Europe/Istanbul', releaseHour: 8, weeks: {}
   };
   const WEEK_ID = /^week(01|02|03|04|05|07|08|09|10|11|13|14)$/;
+  const WEEK_IDS = Object.freeze(['week01','week02','week03','week04','week05','week07','week08','week09','week10','week11','week13','week14']);
+  const RELEASE_STATUSES = Object.freeze(['draft','scheduled','open','closed']);
   const activityWeeks = Object.freeze({
     machine: 'week07', energy: 'week08', reservations: 'week09',
     lending: 'week11', support: 'week13', charging: 'week14'
@@ -26,7 +28,42 @@
   });
   const formatters = {};
   const CLOCK_KEY = 'ie301-release-clock-v1';
+  const SCHEDULE_KEY = 'ie301-release-schedule-v1';
   const CLOCK_TTL_MS = 60 * 60 * 1000;
+
+  function normalizedSchedule(value) {
+    if (!value || value.timeZone !== 'Europe/Istanbul' || value.releaseHour !== 8 || !value.weeks) return null;
+    const weeks = {};
+    for (const week of WEEK_IDS) {
+      const row = value.weeks[week];
+      if (!row || !RELEASE_STATUSES.includes(row.status)) return null;
+      if (row.opensOn && !isDate(row.opensOn)) return null;
+      if (row.status === 'scheduled' && !isDate(row.opensOn)) return null;
+      weeks[week] = Object.freeze({ status: row.status, ...(row.opensOn ? { opensOn: row.opensOn } : {}) });
+    }
+    return Object.freeze({ timeZone: 'Europe/Istanbul', releaseHour: 8, weeks: Object.freeze(weeks) });
+  }
+
+  function scheduleFromSource(source) {
+    if (typeof source !== 'string') return null;
+    const weeks = {};
+    for (const week of WEEK_IDS) {
+      const match = source.match(new RegExp(week + "\\s*:\\s*\\{\\s*status\\s*:\\s*'(" + RELEASE_STATUSES.join('|') + ")'(?:\\s*,\\s*opensOn\\s*:\\s*'(\\d{4}-\\d{2}-\\d{2})')?\\s*\\}"));
+      if (!match) return null;
+      weeks[week] = { status: match[1], ...(match[2] ? { opensOn: match[2] } : {}) };
+    }
+    return normalizedSchedule({ timeZone: 'Europe/Istanbul', releaseHour: 8, weeks });
+  }
+
+  function readSavedSchedule() {
+    try { return normalizedSchedule(JSON.parse(sessionStorage.getItem(SCHEDULE_KEY))); }
+    catch (_) { return null; }
+  }
+
+  function storeSession(key, value) {
+    try { sessionStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (_) { return false; }
+  }
 
   function readClock() {
     try {
@@ -38,6 +75,11 @@
   }
 
   const savedClock = readClock();
+  const savedSchedule = readSavedSchedule();
+  if (savedSchedule) {
+    schedule = savedSchedule;
+    window.IE301_RELEASE_SCHEDULE = savedSchedule;
+  }
   let clockOffsetMs = savedClock?.offsetMs || 0;
 
   function releaseNow() {
@@ -131,24 +173,34 @@
   }
 
   async function syncServerClock() {
-    if (currentRoute.bypass) return false;
+    const result = { fetched: false, clockSynced: false, clockStored: false, scheduleChanged: false, scheduleStored: false };
+    if (currentRoute.bypass) return result;
     const script = [...document.scripts].find(node => /release-schedule\.js(?:[?#]|$)/.test(node.src));
-    if (!script?.src) return false;
+    if (!script?.src) return result;
     const url = new URL(script.src);
     url.searchParams.set('clock', String(Date.now()));
     const started = Date.now();
     try {
-      const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+      const response = await fetch(url, { cache: 'no-store' });
       const ended = Date.now();
+      if (!response.ok) return result;
+      result.fetched = true;
+      const freshSchedule = scheduleFromSource(await response.text());
+      if (freshSchedule) {
+        result.scheduleChanged = JSON.stringify(freshSchedule.weeks) !== JSON.stringify(schedule.weeks);
+        schedule = freshSchedule;
+        window.IE301_RELEASE_SCHEDULE = freshSchedule;
+        result.scheduleStored = storeSession(SCHEDULE_KEY, freshSchedule);
+      }
       const serverMs = Date.parse(response.headers.get('Date') || '');
-      if (!response.ok || !Number.isFinite(serverMs)) return false;
-      clockOffsetMs = serverMs + (ended - started) / 2 - ended;
-      try {
-        sessionStorage.setItem(CLOCK_KEY, JSON.stringify({ offsetMs: clockOffsetMs, checkedAt: ended }));
-      } catch (_) { /* The synchronized value still applies to this page. */ }
-      return true;
+      if (Number.isFinite(serverMs)) {
+        clockOffsetMs = serverMs + (ended - started) / 2 - ended;
+        result.clockSynced = true;
+        result.clockStored = storeSession(CLOCK_KEY, { offsetMs: clockOffsetMs, checkedAt: ended });
+      }
+      return result;
     } catch (_) {
-      return false;
+      return result;
     }
   }
 
@@ -218,9 +270,9 @@
   const currentRoute = routeFor();
   const blocked = Boolean(currentRoute.week && !currentRoute.bypass && !isOpen(currentRoute.week));
   const schedulePage = currentRoute.week || ['ie301-lecture-companion.html','polls.html','guided.html'].includes(currentRoute.filename);
-  if (schedulePage && !currentRoute.bypass && !savedClock) document.documentElement.classList.add('release-time-pending');
+  if (schedulePage && !currentRoute.bypass) document.documentElement.classList.add('release-time-pending');
   if (blocked) document.documentElement.classList.add('release-route-locked');
-  const clockSync = schedulePage ? syncServerClock() : Promise.resolve(false);
+  const clockSync = schedulePage ? syncServerClock() : Promise.resolve({});
   document.addEventListener('DOMContentLoaded', () => {
     if (blocked) {
       const main = document.querySelector('main');
@@ -228,18 +280,28 @@
     } else if (filenameFrom() === 'ie301-lecture-companion.html') {
       decorateWeekCards();
     }
-    clockSync.then(synced => {
-      document.documentElement.classList.remove('release-time-pending');
-      if (!synced) return;
+    clockSync.then(result => {
       const correctedBlocked = Boolean(currentRoute.week && !currentRoute.bypass && !isOpen(currentRoute.week));
-      // A first live visit reloads once with the cached server offset so every
-      // dependent script starts from the same authoritative release state.
-      if (!savedClock || correctedBlocked !== blocked) window.location.reload();
+      // Reload once from the session-cached config/clock so every dependent
+      // script starts with the same state. Storage guards against reload loops.
+      const shouldReload = (result.scheduleChanged && result.scheduleStored) ||
+          (!savedClock && result.clockSynced && result.clockStored) ||
+          (correctedBlocked !== blocked && (result.scheduleStored || result.clockStored));
+      if (shouldReload) {
+        window.location.reload();
+        return;
+      }
+      document.documentElement.classList.remove('release-time-pending');
+      if (correctedBlocked && !blocked) {
+        document.documentElement.classList.add('release-route-locked');
+        const main = document.querySelector('main');
+        if (main) renderLockedScreen(main, currentRoute.week);
+      }
     });
   });
 
   window.IE301_RELEASES = Object.freeze({
-    schedule,
+    get schedule() { return schedule; },
     activityWeeks,
     weekWidgets,
     routeFor,

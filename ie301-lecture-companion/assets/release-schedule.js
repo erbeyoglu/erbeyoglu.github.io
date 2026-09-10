@@ -11,7 +11,7 @@
     week03: { status: 'scheduled', opensOn: '2026-10-05' },
     week04: { status: 'scheduled', opensOn: '2026-10-12' },
     week05: { status: 'scheduled', opensOn: '2026-10-19' },
-    week07: { status: 'scheduled', opensOn: '2026-10-22' },
+    week07: { status: 'scheduled', opensOn: '2026-11-02' },
     week08: { status: 'scheduled', opensOn: '2026-11-09' },
     week09: { status: 'scheduled', opensOn: '2026-11-16' },
     week10: { status: 'scheduled', opensOn: '2026-11-23' },
