@@ -329,6 +329,7 @@ a.card:hover { border-color: var(--s1); }
 .release-card-locked .release-date { margin-top: 12px; color: var(--s1); font-weight: 700; }
 .release-route-locked header.site nav.widgets { display: none; }
 .release-route-locked main > :not(.release-locked) { display: none !important; }
+.release-time-pending main { visibility: hidden; }
 .release-locked { max-width: 680px; margin: 40px auto !important; }
 .release-locked a { color: var(--s1); }
 

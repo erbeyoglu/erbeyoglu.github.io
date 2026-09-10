@@ -10,7 +10,39 @@
     machine: 'week07', energy: 'week08', reservations: 'week09',
     lending: 'week11', support: 'week13', charging: 'week14'
   });
+  const weekWidgets = Object.freeze({
+    week01: Object.freeze(['regression','box','explorer','hunt','convexity','hessian']),
+    week02: Object.freeze(['warehouse','tank','bisection','newton','candidates','monopolist']),
+    week03: Object.freeze(['classify','profit','openbox','gradient']),
+    week04: Object.freeze(['cubic','utility','adv','chem','kkt']),
+    week05: Object.freeze(['geometry','notation','simplex']),
+    week07: Object.freeze(['matches','network','efficiency','inventory']),
+    week08: Object.freeze(['ww','teams','glueco','fishery']),
+    week09: Object.freeze(['milk','pinv','sally','reject']),
+    week10: Object.freeze(['bayes','voter','memoryless','race','poisson']),
+    week11: Object.freeze(['weather','gambler','paths','classify','insurance']),
+    week13: Object.freeze(['steady','premium','camera','accounts','freezco','hth']),
+    week14: Object.freeze(['updown','balance','barbersim'])
+  });
   const formatters = {};
+  const CLOCK_KEY = 'ie301-release-clock-v1';
+  const CLOCK_TTL_MS = 60 * 60 * 1000;
+
+  function readClock() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(CLOCK_KEY));
+      if (Number.isFinite(value?.offsetMs) && Number.isFinite(value?.checkedAt) &&
+          Math.abs(Date.now() - value.checkedAt) < CLOCK_TTL_MS) return value;
+    } catch (_) { /* Storage can be unavailable; device time remains the fallback. */ }
+    return null;
+  }
+
+  const savedClock = readClock();
+  let clockOffsetMs = savedClock?.offsetMs || 0;
+
+  function releaseNow() {
+    return new Date(Date.now() + clockOffsetMs);
+  }
 
   function dateFormatter() {
     return formatters.parts ||= new Intl.DateTimeFormat('en-CA', {
@@ -65,9 +97,10 @@
     const local = url.protocol === 'file:' || ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
     const pollFlow = filename === 'polls.html' &&
       (params.get('host') === '1' || /^[A-Z0-9]{4,8}$/i.test(params.get('session') || ''));
+    const validWidget = value => Boolean(week && value && weekWidgets[week]?.includes(value));
     const weekFlow = /^week\d\d\.html$/.test(filename) &&
-      (Boolean(params.get('embed')) || Boolean(params.get('view')) ||
-       (/^[A-Z0-9]{4,8}$/i.test(params.get('class') || '') && Boolean(params.get('w'))));
+      (validWidget(params.get('embed')) || validWidget(params.get('view')) ||
+       (/^[A-Z0-9]{4,8}$/i.test(params.get('class') || '') && validWidget(params.get('w'))));
     const bypass = local || pollFlow || weekFlow;
     return Object.freeze({ week, bypass, filename, activity: params.get('activity') || null });
   }
@@ -85,7 +118,7 @@
     return routeFor(value).bypass;
   }
 
-  function isOpen(value = window.location, now = new Date()) {
+  function isOpen(value = window.location, now = releaseNow()) {
     const route = typeof value === 'string' && (WEEK_ID.test(value) || activityWeeks[value]) ? null : routeFor(value);
     if (route?.bypass) return true;
     const week = getWeek(value);
@@ -94,7 +127,29 @@
     if (week.status === 'open') return true;
     if (week.status !== 'scheduled') return false;
     const opensAt = instantAtIstanbul(week.opensOn);
-    return Boolean(opensAt && now instanceof Date && !Number.isNaN(now) && now >= opensAt);
+    return Boolean(opensAt && now instanceof Date && !Number.isNaN(now.getTime()) && now >= opensAt);
+  }
+
+  async function syncServerClock() {
+    if (currentRoute.bypass) return false;
+    const script = [...document.scripts].find(node => /release-schedule\.js(?:[?#]|$)/.test(node.src));
+    if (!script?.src) return false;
+    const url = new URL(script.src);
+    url.searchParams.set('clock', String(Date.now()));
+    const started = Date.now();
+    try {
+      const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+      const ended = Date.now();
+      const serverMs = Date.parse(response.headers.get('Date') || '');
+      if (!response.ok || !Number.isFinite(serverMs)) return false;
+      clockOffsetMs = serverMs + (ended - started) / 2 - ended;
+      try {
+        sessionStorage.setItem(CLOCK_KEY, JSON.stringify({ offsetMs: clockOffsetMs, checkedAt: ended }));
+      } catch (_) { /* The synchronized value still applies to this page. */ }
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function releaseAt(value = window.location) {
@@ -128,7 +183,7 @@
     const message = document.createElement('p');
     message.textContent = releaseLabel(week?.id);
     const note = document.createElement('p');
-    note.textContent = 'Practice questions, guided modeling and lecture tools will open together.';
+    note.textContent = 'Practice questions, guided modeling and lecture tools will open together. If this page was already open at 08:00, refresh it.';
     const home = document.createElement('a');
     home.href = '../ie301-lecture-companion.html';
     home.textContent = '← Course home';
@@ -162,7 +217,10 @@
 
   const currentRoute = routeFor();
   const blocked = Boolean(currentRoute.week && !currentRoute.bypass && !isOpen(currentRoute.week));
+  const schedulePage = currentRoute.week || ['ie301-lecture-companion.html','polls.html','guided.html'].includes(currentRoute.filename);
+  if (schedulePage && !currentRoute.bypass && !savedClock) document.documentElement.classList.add('release-time-pending');
   if (blocked) document.documentElement.classList.add('release-route-locked');
+  const clockSync = schedulePage ? syncServerClock() : Promise.resolve(false);
   document.addEventListener('DOMContentLoaded', () => {
     if (blocked) {
       const main = document.querySelector('main');
@@ -170,11 +228,20 @@
     } else if (filenameFrom() === 'ie301-lecture-companion.html') {
       decorateWeekCards();
     }
+    clockSync.then(synced => {
+      document.documentElement.classList.remove('release-time-pending');
+      if (!synced) return;
+      const correctedBlocked = Boolean(currentRoute.week && !currentRoute.bypass && !isOpen(currentRoute.week));
+      // A first live visit reloads once with the cached server offset so every
+      // dependent script starts from the same authoritative release state.
+      if (!savedClock || correctedBlocked !== blocked) window.location.reload();
+    });
   });
 
   window.IE301_RELEASES = Object.freeze({
     schedule,
     activityWeeks,
+    weekWidgets,
     routeFor,
     getWeek,
     isBypass,
@@ -182,6 +249,8 @@
     releaseAt,
     releaseLabel,
     instantAtIstanbul,
+    releaseNow,
+    syncServerClock,
     renderLockedScreen,
     decorateWeekCards,
     currentRoute,
