@@ -64,8 +64,10 @@ header.learning-header { position: static; padding-right: 24px; }
 .course-trail [aria-current] { color: var(--ink-2); }
 .week-hub nav.widgets, .week-hub main > :not(#week-study-menu) { display: none; }
 #week-study-menu h2 { font-size: 1.3rem; margin: 4px 0 20px; }
+.week-study-route { max-width: 720px; margin: -8px 0 20px; color: var(--ink-2); }
 .week-study-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .week-study-card { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 24px 44px 24px 24px; border: 1px solid var(--grid); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.week-study-card.recommended { border-color: var(--s1); }
 .week-study-card strong { font-size: 1.25rem; }
 .week-study-card > span:not(.learning-eyebrow) { color: var(--ink-2); }
 .week-study-card b { position: absolute; right: 20px; bottom: 22px; color: var(--s1); }

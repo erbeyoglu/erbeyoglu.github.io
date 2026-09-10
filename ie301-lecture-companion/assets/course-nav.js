@@ -31,11 +31,12 @@
       if(toolsView)item('Lecture tools');
       else {
         const menu=document.createElement('section');menu.id='week-study-menu';
-        const card=(href,title,detail,tag)=>`<a class="week-study-card" href="${href}"><span class="learning-eyebrow">${tag}</span><strong>${title}</strong><span>${detail}</span><b aria-hidden="true">→</b></a>`;
-        menu.innerHTML='<h2>Choose how to study this week</h2><div class="week-study-grid">'+
-          card('polls.html?week='+week,'Practice questions','Make one modeling choice at a time, then compare the reasoning.','3 short questions')+
-          (guided[week]?card('guided.html?activity='+guided[week],'Guided modeling','Build a new model with hints, then try a changed assumption.','20–25 minutes'):'')+
-          card(file+'?tools=1','Lecture tools','Explore the graphs, simulations and examples from the lecture.','Interactive examples')+'</div>';
+        const hasGuided=Boolean(guided[week]);
+        const card=(href,title,detail,tag,recommended=false)=>`<a class="week-study-card${recommended?' recommended':''}" href="${href}"><span class="learning-eyebrow">${tag}</span><strong>${title}</strong><span>${detail}</span><b aria-hidden="true">→</b></a>`;
+        menu.innerHTML='<h2>Study this week</h2><p class="week-study-route">Follow the cards in order. Begin by making the modeling decisions yourself; use the lecture tools when you want to revisit an idea.</p><div class="week-study-grid">'+
+          card('polls.html?week='+week,'Practice questions','Make one modeling choice at a time, then compare the reasoning.','1 · Start here',true)+
+          (hasGuided?card('guided.html?activity='+guided[week],'Guided modeling','Build a new model with hints, then try a changed assumption.','2 · Build a new model'):'')+
+          card(file+'?tools=1','Lecture tools','Explore the graphs, simulations and examples from the lecture.',(hasGuided?'3':'2')+' · Explore as needed')+'</div>';
         document.querySelector('main').prepend(menu);
       }
     } else if(file==='polls.html')item(activeWeek?'Practice questions':'Practice library');
