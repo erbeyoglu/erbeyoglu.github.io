@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  if(window.IE301_RELEASES?.blocked)return;
   const $=id=>document.getElementById(id), app=$('guided-app');
   const escape=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const selected=new URLSearchParams(location.search).get('activity');
@@ -11,8 +12,10 @@
     return f && +f[2]!==0 ? +f[1]/+f[2] : NaN;
   };
   if(!activity) {
+    const releases=window.IE301_RELEASES;
+    const available=GUIDED.filter(a=>!releases || releases.isBypass() || releases.isOpen(a.week));
     app.innerHTML=`<section class="widget"><div class="learning-eyebrow">Self-study · six activities</div><h2>From a story to your own model</h2><p>Allow about 20–25 minutes per activity. Start with your own formulation, use hints when needed, and finish with a changed assumption. Your drafts stay in this browser. No AI account is needed.</p>${selected ? '<p class="learning-error">That activity was not found. Choose one below.</p>' : ''}</section>
-      <div class="cards">${GUIDED.map(a=>`<a class="card" href="guided.html?activity=${a.id}"><div class="wk">WEEK ${Number(a.week.slice(4))}</div><h3>${escape(a.title)}</h3><p>${escape(a.family)}</p><p>${escape(a.intro)}</p></a>`).join('')}</div>`;
+      <div class="cards">${available.map(a=>`<a class="card" href="guided.html?activity=${a.id}"><div class="wk">WEEK ${Number(a.week.slice(4))}</div><h3>${escape(a.title)}</h3><p>${escape(a.family)}</p><p>${escape(a.intro)}</p></a>`).join('')}</div>`;
     return;
   }
   const key='ie301-guided-v1:'+activity.id;

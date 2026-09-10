@@ -3,6 +3,7 @@
    browser even when an earlier request finishes after voting closes. */
 (() => {
   'use strict';
+  if(window.IE301_RELEASES?.blocked)return;
   const params = new URLSearchParams(location.search);
   const isHost = params.get('host') === '1';
   if (isHost) document.body.classList.add('poll-host');
@@ -296,8 +297,10 @@
     document.title='IE301 · Modeling practice';
     $('poll-connection').hidden=true;
     if(!MODELING.weeks.includes(params.get('week'))) {
+      const releases=window.IE301_RELEASES;
+      const available=w=>!releases || releases.isBypass() || releases.isOpen(w);
       $('poll-controls').innerHTML='<div class="learning-eyebrow">Self-study</div><h2>Choose a week</h2><p class="learning-context">Three short questions per week. Make a choice, compare the reasoning, then move to the next question.</p>'+
-        [['Nonlinear programming',MODELING.weeks.slice(0,5)],['Dynamic programming',MODELING.weeks.slice(5,8)],['Probability & Markov chains',MODELING.weeks.slice(8)]].map(([family,weeks])=>
+        [['Nonlinear programming',MODELING.weeks.slice(0,5)],['Dynamic programming',MODELING.weeks.slice(5,8)],['Probability & Markov chains',MODELING.weeks.slice(8)]].map(([family,weeks])=>[family,weeks.filter(available)]).filter(([,weeks])=>weeks.length).map(([family,weeks])=>
           `<section class="practice-family"><h3>${escape(family)}</h3><div class="practice-week-grid">${weeks.map(w=>`<a class="practice-week" href="polls.html?week=${w}"><span class="learning-eyebrow">Week ${Number(w.slice(4))}</span><strong>${escape(practiceTopics[w])}</strong><span class="learning-muted">3 questions${reviewedCount(w)?' · '+reviewedCount(w)+' reviewed':''}</span><span class="practice-week-arrow" aria-hidden="true">→</span></a>`).join('')}</div></section>`).join('');
       return;
     }

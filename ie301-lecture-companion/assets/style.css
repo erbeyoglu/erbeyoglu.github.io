@@ -325,6 +325,12 @@ a.card, div.card {
 }
 
 a.card:hover { border-color: var(--s1); }
+.release-card-locked { opacity: .68; cursor: default; }
+.release-card-locked .release-date { margin-top: 12px; color: var(--s1); font-weight: 700; }
+.release-route-locked header.site nav.widgets { display: none; }
+.release-route-locked main > :not(.release-locked) { display: none !important; }
+.release-locked { max-width: 680px; margin: 40px auto !important; }
+.release-locked a { color: var(--s1); }
 
 .card .wk { font-size: 0.8rem; font-weight: 700; color: var(--s1); }
 .card h3 { margin: 4px 0 6px; font-size: 1.05rem; }

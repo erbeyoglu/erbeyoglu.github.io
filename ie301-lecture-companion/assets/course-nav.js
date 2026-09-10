@@ -2,6 +2,7 @@
    QR/host views stay focused on the instructor's current activity. */
 (() => {
   'use strict';
+  if(window.IE301_RELEASES?.blocked)return;
   const params=new URLSearchParams(location.search), file=location.pathname.split('/').pop();
   if(['host','session','class','embed','view'].some(key=>params.has(key)))return;
   const validWeek=w=>/^week(01|02|03|04|05|07|08|09|10|11|13|14)$/.test(w || '');
