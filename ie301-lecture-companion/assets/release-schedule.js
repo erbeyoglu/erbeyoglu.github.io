@@ -6,7 +6,7 @@
 (() => {
   'use strict';
   const weeks = {
-    week01: { status: 'open', opensOn: '2026-09-21' },
+    week01: { status: 'scheduled', opensOn: '2026-09-21' },
     week02: { status: 'scheduled', opensOn: '2026-09-28' },
     week03: { status: 'scheduled', opensOn: '2026-10-05' },
     week04: { status: 'scheduled', opensOn: '2026-10-12' },
