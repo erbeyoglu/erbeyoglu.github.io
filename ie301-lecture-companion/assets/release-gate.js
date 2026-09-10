@@ -235,7 +235,7 @@
     const message = document.createElement('p');
     message.textContent = releaseLabel(week?.id);
     const note = document.createElement('p');
-    note.textContent = 'Practice questions, guided modeling and lecture tools will open together. If this page was already open at 08:00, refresh it.';
+    note.textContent = 'The pre-class modeling warm-up, guided activities and in-class interactions will open together. If this page was already open at 08:00, refresh it.';
     const home = document.createElement('a');
     home.href = '../ie301-lecture-companion.html';
     home.textContent = '← Course home';

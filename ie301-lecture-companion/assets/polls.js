@@ -293,8 +293,8 @@
   const reviewedCount = w => MODELING.forWeek(w).filter(q=>practiceRecord(q).revealed).length;
   function setupPractice() {
     document.body.classList.add('poll-practice');
-    document.querySelector('.learning-header h1').textContent='IE301 · Modeling practice';
-    document.title='IE301 · Modeling practice';
+    document.querySelector('.learning-header h1').textContent='IE301 · Pre-class modeling warm-up';
+    document.title='IE301 · Pre-class modeling warm-up';
     $('poll-connection').hidden=true;
     if(!MODELING.weeks.includes(params.get('week'))) {
       const releases=window.IE301_RELEASES;
