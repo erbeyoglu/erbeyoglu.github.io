@@ -280,7 +280,7 @@
   function schedule() {clearTimeout(timer);timer=setTimeout(async()=>{await refresh();schedule();},2000);}
 
   const practiceTopics = {
-    week01:'NLP foundations', week02:'One-variable NLP', week03:'Multivariable NLP',
+    week01:'Convexity, concavity and NLP foundations', week02:'One-variable NLP', week03:'Multivariable NLP',
     week04:'KKT conditions', week05:'Quadratic programming',
     week07:'DP: state and recursion', week08:'DP: resource allocation', week09:'Probabilistic DP',
     week10:'Probability review', week11:'DTMC: states and transitions',
