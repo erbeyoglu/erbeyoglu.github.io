@@ -1,12 +1,12 @@
 /* Student release schedule — edit this file or use instructor/index.html.
  * opensOn is the syllabus Monday (YYYY-MM-DD). Scheduled weeks open at
- * 08:00 Europe/Istanbul; thinking warm-up, guided modeling and in-class interactions open together.
+ * 08:00 Europe/Istanbul; practice, guided modeling and lecture tools open together.
  * status: draft = hold, scheduled = open on date, open = immediate, closed = unavailable.
  */
 (() => {
   'use strict';
   const weeks = {
-    week01: { status: 'scheduled', opensOn: '2026-09-21' },
+    week01: { status: 'open', opensOn: '2026-09-21' },
     week02: { status: 'scheduled', opensOn: '2026-09-28' },
     week03: { status: 'scheduled', opensOn: '2026-10-05' },
     week04: { status: 'scheduled', opensOn: '2026-10-12' },
