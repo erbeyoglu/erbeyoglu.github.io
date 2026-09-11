@@ -308,12 +308,13 @@
     document.querySelector('.learning-header h1').textContent=isClassPreview?'IE301 · Classroom checkpoint preview':'IE301 · Pre-class thinking warm-up';
     document.title=isClassPreview?'IE301 · Classroom checkpoint preview':'IE301 · Pre-class thinking warm-up';
     $('poll-connection').hidden=true;
+    const purpose='These questions help you start thinking about the ideas we will explore in class. Choose the answer that makes sense to you, then read the explanations to see the reasoning behind each option.';
     if(!MODELING.weeks.includes(params.get('week'))) {
       const releases=window.IE301_RELEASES;
       const available=w=>!releases || releases.isBypass() || releases.isOpen(w);
       const libraryIntro=isClassPreview
         ? '<div class="learning-eyebrow">Instructor preview</div><h2>Choose a week</h2><p class="learning-context">Review the three classroom checkpoints for a week.</p>'
-        : '<div class="learning-eyebrow">Self-study</div><h2>Choose a week</h2><p class="learning-context">Each week has three starting questions and three optional extra questions. Make a choice, compare the reasoning, then move on.</p>';
+        : '<div class="learning-eyebrow">Self-study</div><h2>Choose a week</h2><p class="learning-context">'+purpose+'</p>';
       $('poll-controls').innerHTML=libraryIntro+
         [['Nonlinear programming',practiceBank.weeks.slice(0,5)],['Dynamic programming',practiceBank.weeks.slice(5,8)],['Probability & Markov chains',practiceBank.weeks.slice(8)]].map(([family,weeks])=>[family,weeks.filter(available)]).filter(([,weeks])=>weeks.length).map(([family,weeks])=>
           `<section class="practice-family"><h3>${escape(family)}</h3><div class="practice-week-grid">${weeks.map(w=>{const first=practiceBank.forWeek(w)[0],count=practiceBank.forWeek(w).length;return `<a class="practice-week" href="${practiceURL(first).replace(/&q=.*$/,'')}"><span class="learning-eyebrow">Week ${Number(w.slice(4))}</span><strong>${escape(practiceTopics[w])}</strong><span class="learning-muted">${count} questions${reviewedCount(w)?' · '+reviewedCount(w)+' reviewed':''}</span><span class="practice-week-arrow" aria-hidden="true">→</span></a>`}).join('')}</div></section>`).join('');
@@ -323,6 +324,7 @@
     const starting=all.filter(q=>!q.challenge), challenges=all.filter(q=>q.challenge);
     const practiceTrack=(label,description,items,extraClass='')=>items.length?`<section class="practice-track ${extraClass}"><div class="practice-track-heading"><strong>${label}</strong><span>${description}</span></div><nav class="practice-steps" aria-label="${label}">${items.map(q=>{const i=all.findIndex(item=>item.id===q.id);return `<a data-practice-question="${q.id}" href="${practiceURL(q)}" ${q.id===selected?'aria-current="page"':''}><span class="practice-step-number">${i+1}</span><span class="practice-step-title">${escape(q.title)}${q.stretch?'<small>Stretch</small>':''}</span><span class="practice-step-status" aria-label="${practiceRecord(q).revealed?'Explanation reviewed':''}">${practiceRecord(q).revealed?'✓':''}</span></a>`}).join('')}</nav></section>`:'';
     $('poll-controls').innerHTML=`<div class="learning-eyebrow">Week ${Number(week.slice(4))}</div><h2>${escape(practiceTopics[week])}</h2>
+      ${isClassPreview?'':`<p class="learning-context">${purpose}</p>`}
       ${practiceTrack(isClassPreview?'Classroom checkpoints':'Start here',isClassPreview?'Three instructor questions':'Three short reasoning questions',starting)}
       ${practiceTrack('More questions (optional)','Three more reasoning questions',challenges,'challenge-track')}`;
     const navigation=document.createElement('nav');navigation.id='practice-navigation';navigation.setAttribute('aria-label','Previous and next question');
