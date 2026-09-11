@@ -68,7 +68,7 @@
   const labels = q => [...q.options, 'Not sure yet'];
   function questionHTML(q, answerButtons, practice = false, bank = MODELING) {
     const number=bank.forWeek(q.week).findIndex(x=>x.id===q.id)+1;
-    const label=practice ? `${q.stretch ? 'Stretch · ' : ''}Question ${number} of ${bank.forWeek(q.week).length}` : `${q.optional ? 'Reserve' : 'Core'} checkpoint`;
+    const label=practice ? `${q.challenge ? 'Challenge · ' : q.stretch ? 'Stretch · ' : ''}Question ${number} of ${bank.forWeek(q.week).length}` : `${q.optional ? 'Reserve' : 'Core'} checkpoint`;
     return `<div class="learning-eyebrow">Week ${Number(q.week.slice(4))} · ${label}</div>
       <h2>${escape(q.title)}</h2><p class="learning-context">${escape(q.context)}</p>
       <p><strong>${escape(q.prompt)}</strong></p><div class="learning-choices">` +
@@ -311,27 +311,41 @@
     if(!MODELING.weeks.includes(params.get('week'))) {
       const releases=window.IE301_RELEASES;
       const available=w=>!releases || releases.isBypass() || releases.isOpen(w);
-      $('poll-controls').innerHTML='<div class="learning-eyebrow">Self-study</div><h2>Choose a week</h2><p class="learning-context">Three short questions per week. Make a choice, compare the reasoning, then move to the next question.</p>'+
+      const libraryIntro=isClassPreview
+        ? '<div class="learning-eyebrow">Instructor preview</div><h2>Choose a week</h2><p class="learning-context">Review the three classroom checkpoints for a week.</p>'
+        : '<div class="learning-eyebrow">Self-study</div><h2>Choose a week</h2><p class="learning-context">Each week has three starting questions and three optional challenges. Make a choice, compare the reasoning, then move on.</p>';
+      $('poll-controls').innerHTML=libraryIntro+
         [['Nonlinear programming',practiceBank.weeks.slice(0,5)],['Dynamic programming',practiceBank.weeks.slice(5,8)],['Probability & Markov chains',practiceBank.weeks.slice(8)]].map(([family,weeks])=>[family,weeks.filter(available)]).filter(([,weeks])=>weeks.length).map(([family,weeks])=>
-          `<section class="practice-family"><h3>${escape(family)}</h3><div class="practice-week-grid">${weeks.map(w=>{const first=practiceBank.forWeek(w)[0];return `<a class="practice-week" href="${practiceURL(first).replace(/&q=.*$/,'')}"><span class="learning-eyebrow">Week ${Number(w.slice(4))}</span><strong>${escape(practiceTopics[w])}</strong><span class="learning-muted">3 questions${reviewedCount(w)?' · '+reviewedCount(w)+' reviewed':''}</span><span class="practice-week-arrow" aria-hidden="true">→</span></a>`}).join('')}</div></section>`).join('');
+          `<section class="practice-family"><h3>${escape(family)}</h3><div class="practice-week-grid">${weeks.map(w=>{const first=practiceBank.forWeek(w)[0],count=practiceBank.forWeek(w).length;return `<a class="practice-week" href="${practiceURL(first).replace(/&q=.*$/,'')}"><span class="learning-eyebrow">Week ${Number(w.slice(4))}</span><strong>${escape(practiceTopics[w])}</strong><span class="learning-muted">${count} questions${reviewedCount(w)?' · '+reviewedCount(w)+' reviewed':''}</span><span class="practice-week-arrow" aria-hidden="true">→</span></a>`}).join('')}</div></section>`).join('');
       return;
     }
     const all=practiceBank.forWeek(week);
+    const starting=all.filter(q=>!q.challenge), challenges=all.filter(q=>q.challenge);
+    const practiceTrack=(label,description,items,extraClass='')=>items.length?`<section class="practice-track ${extraClass}"><div class="practice-track-heading"><strong>${label}</strong><span>${description}</span></div><nav class="practice-steps" aria-label="${label}">${items.map(q=>{const i=all.findIndex(item=>item.id===q.id);return `<a data-practice-question="${q.id}" href="${practiceURL(q)}" ${q.id===selected?'aria-current="page"':''}><span class="practice-step-number">${i+1}</span><span class="practice-step-title">${escape(q.title)}${q.stretch?'<small>Stretch</small>':''}</span><span class="practice-step-status" aria-label="${practiceRecord(q).revealed?'Explanation reviewed':''}">${practiceRecord(q).revealed?'✓':''}</span></a>`}).join('')}</nav></section>`:'';
     $('poll-controls').innerHTML=`<div class="learning-eyebrow">Week ${Number(week.slice(4))}</div><h2>${escape(practiceTopics[week])}</h2>
-      <nav class="practice-steps" aria-label="Questions in this week">${all.map((q,i)=>`<a data-practice-question="${q.id}" href="${practiceURL(q)}" ${q.id===selected?'aria-current="page"':''}><span class="practice-step-number">${i+1}</span><span>${escape(q.title)}</span><span class="practice-step-status" aria-label="${practiceRecord(q).revealed?'Explanation reviewed':''}">${practiceRecord(q).revealed?'✓':''}</span></a>`).join('')}</nav>`;
+      ${practiceTrack(isClassPreview?'Classroom checkpoints':'Start here',isClassPreview?'Three instructor questions':'Three short reasoning questions',starting)}
+      ${practiceTrack('Optional challenges','Three harder transfer questions',challenges,'challenge-track')}`;
     const navigation=document.createElement('nav');navigation.id='practice-navigation';navigation.setAttribute('aria-label','Previous and next question');
     $('poll-app').appendChild(navigation);
     renderPractice();
   }
   function renderPractice() {
     const all=practiceBank.forWeek(week), q=practiceBank.get(selected), index=all.findIndex(x=>x.id===selected);
+    const starting=all.filter(item=>!item.challenge), challenges=all.filter(item=>item.challenge);
     const record=practiceRecord(q);choice=null;
     $('poll-question').hidden=false;$('poll-results').hidden=true;
     $('poll-question').innerHTML=questionHTML(q,true,true,practiceBank)+'<button id="poll-submit" class="primary" disabled>Compare reasoning</button>';
-    $('practice-navigation').innerHTML=`<p id="practice-progress" class="learning-muted" role="status"></p><div class="practice-paging">${index>0?`<a class="practice-page-link" rel="prev" href="${practiceURL(all[index-1])}">← Previous question</a>`:'<span></span>'}${index<all.length-1?`<a class="practice-page-link practice-next" rel="next" href="${practiceURL(all[index+1])}">Next question →</a>`:`<a class="practice-page-link practice-next" href="${week}.html">Back to Week ${Number(week.slice(4))} →</a>`}</div>`;
+    const nextLabel=!isClassPreview && index===2?'Try optional challenges →':'Next question →';
+    $('practice-navigation').innerHTML=`<p id="practice-progress" class="learning-muted" role="status"></p><div class="practice-paging">${index>0?`<a class="practice-page-link" rel="prev" href="${practiceURL(all[index-1])}">← Previous question</a>`:'<span></span>'}${index<all.length-1?`<a class="practice-page-link practice-next" rel="next" href="${practiceURL(all[index+1])}">${nextLabel}</a>`:`<a class="practice-page-link practice-next" href="${week}.html">Back to Week ${Number(week.slice(4))} →</a>`}</div>`;
     const updateProgress=()=>{
       // Count reviewed explanations, not correct answers or independent mastery.
-      $('practice-progress').textContent=reviewedCount(week)+' of '+all.length+' explanations reviewed · '+(practiceStorageOK?'saved in this browser':'browser storage unavailable');
+      const storage=practiceStorageOK?'saved in this browser':'browser storage unavailable';
+      if(isClassPreview)$('practice-progress').textContent=reviewedCount(week)+' of '+all.length+' explanations reviewed · '+storage;
+      else {
+        const startingReviewed=starting.filter(item=>practiceRecord(item).revealed).length;
+        const challengeReviewed=challenges.filter(item=>practiceRecord(item).revealed).length;
+        $('practice-progress').textContent='Starting questions '+startingReviewed+' of '+starting.length+' · Challenges '+challengeReviewed+' of '+challenges.length+' reviewed · '+storage;
+      }
       const mark=document.querySelector(`[data-practice-question="${q.id}"] .practice-step-status`);
       mark.textContent=record.revealed?'✓':'';mark.setAttribute('aria-label',record.revealed?'Explanation reviewed':'');
     };

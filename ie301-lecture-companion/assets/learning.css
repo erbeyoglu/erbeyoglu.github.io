@@ -76,7 +76,7 @@ header.learning-header { position: static; padding-right: 24px; }
   .week-study-grid { grid-template-columns: 1fr; gap: 12px; }
   .week-study-card { padding: 18px 38px 18px 18px; gap: 8px; }
 }
-/* Practice: a week library, then three directly accessible questions. */
+/* Practice: a week library, then six directly accessible questions. */
 .poll-practice #poll-controls { background: transparent; border: 0; padding: 0; }
 .practice-family { margin-top: 30px; }
 .practice-family h3 { margin-bottom: 12px; }
@@ -86,10 +86,18 @@ header.learning-header { position: static; padding-right: 24px; }
 .practice-week strong { font-size: 1.08rem; line-height: 1.4; }
 .practice-week .learning-muted { font-size: .85rem; margin-top: auto; }
 .practice-week-arrow { position: absolute; right: 14px; bottom: 16px; color: var(--s1); }
-.practice-steps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 18px; }
+.practice-track { margin-top: 18px; }
+.practice-track + .practice-track { margin-top: 24px; }
+.practice-track-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 9px; }
+.practice-track-heading strong { font-size: .95rem; }
+.practice-track-heading span { color: var(--ink-2); font-size: .82rem; }
+.challenge-track { padding-top: 18px; border-top: 1px solid var(--grid); }
+.practice-steps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
 .practice-steps a { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--grid); border-radius: 10px; text-decoration: none; color: var(--ink); font-size: .9rem; line-height: 1.35; background: var(--surface); }
 .practice-steps a[aria-current="page"] { border-color: var(--s1); background: var(--region-fill); box-shadow: inset 0 0 0 1px var(--s1); }
 .practice-step-number { flex: 0 0 26px; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 50%; background: var(--region-fill); color: var(--s1); font-weight: 750; }
+.practice-step-title { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.practice-step-title small { color: var(--s1); font-size: .68rem; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
 .practice-step-status { color: var(--s1); margin-left: auto; }
 #practice-navigation { margin: 18px 0 30px; }
 #practice-progress { font-size: .85rem; }
@@ -103,6 +111,7 @@ header.learning-header { position: static; padding-right: 24px; }
   .practice-steps a { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 8px; font-size: .8rem; }
   .practice-step-number { flex-basis: 26px; }
   .practice-step-status:empty { display: none; }
+  .practice-track-heading { align-items: flex-start; flex-direction: column; gap: 3px; }
   .practice-page-link { padding: 9px 10px; font-size: .9rem; }
 }
 .poll-live #poll-controls { padding: 10px 14px; }

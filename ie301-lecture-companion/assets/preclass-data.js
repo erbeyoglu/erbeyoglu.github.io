@@ -3,9 +3,12 @@
    lecture question, story, numbers or answer. */
 window.PRECLASS = (() => {
   const questions = [];
-  function add(week, key, title, context, prompt, options, answer, explanations, todayConnection, stretch = false) {
+  function add(week, key, title, context, prompt, options, answer, explanations, todayConnection, stretch = false, challenge = false) {
     questions.push({id:`pc-w${week}-${key}`,week:`week${week}`,title,context,prompt,
-      options,answer,explanations,todayConnection,stretch});
+      options,answer,explanations,todayConnection,stretch,challenge});
+  }
+  function addChallenge(week, key, title, context, prompt, options, answer, explanations, todayConnection) {
+    add(week,key,title,context,prompt,options,answer,explanations,todayConnection,false,true);
   }
 
   add('01','changeable','What can the plan change?',
@@ -236,7 +239,235 @@ window.PRECLASS = (() => {
     ['The first log could span seconds or hours; its position in the list gives no timing information.','Matching status order does not imply matching time spent in each status.','Durations or timestamps are needed to compare how quickly the changes occur.'],
     'The sequence of conditions and the time spent in them are separate pieces of information.',true);
 
+  addChallenge('01','rule-cycle','Can all three rules hold?',
+    'Three talks—Amber, Birch and Cedar—must be placed in a single order. Amber must come before Birch, Birch before Cedar, and Cedar before Amber.',
+    'Can one schedule satisfy all three rules?',
+    ['Yes: Amber, then Birch, then Cedar','No: following the rules creates a circle','It depends on the length of the talks'],1,
+    ['This order breaks the rule that Cedar must come before Amber.','Starting from any talk eventually requires it to come before itself, so no order works.','Talk lengths do not change the required before-and-after relationships.'],
+    'Before comparing possible plans, check whether the stated rules can all hold together.');
+  addChallenge('01','counterexample','One case can break “always”',
+    'A study adviser claims: “Between any two students, the one who studies more hours always receives the higher quiz score.”',
+    'Which single observation would be enough to disprove that claim?',
+    ['One student studies 6 hours and scores lower than another who studies 4 hours','Two students study the same number of hours and receive the same score','Most students who study longer receive higher scores'],0,
+    ['The claim says “always,” so one reversed pair is a counterexample.','Equal effort and equal scores do not contradict the stated ordering claim.','A pattern that holds for most students does not itself identify an exception.'],
+    'Test a broad claim by looking for a case it says cannot happen.');
+  addChallenge('01','measurement-boundary','Did the wait really shrink?',
+    'A cafeteria measures waiting only from the entrance door to the counter. It moves half of the queue outside. The reported indoor wait falls, but the time from joining the outside queue to receiving food stays unchanged.',
+    'What does the evidence support?',
+    ['Customers now spend less total time waiting','The counter now serves customers faster','The reported measure fell because its starting point moved'],2,
+    ['The story says the complete arrival-to-service time is unchanged.','No faster service is reported; part of the same queue was moved outside.','Excluding the outside portion lowers the reported number without shortening the full wait.'],
+    'Make sure a convenient measurement covers the outcome you actually care about.');
+
+  addChallenge('02','visit-plans','A choice that depends on usage',
+    'Plan Lime has no joining fee and costs 7 TL per visit. Plan Gold has an 18 TL joining fee and costs 4 TL per visit.',
+    'At what whole-number visit count does Gold first become strictly cheaper than Lime?',
+    ['6 visits','7 visits','8 visits'],1,
+    ['At 6 visits both plans cost 42 TL, so Gold is not yet cheaper.','At 7 visits Lime costs 49 TL and Gold costs 46 TL; this is the first strict advantage.','Gold is already cheaper at 7 visits, so 8 is not the first count.'],
+    'A crossing point can change which choice is best; distinguish a tie from the first strict improvement.');
+  addChallenge('02','no-last-setting','Always one better',
+    'A game allows any positive whole-number setting, with no largest allowed setting. Moving from any setting to the next one always adds two points and has no other effect.',
+    'Which statement is correct?',
+    ['Setting 1 is best because it is the first allowed setting','There is a best finite setting, but more tests are needed','There is no highest-scoring setting because every setting has a better next one'],2,
+    ['Every later setting scores more than setting 1.','No finite candidate can be best under the stated rule.','For any proposed setting, the next allowed setting scores two points more.'],
+    'Before searching for a best choice, check that the allowed choices can actually contain one.');
+  addChallenge('02','plateau-tiebreak','Stop when improvement stops',
+    'An audio app has whole-number settings from 1 to 10. Clarity improves through setting 6 and is identical from 6 through 10. Battery drain increases at every step. The goal is greatest clarity, then least battery drain among ties.',
+    'Which setting should be chosen?',
+    ['Setting 6','Setting 10','The information is insufficient'],0,
+    ['Setting 6 reaches the greatest clarity and uses less battery than every tied higher setting.','Setting 10 has no clarity advantage over 6 and drains more battery.','The plateau and tie-break rule identify one setting.'],
+    'When several choices share the main result, use the stated secondary concern to break the tie.');
+
+  addChallenge('03','isolate-light','Change one thing at a time',
+    'Greenhouse X gives one seed variety more light and more water than Greenhouse Y, and X grows taller plants. A manager wants to learn whether the extra light helped.',
+    'Which new comparison would isolate the effect of light most directly?',
+    ['Give the same variety both more light and more water again','Grow different seed varieties under the same light and water','Use the same variety and water level, but different light levels'],2,
+    ['Changing both conditions again leaves their effects mixed together.','This comparison studies variety rather than light.','Holding variety and water fixed leaves light as the relevant difference.'],
+    'When several features vary, hold other plausible causes steady before crediting one of them.');
+  addChallenge('03','unchecked-grid','A cross is not the whole grid',
+    'A treasure board has 10 rows and 10 columns. A searcher checks every square in row 4 and every square in column 6.',
+    'How many squares remain unchecked?',
+    ['80','81','82'],1,
+    ['The row and column contain 20 listed positions, but their intersection was counted twice.','The search checks 10 + 10 − 1 = 19 distinct squares, leaving 100 − 19 = 81.','This would treat two additional squares as checked without a reason.'],
+    'Evidence gathered along a few directions may leave combinations elsewhere unchecked.');
+  addChallenge('03','parallel-loads','The same total can finish later',
+    'Two printers work at the same time, and a batch finishes when the slower printer finishes. Plan A assigns 9 minutes of work to one printer and 3 to the other. Plan B assigns 6 minutes to each.',
+    'Which plan finishes first?',
+    ['Plan B','Plan A','They finish together because both assign 12 minutes in total'],0,
+    ['Under Plan B both printers finish after 6 minutes.','Plan A must wait 9 minutes for the more heavily loaded printer.','Adding the workloads ignores that they are processed in parallel.'],
+    'A single total can hide how work is distributed across simultaneous choices.');
+
+  addChallenge('04','current-bottleneck','Which gift can help?',
+    'Each rescue trip needs one driver and two volunteers. A center has four drivers and six volunteers. A donor can provide either one additional driver or two additional volunteers.',
+    'Which donation can increase the number of trips that can run at the same time?',
+    ['Two additional volunteers','One additional driver','Neither donation'],0,
+    ['Six volunteers support three trips; eight support four, matching the four drivers.','A fifth driver does not help while six volunteers still support only three trips.','The volunteer donation raises the limit from three trips to four.'],
+    'When several limits act together, identify which one blocks the next improvement.');
+  addChallenge('04','necessary-not-sufficient','Passing every filter may not be enough',
+    'An audit finds that every prize-winning design is symmetric and uses at most 20 parts. Design X is symmetric and uses 18 parts.',
+    'What follows from the audit?',
+    ['Design X definitely wins','Design X may or may not win; it only passes two necessary tests','Design X definitely loses'],1,
+    ['The audit says winners have these properties; it does not say every design with them wins.','The properties rule out some designs but do not by themselves certify a winner.','Nothing in the audit says a design with both properties must lose.'],
+    'Conditions that every good solution must satisfy need not be enough to identify a good solution.');
+  addChallenge('04','redundant-rule','Which rule adds no restriction?',
+    'A venue has two independent attendance rules: the fire code permits at most 80 people, and the staffing plan permits at most 100 people. Every other requirement stays the same.',
+    'Which single rule can be removed without changing the set of allowed attendance levels?',
+    ['Remove the fire-code rule','Remove both rules','Remove the staffing rule'],2,
+    ['Without the 80-person rule, attendance from 81 to 100 becomes allowed.','Without either rule, attendance above 80 becomes allowed.','The 80-person fire limit already guarantees the 100-person staffing limit.'],
+    'A looser rule can add no restriction when a tighter rule already covers it.');
+
+  addChallenge('05','hidden-lift','What happened when both changed?',
+    'A shop averages 100 visitors. With only a poster it gets 112; with only background music it gets 109; with both it gets 130.',
+    'Which comparison correctly detects what happened when both changes were used?',
+    ['The additive benchmark is 121, so using both adds 9 visitors beyond it','The additive benchmark is 130, so nothing extra happened','The additive benchmark is 121, so using both loses 9 visitors'],0,
+    ['The separate gains are 12 and 9, giving an additive benchmark of 121; the observed 130 is 9 higher.','The observed 130 is the result to explain, not the benchmark from separate tests.','The actual result is above 121, not below it.'],
+    'Paired choices can create an effect that separate one-at-a-time tests do not reveal.');
+  addChallenge('05','halfway-plan','Blend two allowed plans',
+    'Plan R uses 8 hours of printer time and 2 hours of cutter time. Plan S uses 2 printer hours and 8 cutter hours. Each resource has an 8-hour limit, and the work is divisible so a half-R, half-S blend is possible.',
+    'What is guaranteed about the half-and-half blend?',
+    ['It uses 10 hours of each resource','It uses 5 hours of each resource and respects both limits','Its quality score must exceed both original plans'],1,
+    ['This adds the plans in full instead of taking half of each.','Averaging 8 with 2 gives 5 for each resource, below both limits.','Resource use is given, but no rule about the quality score is supplied.'],
+    'When choices can be blended, check whether upper limits remain satisfied between allowed plans.');
+  addChallenge('05','curved-blend','Test a claim at the midpoint',
+    'Recipe R costs 10 credits and recipe S costs 18 credits. A half-R, half-S blend costs 15 credits. Someone claims that every blend costs no more than the same weighted blend of the two endpoint costs.',
+    'What does the halfway observation show?',
+    ['It supports the claim because 15 is below 18','The claim cannot be tested without observing every possible blend','It disproves the claim because the halfway benchmark is 14, below the observed 15'],2,
+    ['The relevant comparison is with the weighted endpoint benchmark, not only the larger endpoint.','A universal claim is disproved by one counterexample.','Half of 10 plus half of 18 is 14, and the actual halfway cost is higher.'],
+    'Values between two choices need not follow the straight line joining their endpoint values.');
+
+  addChallenge('07','small-now-big-later','Do not stop at the first reward',
+    'The Silver door gives 8 points and ends the game. Bronze gives 5, then either 2 now plus 4 later or 6 now and no later reward. Wooden gives 3, then either 7 now plus 3 later or 9 now and no later reward.',
+    'Which first door can produce the highest final score?',
+    ['Silver','Bronze','Wooden'],2,
+    ['Silver finishes with 8 points.','Bronze can finish with at most 11 points.','Wooden can finish with 13 points through 3 + 7 + 3.'],
+    'Compare a current gain together with the best continuation it leaves available.');
+  addChallenge('07','duplicate-stage-cost','Charge each consequence once',
+    'A delivery contract charges one 4-credit dispatch fee for each trip. A draft calculation adds 4 credits when the van departs and another 4 when it reaches its first stop, both for that same dispatch.',
+    'What is the correct repair?',
+    ['Keep both charges because two stages are listed','Remove one of the two charges so the dispatch fee is counted once','Remove both charges because the fee is not a travel time'],1,
+    ['Listing a consequence at two stages does not make it occur twice.','One charge belongs in the total; assigning it to exactly one stage prevents double counting.','The fee is part of the stated consequence even though it is not measured in minutes.'],
+    'When a total is built stage by stage, assign each consequence to exactly one stage.');
+  addChallenge('07','unknown-final-value','The last desk changes the first choice',
+    'At the first desk, you may exchange a gold token for 8 points, or keep it and take 3 points. At the final desk, a kept token will be worth either 0 or 7 points, but the rule sheet omits which value applies.',
+    'Can the better first-desk choice be determined?',
+    ['No; the missing final value can reverse the choice','Yes, always exchange the token','Yes, always keep the token'],0,
+    ['If the final value is 0, exchanging wins 8 to 3; if it is 7, keeping wins 10 to 8.','Keeping is better when the final value is 7.','Exchanging is better when the final value is 0.'],
+    'What remains valuable at the end can change the best choice much earlier.');
+
+  addChallenge('08','shared-favorite','Find the assignment threshold',
+    'Two reviewers must receive different papers. Reviewer 1 scores A as 10 and B as 8. Reviewer 2 scores A as 9 and B as x. Assignment scores are added.',
+    'When is it strictly better to give A to Reviewer 2 and B to Reviewer 1?',
+    ['When x > 7','When x < 7','For every value of x'],1,
+    ['If x > 7, giving A to Reviewer 1 produces 10 + x > 17.','Giving A to Reviewer 2 produces 8 + 9 = 17; this beats 10 + x exactly when x < 7.','At x = 8, for example, giving A to Reviewer 1 is better.'],
+    'A scarce option may belong where the alternative is weakest; a comparison can reveal the exact threshold.');
+  addChallenge('08','weakest-station','The weakest station sets the result',
+    'An event rates a staffing plan by its lowest station score. Plan A gives 9, 9 and 2; Plan B gives 7, 6 and 6; Plan C gives 5, 5 and 8. Before rating, exactly 2 bonus points may be added to one station.',
+    'Which plan can achieve the highest event rating after using the bonus optimally?',
+    ['Plan A','Plan C','Plan B'],2,
+    ['Raising the 2 to 4 leaves Plan A’s minimum at 4.','Raising one 5 to 7 leaves the other 5, so Plan C’s minimum stays 5.','Plan B already has minimum 6; adding the bonus to one station cannot lower it, so 6 remains the best attainable minimum.'],
+    'How separate outcomes are combined can matter more than their simple total.');
+  addChallenge('08','same-completions','Different histories, same remaining task',
+    'A five-letter badge must contain exactly two vowels; there are no other letter restrictions. After three letters, the partial badges are CAT, DOG and EEL.',
+    'Which two partial badges allow exactly the same kinds of valid two-letter endings?',
+    ['CAT and DOG','CAT and EEL','DOG and EEL'],0,
+    ['CAT and DOG each contain one vowel, so each ending needs exactly one more.','CAT needs one more vowel, while EEL needs only consonants.','DOG needs one more vowel, while EEL needs only consonants.'],
+    'Different histories can become equivalent when they leave the same requirement for the future.');
+
+  addChallenge('09','two-night-pattern','The daily chance is not the whole story',
+    'For System X, each night is a fresh half-and-half draw unaffected by the other night. System Y succeeds on both nights with probability one-half and fails on both nights with probability one-half.',
+    'Which system is more likely to succeed at least once over two nights?',
+    ['System X','System Y','They are equal because each has a one-half chance on one night'],0,
+    ['Only fail-fail misses for X, so its chance is three-fourths.','Y succeeds at least once only in its both-success outcome, with chance one-half.','Matching one-night chances does not fix a two-night result when the relationship differs.'],
+    'A sequence of uncertain outcomes depends on how stages are related, not only on each stage viewed alone.');
+  addChallenge('09','forecast-price','How much is perfect information worth?',
+    'Rain has a one-in-three chance. Reserving an umbrella costs 1 credit whether or not it rains. Without a reservation, rain causes 4 credits of loss and a dry day costs nothing. A perfect forecast arrives before the reservation decision.',
+    'What is the most you should pay for that forecast if only average cost matters?',
+    ['One-third of a credit','Two-thirds of a credit','One credit'],1,
+    ['One-third is the remaining average cost with the forecast, not the saving.','Always reserving costs 1; with the forecast, reserve only in rain for an average one-third, saving two-thirds.','Paying 1 would exceed the forecast’s two-thirds saving.'],
+    'Information has value only through the later choices it allows you to change.');
+  addChallenge('09','discard-without-chances','No weather probabilities needed',
+    'Completion times under Calm, Windy and Storm weather are: Plan A — 6, 8, 11 minutes; Plan B — 7, 10, 13; Plan C — 5, 9, 15. Weather probabilities are not given, and shorter is preferred.',
+    'Which plan can be discarded even without those probabilities?',
+    ['Plan A','Plan C','Plan B'],2,
+    ['A is faster than B in every weather and trades places with C.','C is fastest in Calm weather, so it cannot be ruled out without the weather mix.','B is slower than A in all three conditions, so no probability mix can make its average lower.'],
+    'A choice that is worse in every possible outcome can be removed before outcome chances are known.');
+
+  addChallenge('10','starting-mix','The missing starting mix',
+    'A city has North and South bus routes. On a typical trip, 9 out of 10 North buses are late, while 1 out of 10 South buses are late. You see that one bus is late, but do not know how many trips usually begin on each route.',
+    'Which conclusion is justified about the route of the late bus?',
+    ['It is more likely to be a North bus','It is more likely to be a South bus','The route cannot be ranked without knowing the usual mix of North and South trips'],2,
+    ['North buses have a higher late rate, but that alone does not settle which route contributes more late buses.','South buses may be much more common, so their lower late rate could still produce more late buses.','The usual route frequencies are needed to compare the two possible sources of a late bus.'],
+    'When an observation has several possible sources, consider both the rate within each source and how common each source is.');
+  addChallenge('10','two-days','Reach tomorrow through today',
+    'A device has a 20% chance of failing today. If it survives today, it has a 10% chance of failing tomorrow.',
+    'What is the chance that it has failed by the end of tomorrow?',
+    ['28%','30%','2%'],0,
+    ['Failure today contributes 20%; surviving today and then failing contributes 80% × 10% = 8%, for 28% in total.','Adding 20% and 10% ignores that tomorrow’s failure branch is reached only after survival today.','This counts only survival today followed by failure tomorrow.'],
+    'Combine distinct routes to an event, and condition a later route on reaching it.');
+  addChallenge('10','three-voters','When two out of three are enough',
+    'Three voters decide independently. Each voter selects the better proposal with probability 0.6. The majority decision is better when exactly two or all three voters are correct.',
+    'What is the probability that the majority selects the better proposal?',
+    ['0.600','0.648','0.360'],1,
+    ['The majority improves on one voter here because several winning combinations are possible.','Exactly two correct contributes 3 × 0.6² × 0.4 = 0.432, and all three contributes 0.6³ = 0.216; together they give 0.648.','This counts only two specified voters being correct and misses other winning cases.'],
+    'When an event can happen through several distinct cases, count every case without overlap.');
+
+  addChallenge('11','visit-versus-occupy','Visited is different from being there',
+    'A token starts at A. On its first move, it goes to T or B with equal chance. From either T or B, its second move goes to T or B with equal chance.',
+    'Which comparison is correct?',
+    ['The chance of visiting T within two moves is 3/4, while the chance of being at T after two moves is 1/2','Both chances are 1/2','The chance of being at T after two moves is 3/4, while visiting T within two moves is 1/2'],0,
+    ['Half visit T immediately; another quarter first visit B and then T. At the second move, half of all paths end at T.','This misses paths that visit T first and leave on the second move.','It reverses the two events.'],
+    'Being in a place at a stated time and having visited it by that time are different events.');
+  addChallenge('11','map-claim','A route map is not a guarantee',
+    'A visitor always moves from Entrance to Atrium. From Atrium, the next move can be back to Entrance or onward to Gallery. Gallery leads only to Gallery. The map does not state how the choice at Atrium is made.',
+    'Does the map alone prove that every visitor starting at Entrance eventually reaches Gallery?',
+    ['Yes, because a path to Gallery exists','No; a visitor could keep returning from Atrium to Entrance','No, because Gallery leads only to itself'],1,
+    ['A possible path establishes reachability, not that every allowed route takes it.','The map permits repeated Entrance–Atrium returns, so the universal claim does not follow from the map alone.','What happens after reaching Gallery does not prevent it from being reached.'],
+    'Separate what a map makes possible from what its transition rules make inevitable or likely.');
+  addChallenge('11','two-step-paths','Add the paths that reach the target',
+    'A token starts at A. Its first move goes to B or C with equal chance. From B it certainly moves to D. From C it moves to D with equal chance or returns to A with equal chance.',
+    'What is the chance that the token is at D after exactly two moves?',
+    ['One half','One quarter','Three quarters'],2,
+    ['This counts only the route through B.','This counts only the route through C.','The route through B contributes one half, and the route through C contributes one quarter, totaling three quarters.'],
+    'For a multi-step destination, identify every path that arrives there and combine their chances.');
+
+  addChallenge('13','closed-regions','The starting region can persist',
+    'A robot moves forever on one of two disconnected loops, Red or Blue, and can never cross between them. Its starting loop is unknown.',
+    'Can its long-run fraction of time on the Red loop be determined?',
+    ['Yes, it must be one half because there are two loops','Yes, it must approach zero as time passes','No; it is 1 if the robot starts on Red and 0 if it starts on Blue'],2,
+    ['The number of loops does not create movement between them.','Time does not move the robot across a missing connection.','Each loop is closed, so the starting region determines the long-run result.'],
+    'When separate closed regions exist, a long-run conclusion may still depend on where the process starts.');
+  addChallenge('13','switching-cost','The same share can hide different switching costs',
+    'Two machines are active exactly half the time over a long month. Machine A alternates every minute. Machine B runs for twelve hours, then rests for twelve hours. Each start-up causes one unit of wear.',
+    'Which conclusion is justified about start-up wear?',
+    ['Machine A has more start-up wear over the month','The machines must have the same wear because their active shares match','Machine B has more wear because its active periods are longer'],0,
+    ['A starts far more often while producing the same active-time share.','Time spent active does not state how often activity begins.','Long active periods give B fewer starts, not more.'],
+    'A long-run state share can determine a state-based consequence while missing a consequence attached to transitions.');
+  addChallenge('13','stable-population','A stable mix can hide constant movement',
+    'A large set of signs starts with half Green and half Purple. At every beep, every Green sign becomes Purple and every Purple sign becomes Green.',
+    'Which statement is correct?',
+    ['Each individual sign eventually settles on one color','The population remains half Green and half Purple even though every individual switches each time','All signs eventually show the same color'],1,
+    ['Every individual continues alternating forever.','The two equal groups exchange colors, so the overall proportions remain unchanged.','Simultaneous switching preserves the two equally sized groups.'],
+    'A stable distribution across a population does not mean individual paths have stopped changing.');
+
+  addChallenge('14','duration-weighting','A random time favors long stays',
+    'A system repeats the same cycle forever: Flash for 1 minute, then Rest for 9 minutes.',
+    'If you observe it at a uniformly random time far into operation, which state are you more likely to see?',
+    ['They are equally likely because the cycle visits each state once','Rest, because it occupies 9/10 of every cycle','Flash, because it occurs first in every cycle'],1,
+    ['Visit counts ignore how long each visit lasts.','Nine of each ten minutes are Rest, so a random time lands there with probability 9/10.','Position in the cycle does not outweigh duration.'],
+    'Time shares weight states by their durations, not by how many times they are entered.');
+  addChallenge('14','age-effect','An average duration does not fix the next minute',
+    'A help desk reports that tickets remain open for 20 minutes on average. It gives no further information about how closing chances change as a ticket gets older.',
+    'Which statement is warranted?',
+    ['An old ticket must be more likely to close next minute than a new one','An old and a new ticket must have equal next-minute closing chances','Neither comparison follows from the average duration alone'],2,
+    ['An increasing chance with age is possible but is not implied by the average.','Equal next-minute chances require an additional assumption that was not supplied.','Many duration patterns share the same average while having different age effects.'],
+    'Before treating elapsed time as irrelevant, check whether the duration rule supports that assumption.');
+  addChallenge('14','competing-means','Two averages do not determine the first finish',
+    'A customer issue can end when either a self-service guide works or a staff member responds. Each mechanism, considered alone, takes 60 minutes on average. Nothing is said about their timing patterns or whether they influence each other.',
+    'What is the expected time until the issue ends?',
+    ['It cannot be determined from the two averages alone','Exactly 30 minutes','Exactly 60 minutes'],0,
+    ['The separate means do not specify the timing patterns or dependence needed to determine the first finish.','Thirty minutes would require additional assumptions about the two mechanisms.','A second possible finishing mechanism can reduce the wait, but the reduction is not fixed by the separate means.'],
+    'When several clocks compete, identify the assumptions needed before combining their separate summaries.');
+
   const weeks=[...new Set(questions.map(q=>q.week))];
   return {questions,weeks,get:id=>questions.find(q=>q.id===id),
-    forWeek:week=>questions.filter(q=>q.week===week).sort((a,b)=>Number(a.stretch)-Number(b.stretch))};
+    forWeek:week=>questions.filter(q=>q.week===week).sort((a,b)=>Number(a.challenge)-Number(b.challenge) || Number(a.stretch)-Number(b.stretch))};
 })();
