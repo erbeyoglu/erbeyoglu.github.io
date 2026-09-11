@@ -33,13 +33,13 @@
         const menu=document.createElement('section');menu.id='week-study-menu';
         const hasGuided=Boolean(guided[week]);
         const card=(href,title,detail,tag,recommended=false)=>`<a class="week-study-card${recommended?' recommended':''}" href="${href}"><span class="learning-eyebrow">${tag}</span><strong>${title}</strong><span>${detail}</span><b aria-hidden="true">→</b></a>`;
-        menu.innerHTML='<h2>This week’s activities</h2><p class="week-study-route">Start with the pre-class modeling warm-up. If a guided activity is available, use it to build a complete model. The in-class interactions let you revisit examples from the lecture.</p><div class="week-study-grid">'+
-          card('polls.html?week='+week,'Pre-class modeling warm-up','Make three modeling choices, then compare the reasoning.','Start here',true)+
+        menu.innerHTML='<h2>This week’s activities</h2><p class="week-study-route">Start with the pre-class thinking warm-up. If a guided activity is available, use it to build a complete model. The in-class interactions let you revisit examples from the lecture.</p><div class="week-study-grid">'+
+          card('polls.html?week='+week,'Pre-class thinking warm-up','Try two reasoning questions and one stretch question.','Start here',true)+
           (hasGuided?card('guided.html?activity='+guided[week],'Guided modeling activity','Build a new model with hints, then try a changed assumption.','Next · Build a model'):'')+
           card(file+'?tools=1','In-class interactions','Revisit the graphs, simulations and examples used during the lecture.','Optional · From class')+'</div>';
         document.querySelector('main').prepend(menu);
       }
-    } else if(file==='polls.html')item(activeWeek?'Pre-class modeling warm-up':'Pre-class warm-up library');
+    } else if(file==='polls.html')item(activeWeek?'Pre-class thinking warm-up':'Pre-class warm-up library');
     else if(file==='guided.html')item(activity?'Guided modeling':'Guided activity library');
     else if(file==='aitutor.html')item('AI Modeling Tutor');
     document.querySelector('header.site .sub')?.replaceChildren(trail);
