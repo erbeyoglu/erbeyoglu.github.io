@@ -186,12 +186,12 @@ window.CLASSROOM = (() => {
       '<div class="row">' +
       '<input type="text" id="cl-name-' + w.id + '" placeholder="your name" maxlength="18" ' +
       'autocomplete="name" enterkeyhint="send" value="' + name0 + '">' +
-      '<button class="primary send" id="cl-sub-' + w.id + '">Submit</button>' +
+      '<button class="primary send" id="cl-sub-' + w.id + '">Submit to class</button>' +
       '</div>' +
       '<div class="meta">' +
       '<span>your best: <b id="cl-best-' + w.id + '">' +
       (isNaN(bestPrev) ? '—' : bestPrev.toFixed(w.digits)) + '</b></span>' +
-      '<span class="fb" id="cl-fb-' + w.id + '">play, then submit your ' + w.label + '</span>' +
+      '<span class="fb" id="cl-fb-' + w.id + '">Not sent yet. Choose your settings, then tap Submit to class.</span>' +
       '</div>';
     document.body.appendChild(dock);
 
@@ -209,15 +209,15 @@ window.CLASSROOM = (() => {
       lsSet('classroom-name', name);
       const v = w.get();
       if (!Number.isFinite(v)) {
-        say('no valid attempt yet — play the activity first', 'err');
+        say(w.invalidMessage || 'no valid attempt yet — play the activity first', 'err');
         return;
       }
       btn.disabled = true;
       say('sending…');
       try {
         await dbPost('/sessions/' + joinCode + '/' + w.id, { n: name, v: +v.toFixed(w.digits) });
-        say('sent ' + v.toFixed(w.digits) + ' ✓', 'ok');
-        btn.textContent = 'Submit again';
+        say('Sent to class: ' + v.toFixed(w.digits) + ' ✓', 'ok');
+        btn.textContent = 'Submit to class again';
         updateBest(w, v);
       } catch {
         say('could not send — check your connection', 'err');
