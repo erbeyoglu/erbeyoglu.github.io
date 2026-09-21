@@ -1,0 +1,131 @@
+/* End-of-lesson quiz. One stylesheet for both ends of the room: the projector
+   view inside the instructor's local deck and the student's phone page. They
+   share these rules so an option box looks and reads the same in both places.
+
+   The four option hues are fixed in every theme. They are fills carrying white
+   text, not series colours, so the room can say "the blue one" whatever theme
+   the projector is on. None of them is green or red, because those two belong
+   to right and wrong: a green box would quietly tell the room which to pick. */
+:root {
+  --qz1: #1c5cab;
+  --qz2: #5b3fa8;
+  --qz3: #8a5200;
+  --qz4: #9c2a6b;
+}
+
+.qz-eyebrow { font-size: .82rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; }
+.qz-prompt { font-size: clamp(1.15rem, 2.4vw, 1.9rem); line-height: 1.25; font-weight: 700;
+  margin: .4rem 0 1.1rem; }
+
+/* ---------- option boxes ---------- */
+.qz-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.qz-tile { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 14px;
+  color: #fff; font-size: clamp(.95rem, 1.35vw, 1.15rem); font-weight: 600; border: 0;
+  text-align: left; font-family: inherit; background: var(--hue); cursor: pointer;
+  transition: transform .12s ease, opacity .2s ease; }
+.qz-tile:nth-child(1) { --hue: var(--qz1); }
+.qz-tile:nth-child(2) { --hue: var(--qz2); }
+.qz-tile:nth-child(3) { --hue: var(--qz3); }
+.qz-tile:nth-child(4) { --hue: var(--qz4); }
+.qz-tile .qz-mark { flex: 0 0 34px; height: 34px; display: grid; place-items: center;
+  background: rgba(255, 255, 255, .22); border-radius: 9px; font-weight: 800; }
+.qz-tile .qz-shape { width: 17px; height: 17px; background: #fff; flex: 0 0 17px; }
+.qz-shape.tri { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.qz-shape.dia { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.qz-shape.cir { border-radius: 50%; }
+.qz-tile[aria-pressed="true"] { outline: 4px solid var(--ink); outline-offset: 3px; }
+.qz-tile:disabled { cursor: default; }
+
+/* Result state: the same boxes, now filled in proportion to the votes. Nothing
+   moves between voting, locking and revealing, so the room never re-reads a
+   different chart. Text turns to ink on a pale tint, which holds its contrast
+   whether a box is nearly empty or nearly full. */
+.qz-tile.result { background: var(--surface); color: var(--ink); border: 2px solid var(--hue);
+  position: relative; overflow: hidden; }
+.qz-tile.result > * { position: relative; z-index: 1; }
+.qz-tile.result .qz-fill { position: absolute; left: 0; top: 0; bottom: 0; z-index: 0;
+  background: var(--hue); opacity: .22; transition: width .8s cubic-bezier(.3, 1, .5, 1); }
+.qz-tile.result .qz-mark { background: var(--hue); color: #fff; }
+.qz-tile.result .qz-shape { background: var(--hue); }
+.qz-tile.result .qz-count { margin-left: auto; font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, .09); color: var(--ink); padding: 3px 11px; border-radius: 999px; }
+:root[data-theme="dark"] .qz-tile.result .qz-fill { opacity: .34; }
+:root[data-theme="dark"] .qz-tile.result .qz-count { background: rgba(255, 255, 255, .14); }
+/* A wrong option is quietened, never faded out: the room still has to read it
+   while the instructor explains why it is wrong. */
+.qz-tile.result.quiet { border-color: var(--grid); color: var(--ink-2); }
+.qz-tile.result.quiet .qz-fill { opacity: .10; }
+.qz-tile.result.quiet .qz-mark { opacity: .55; }
+.qz-tile.result.correct { border-color: var(--good); outline: 4px solid var(--good);
+  outline-offset: 3px; }
+
+/* ---------- countdown ---------- */
+.qz-timer { display: flex; align-items: center; gap: 16px; margin-bottom: 1.1rem; }
+.qz-ring { position: relative; width: 74px; height: 74px; flex: 0 0 74px; }
+.qz-ring svg { transform: rotate(-90deg); }
+.qz-ring circle { fill: none; stroke-width: 8; }
+.qz-ring .bg { stroke: var(--grid); }
+.qz-ring .fg { stroke: var(--qz1); stroke-linecap: round;
+  transition: stroke-dashoffset .95s linear, stroke .3s; }
+.qz-ring.low .fg { stroke: var(--critical); }
+.qz-ring b { position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.qz-status { color: var(--ink-2); }
+.qz-status b { color: var(--ink); font-size: 1.3rem; }
+
+/* ---------- leaderboard ---------- */
+.qz-board { display: grid; gap: 10px; max-width: 660px; margin: 1.1rem auto 0; }
+.qz-row { display: grid; grid-template-columns: 52px 1fr auto auto; gap: 18px; align-items: center;
+  padding: 13px 18px; border-radius: 13px; background: var(--page);
+  border: 1px solid var(--border); font-size: 1.15rem; font-weight: 600; }
+.qz-row .qz-rank { font-size: 1.4rem; font-weight: 800; color: var(--muted); text-align: center; }
+.qz-row.lead { background: color-mix(in srgb, var(--s2) 14%, var(--page)); border-color: var(--s2); }
+.qz-row.lead .qz-rank { color: var(--s2); }
+.qz-row.you { outline: 2px dashed var(--s1); }
+.qz-score { font-variant-numeric: tabular-nums; font-weight: 800; }
+.qz-clock { font-variant-numeric: tabular-nums; color: var(--ink-2); width: 74px; text-align: right; }
+.qz-note { text-align: center; color: var(--muted); font-size: .85rem; margin-top: .9rem; }
+
+/* ---------- join screen ---------- */
+.qz-join { display: grid; grid-template-columns: auto 1fr; gap: 34px; align-items: center; }
+.qz-code { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: .09em; }
+.qz-cloud { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px;
+  margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid var(--border); min-height: 110px; }
+.qz-cloud button { font: inherit; font-weight: 700; line-height: 1.1; border: 0; background: none;
+  cursor: pointer; color: var(--ink); padding: 2px 4px; border-radius: 6px;
+  animation: qz-pop .45s cubic-bezier(.2, 1.4, .5, 1) both; }
+.qz-cloud button:hover { opacity: .45; text-decoration: line-through; }
+.qz-cloud button:nth-child(4n+1) { color: var(--qz1); }
+.qz-cloud button:nth-child(4n+2) { color: var(--qz2); }
+.qz-cloud button:nth-child(4n+3) { color: var(--qz3); }
+.qz-cloud button:nth-child(4n+4) { color: var(--qz4); }
+@keyframes qz-pop { from { opacity: 0; transform: scale(.55) translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .qz-cloud button { animation: none; } }
+
+/* ---------- winner ---------- */
+.qz-finale { text-align: center; }
+.qz-finale .qz-crown { font-size: 3.4rem; line-height: 1; }
+.qz-finale h2 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); margin: .3rem 0 .1rem; }
+.qz-finale p { color: var(--ink-2); margin: 0 0 1.1rem; }
+
+/* ---------- phone ---------- */
+@media (max-width: 720px) {
+  .qz-tiles { grid-template-columns: 1fr; gap: 9px; }
+  .qz-join { grid-template-columns: 1fr; gap: 16px; justify-items: center; text-align: center; }
+  .qz-ring { width: 56px; height: 56px; flex-basis: 56px; }
+  .qz-ring b { font-size: 1.2rem; }
+  .qz-row { grid-template-columns: 38px 1fr auto auto; gap: 10px; font-size: 1rem; padding: 10px 12px; }
+}
+.qz-verdict { border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 14px; }
+.qz-verdict.ok { background: color-mix(in srgb, var(--good) 15%, var(--surface)); border: 1px solid var(--good); }
+.qz-verdict.no { background: color-mix(in srgb, var(--critical) 12%, var(--surface)); border: 1px solid var(--critical); }
+.qz-verdict .qz-big { font-size: 1.7rem; font-weight: 800; }
+.qz-verdict .qz-lead { font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.qz-verdict.ok .qz-lead { color: var(--good); }
+.qz-verdict.no .qz-lead { color: var(--critical); }
+.qz-verdict small { color: var(--ink-2); }
+.qz-wrap { padding-left: 1.2rem; }
+.qz-wrap li { margin-bottom: .55rem; }
+.qz-wrap .r { color: var(--good); font-weight: 700; }
+.qz-wrap .w { color: var(--critical); font-weight: 700; }

@@ -224,7 +224,10 @@
     }
     if (!isHost && meta && ['waiting','ended'].includes(phase)) {
       $('poll-question').hidden=false;
-      $('poll-question').innerHTML=phase==='ended' ? '<h2>This lesson session has ended.</h2><p>Scan your instructor’s QR for the next lesson.</p>' : '<h2>You’re connected.</h2><p>Keep this page open. The next question or activity will appear here when your instructor opens it.</p>';
+      const quizCode=typeof meta.quizCode==='string' && /^[A-Z0-9]{4,8}$/.test(meta.quizCode) ? meta.quizCode : '';
+      const switchCard=quizCode ? '<div class="learning-notice"><p><b>Your instructor started the end-of-lesson quiz.</b></p>'+
+        '<p><a class="primary-link" href="quiz.html?quiz='+quizCode+'">Join the quiz →</a></p></div>' : '';
+      $('poll-question').innerHTML=switchCard + (phase==='ended' ? '<h2>This lesson session has ended.</h2><p>Scan your instructor’s QR for the next lesson.</p>' : '<h2>You’re connected.</h2><p>Keep this page open. The next question or activity will appear here when your instructor opens it.</p>');
       return;
     }
     if(!q) { $('poll-question').hidden=true; return; }
@@ -420,6 +423,11 @@
       } else if (command==='open-activity') {
         if (!data.activityKey) throw new Error('Choose an activity before opening it.');
         await openActivity(data.activityKey);
+      } else if (command==='quiz') {
+        // The end-of-lesson quiz runs in its own session. The lesson only
+        // carries its code so phones already on this page can hop across.
+        const value=typeof data.value==='string' ? data.value.toUpperCase().replace(/[^A-Z0-9]/g,'') : '';
+        await changeMeta({quizCode: /^[A-Z0-9]{4,8}$/.test(value) ? value : null});
       } else if (command==='close-activity') {
         await closeActivity(data.activityKey);
       } else if (command==='end') {
