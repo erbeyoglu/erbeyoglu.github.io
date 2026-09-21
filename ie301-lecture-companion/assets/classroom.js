@@ -51,20 +51,25 @@ window.CLASSROOM = (() => {
   function classBar(w){if(document.querySelector('.class-bar'))return;const bar=document.createElement('div');bar.className='class-bar';const title=(document.getElementById(w.id)?.querySelector('h2')?.childNodes[0]?.textContent||'').trim();bar.innerHTML='<span class="code">CLASS '+esc(joinCode)+'</span>'+(title?'<span class="what">'+esc(title)+'</span>':'');document.body.insertBefore(bar,document.body.firstChild);}
   function stripAnswerKeys(scope){scope.querySelectorAll('button').forEach(b=>{if(/^\s*(reveal|show the answer|show answer|solution)/i.test(b.textContent||''))b.classList.add('answer-key');});}
   function updateBest(w,v){const key='best:'+pageKey(w.id),prev=parseFloat(lsGet(key)),best=betterOf(w.dir,isNaN(prev)?null:prev,v);lsSet(key,String(best));const el=document.getElementById('cl-best-'+w.id);if(el)el.textContent=best.toFixed(w.digits);}
+  function fitStudentDock(dock) {
+    const resize = () => document.body.style.setProperty('--class-dock-height', dock.getBoundingClientRect().height + 'px');
+    new ResizeObserver(resize).observe(dock);
+    resize();
+  }
   function normalStudentUI(box,w){
-    const name0=(lsGet('classroom-name')||'').replace(/"/g,''),bestPrev=parseFloat(lsGet('best:'+pageKey(w.id)));box.remove();classBar(w);const dock=document.createElement('div');dock.className='class-dock';dock.innerHTML='<div class="row"><input type="text" id="cl-name-'+w.id+'" placeholder="your name" maxlength="18" autocomplete="name" enterkeyhint="send" value="'+esc(name0)+'"><button class="primary send" id="cl-sub-'+w.id+'">Submit to class</button></div><div class="meta"><span>your best: <b id="cl-best-'+w.id+'">'+(isNaN(bestPrev)?'—':bestPrev.toFixed(w.digits))+'</b></span><span class="fb" id="cl-fb-'+w.id+'">Not sent yet. Choose your settings, then tap Submit to class.</span></div>';document.body.appendChild(dock);const fb=dock.querySelector('#cl-fb-'+w.id),nameEl=dock.querySelector('#cl-name-'+w.id),btn=dock.querySelector('#cl-sub-'+w.id);const say=(m,k)=>{fb.textContent=m;fb.className='fb'+(k?' '+k:'');};const submit=async()=>{const name=nameEl.value.trim()||'anon';lsSet('classroom-name',name);const v=w.get();if(!Number.isFinite(v)){say(w.invalidMessage||'no valid attempt yet — play the activity first','err');return;}btn.disabled=true;say('sending…');try{await dbPost('/sessions/'+joinCode+'/'+w.id,{n:name,v:+v.toFixed(w.digits)});say('Sent to class: '+v.toFixed(w.digits)+' ✓','ok');btn.textContent='Submit to class again';updateBest(w,v);}catch{say('could not send — check your connection','err');}finally{btn.disabled=false;}};btn.onclick=submit;nameEl.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+    const name0=(lsGet('classroom-name')||'').replace(/"/g,''),bestPrev=parseFloat(lsGet('best:'+pageKey(w.id)));box.remove();classBar(w);const dock=document.createElement('div');dock.className='class-dock';dock.innerHTML='<div class="row"><input type="text" id="cl-name-'+w.id+'" placeholder="your name" maxlength="18" autocomplete="name" enterkeyhint="send" value="'+esc(name0)+'"><button class="primary send" id="cl-sub-'+w.id+'">Submit to class</button></div><div class="meta"><span>your best: <b id="cl-best-'+w.id+'">'+(isNaN(bestPrev)?'—':bestPrev.toFixed(w.digits))+'</b></span><span class="fb" id="cl-fb-'+w.id+'">Not sent yet. Choose your settings, then tap Submit to class.</span></div>';document.body.appendChild(dock);fitStudentDock(dock);const fb=dock.querySelector('#cl-fb-'+w.id),nameEl=dock.querySelector('#cl-name-'+w.id),btn=dock.querySelector('#cl-sub-'+w.id);const say=(m,k)=>{fb.textContent=m;fb.className='fb'+(k?' '+k:'');};const submit=async()=>{const name=nameEl.value.trim()||'anon';lsSet('classroom-name',name);const v=w.get();if(!Number.isFinite(v)){say(w.invalidMessage||'no valid attempt yet — play the activity first','err');return;}btn.disabled=true;say('sending…');try{await dbPost('/sessions/'+joinCode+'/'+w.id,{n:name,v:+v.toFixed(w.digits)});say('Sent to class: '+v.toFixed(w.digits)+' ✓','ok');btn.textContent='Submit to class again';updateBest(w,v);}catch{say('could not send — check your connection','err');}finally{btn.disabled=false;}};btn.onclick=submit;nameEl.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
   }
   function lessonMatches(meta,w,round=lessonRound){const a=meta?.activity;return meta?.phase==='activity'&&meta.roundId===round&&a?.key===activityKey(w)&&a?.roundId===round&&a.week===week&&a.id===w.id;}
   function lessonRoundMatches(roundMeta,w){return roundMeta?.activityKey===activityKey(w)&&roundMeta?.week===week&&roundMeta?.widgetId===w.id&&roundMeta?.phase==='open';}
   function mountLessonStudent(box,w){
     box.remove();classBar(w);stripAnswerKeys(document);const section=document.getElementById(w.id);let notice=document.getElementById('class-lesson-status-'+w.id),dock=null,offline=true,current=false,pollTimer;
-    if(!notice){notice=document.createElement('p');notice.id='class-lesson-status-'+w.id;notice.className='status info';section?.prepend(notice);}const setNotice=(text,bad=false)=>{notice.textContent=text;notice.className='status '+(bad?'bad':'info');};
+    if(!notice){notice=document.createElement('p');notice.id='class-lesson-status-'+w.id;notice.className='status info';section?.prepend(notice);}const setNotice=(text,bad=false)=>{notice.textContent=text;notice.className='status '+(bad?'bad':'info');notice.hidden=text==='This activity is open.';};
     const ensureDock=()=>{
       if(dock)return;
       const name0=(lsGet('classroom-name')||'').replace(/"/g,''),bestPrev=parseFloat(lsGet('best:'+pageKey(w.id)));
       dock=document.createElement('div');dock.className='class-dock';
       dock.innerHTML='<div class="row"><input type="text" id="cl-name-'+w.id+'" placeholder="your name" maxlength="18" autocomplete="name" enterkeyhint="send" value="'+esc(name0)+'"><button class="primary send" id="cl-sub-'+w.id+'" disabled>Submit to class</button></div><div class="meta"><span>your best: <b id="cl-best-'+w.id+'">'+(isNaN(bestPrev)?'—':bestPrev.toFixed(w.digits))+'</b></span><span class="fb" id="cl-fb-'+w.id+'">Checking whether this activity is open…</span></div>';
-      document.body.appendChild(dock);
+      document.body.appendChild(dock);fitStudentDock(dock);
       const nameEl=dock.querySelector('#cl-name-'+w.id),btn=dock.querySelector('#cl-sub-'+w.id),fb=dock.querySelector('#cl-fb-'+w.id);
       let submitting=false;
       const say=(m,k)=>{fb.textContent=m;fb.className='fb'+(k?' '+k:'');};
@@ -90,7 +95,7 @@ window.CLASSROOM = (() => {
     const refresh=async()=>{try{const meta=await dbGet('/sessions/'+joinCode+'/poll/meta'),matches=lessonMatches(meta,w),scored=matches&&meta.activity?.scored===true;if(matches){const roundMeta=await dbGet('/sessions/'+joinCode+'/activityRounds/'+lessonRound+'/meta');current=lessonRoundMatches(roundMeta,w);offline=false;if(scored)ensureDock();if(dock?._lessonSet)dock._lessonSet({isCurrent:current,isOffline:false,scored});setNotice(current?'This activity is open.':'This activity is closed.');}else{current=false;offline=false;if(dock?._lessonSet)dock._lessonSet({isCurrent:false,isOffline:false,scored:true});setNotice(meta?.phase==='ended'?'This lesson session has ended.':'Waiting for your instructor to open this activity.');}}catch{offline=true;current=false;if(dock?._lessonSet)dock._lessonSet({isCurrent:false,isOffline:true,scored:true});setNotice('Cannot reach the classroom session. Submission is disabled until it reconnects.',true);}pollTimer=setTimeout(refresh,2000);};refresh();window.addEventListener('online',()=>{clearTimeout(pollTimer);refresh();},{once:true});
   }
   function lessonPanelFor(w){
-    if(lessonPanel)return lessonPanel;const section=document.getElementById(w.id);if(!section)return null;const panel=document.createElement('aside');panel.className='classroom classroom-host lesson-classroom';panel.innerHTML='<strong>Lesson activity</strong><div class="lesson-controls"><button class="primary" data-lesson-command="start">Start lesson session</button><button data-lesson-command="open-activity">Open activity</button><button data-lesson-command="close-activity">Close activity</button><button data-lesson-command="end">End lesson</button></div><div class="qr"></div><p class="lesson-join"></p><p class="lesson-status" role="status" aria-live="polite"></p><div class="lb lesson-board"></div>';section.prepend(panel);lessonPanel={panel,w};panel.querySelectorAll('[data-lesson-command]').forEach(btn=>btn.onclick=()=>sendLessonCommand(btn.dataset.lessonCommand,w));if(!document.getElementById('activity-panel-toggle')){const toggle=document.createElement('button');toggle.id='activity-panel-toggle';toggle.textContent='Hide QR panel';toggle.setAttribute('aria-expanded','true');toggle.onclick=()=>{const hidden=document.documentElement.classList.toggle('activity-panel-hidden');toggle.textContent=hidden?'Show QR panel':'Hide QR panel';toggle.setAttribute('aria-expanded',String(!hidden));window.dispatchEvent(new Event('resize'));};document.body.appendChild(toggle);}parent.postMessage({type:'ie301-lesson-ready'},'*');renderLessonPanel();return lessonPanel;
+    if(lessonPanel)return lessonPanel;const section=document.getElementById(w.id);if(!section)return null;const panel=document.createElement('aside');panel.className='classroom classroom-host lesson-classroom';panel.innerHTML='<strong>Lesson activity</strong><div class="lesson-controls"><button class="primary" data-lesson-command="start">Start lesson session</button><button data-lesson-command="open-activity">Open activity</button><button data-lesson-command="close-activity">Close activity</button></div><div class="qr"></div><p class="lesson-join"></p><p class="lesson-status" role="status" aria-live="polite"></p><div class="lb lesson-board"></div>';section.prepend(panel);lessonPanel={panel,w};panel.querySelectorAll('[data-lesson-command]').forEach(btn=>btn.onclick=()=>sendLessonCommand(btn.dataset.lessonCommand,w));if(!document.getElementById('activity-panel-toggle')){const toggle=document.createElement('button');toggle.id='activity-panel-toggle';toggle.textContent='Hide QR panel';toggle.setAttribute('aria-expanded','true');toggle.onclick=()=>{const hidden=document.documentElement.classList.toggle('activity-panel-hidden');toggle.textContent=hidden?'Show QR panel':'Hide QR panel';toggle.setAttribute('aria-expanded',String(!hidden));window.dispatchEvent(new Event('resize'));};document.body.appendChild(toggle);}parent.postMessage({type:'ie301-lesson-ready'},'*');renderLessonPanel();return lessonPanel;
   }
   function sendLessonCommand(command,w){
     if(parent===window)return;
@@ -113,7 +118,7 @@ window.CLASSROOM = (() => {
     button('start').hidden=!!state.code&&!ended;button('start').disabled=busy||offline;
     button('open-activity').hidden=!state.code||ended||(matching&&meta.phase==='activity');button('open-activity').disabled=busy||offline||!state.code||ended||(matching&&meta.phase==='activity');
     button('close-activity').hidden=!(matching&&meta.phase==='activity');button('close-activity').disabled=busy||offline;
-    button('end').hidden=!active;button('end').disabled=busy||offline;
+
     const qr=panel.querySelector('.qr'),join=panel.querySelector('.lesson-join');
     if(state.code&&!ended){const url=lessonPollUrl(state.code);if(qr.dataset.url!==url){addQR(qr,url);qr.dataset.url=url;}join.innerHTML='<b>Session '+esc(state.code)+'</b><br><a href="'+esc(url)+'" target="_blank" rel="noopener">Open student join page</a>';}
     else{qr.replaceChildren();delete qr.dataset.url;join.textContent='Start one lesson session, then keep this QR visible for late arrivals.';}
@@ -137,6 +142,27 @@ window.CLASSROOM = (() => {
   if(isLessonHost){
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountLessonFallback,{once:true});
     else mountLessonFallback();
+  }
+  if(isLessonStudent) {
+    document.documentElement.classList.add('lesson-student');
+    const prepareActivity = () => {
+      const section = document.getElementById(focusId);
+      if (!section) return;
+      const instructions = section.querySelector(':scope > .howto');
+      if (instructions) {
+        const details = document.createElement('details');
+        details.className = 'activity-instructions';
+        const summary = document.createElement('summary');
+        summary.textContent = 'Task instructions';
+        instructions.before(details);
+        details.append(summary, instructions);
+      }
+      section.querySelectorAll('.controls .group').forEach(group => {
+        if (group.querySelectorAll('input[type="range"]').length === 1 && group.children.length === 3 && group.querySelector('label') && group.querySelector('.readout')) group.classList.add('compact-slider');
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', prepareActivity, {once:true});
+    else prepareActivity();
   }
   return {register,updateBest};
 })();

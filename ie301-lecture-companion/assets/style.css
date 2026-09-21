@@ -398,7 +398,13 @@ button.locked { opacity: 0.45; }
 .class-focus main > .howto,
 .class-focus section.widget { display: none; }
 .class-focus section.widget.class-target { display: block; margin: 0 auto; }
-.class-focus main { padding: 6px 12px 24px; }
+.class-focus main { width: 100%; max-width: none; min-width: 0; padding: 6px clamp(6px, 1.5vw, 20px) 24px; }
+.class-focus section.widget.class-target { min-width: 0; width: 100%; }
+.class-focus .controls, .class-focus .controls .group { min-width: 0; max-width: 100%; }
+.class-focus .segwrap { flex-wrap: wrap; max-width: 100%; gap: 3px 0; }
+.class-focus section.widget table { display: block; max-width: 100%; overflow-x: auto; }
+.class-focus button, .class-focus select { max-width: 100%; min-height: 44px; white-space: normal; }
+.class-focus input[type="range"] { min-height: 32px; }
 
 /* … and the answer keys are stripped, in every widget on the page. */
 .class-mode .answer-key,
@@ -436,7 +442,7 @@ button.locked { opacity: 0.45; }
   padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.10);
 }
-.class-mode body { padding-bottom: 132px; }
+.class-mode body { padding-bottom: calc(var(--class-dock-height, 132px) + 12px); }
 .class-dock .row { display: flex; gap: 8px; align-items: stretch; }
 .class-dock input[type="text"] {
   flex: 1 1 auto;
@@ -469,6 +475,40 @@ button.locked { opacity: 0.45; }
 .class-dock .meta b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .class-dock .fb.ok { color: var(--good); }
 .class-dock .fb.err { color: var(--critical); }
+/* The shared lesson shell already identifies the session. Keep the student's
+   working space for the task rather than repeating its heading and code. */
+.lesson-student .class-bar { display: none; }
+.lesson-student .class-target > h2 .chip { display: none; }
+.lesson-student .activity-instructions { margin: 6px 0; }
+.lesson-student .activity-instructions summary { cursor: pointer; color: var(--s1); min-height: 28px; }
+.lesson-student .activity-instructions .howto { margin: 6px 0 12px; }
+@media (max-width: 700px), (max-height: 500px) {
+  .lesson-student section.widget.class-target { padding: 8px; }
+  .lesson-student .class-target > h2 { font-size: 1rem; line-height: 1.3; }
+  .lesson-student .class-target .controls { gap: 6px 8px; margin: 6px 0; }
+  .lesson-student .compact-slider { display: grid; grid-template-columns: minmax(0, 90px) minmax(60px, 1fr) auto; width: 100%; gap: 6px; }
+  .lesson-student .compact-slider > input[type="range"] { width: 100% !important; max-width: none; min-width: 0; grid-column: 2; }
+  .lesson-student .compact-slider > label { font-size: .82rem; }
+  .lesson-student .compact-slider .readout { padding: 4px 6px; }
+  .lesson-student .compact-slider .readout b { font-size: 1rem; }
+  .lesson-student #regression .readout:has(#rg-bestsse) { display: none; }
+  .lesson-student canvas.viz { height: clamp(220px, 48vh, 320px); }
+  .lesson-student #regression canvas.viz, .lesson-student #box canvas.viz { height: clamp(140px, calc(100vh - 420px), 280px) !important; height: clamp(140px, calc(100dvh - 420px), 280px) !important; }
+  .lesson-student .class-dock { padding-top: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+  .lesson-student .class-dock .meta { font-size: .78rem; gap: 2px 10px; margin-top: 4px; }
+}
+@media (max-width: 380px) {
+  .class-dock { padding-left: 8px; padding-right: 8px; }
+  .class-dock .row { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(0, 1.6fr); }
+  .class-dock button.send { padding: 8px; white-space: normal; }
+}
+@media (min-width: 700px) and (max-height: 500px) {
+  .lesson-student #regression.class-target { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 4px 12px; }
+  .lesson-student #regression > h2, .lesson-student #regression > .activity-instructions { grid-column: 1 / -1; }
+  .lesson-student #regression > .controls { grid-column: 1; }
+  .lesson-student #regression > canvas.viz { grid-column: 2; grid-row: 3 / span 2; height: clamp(100px, calc(100vh - 180px), 170px) !important; height: clamp(100px, calc(100dvh - 180px), 170px) !important; }
+  .lesson-student #regression > .status, .lesson-student #regression > .note { grid-column: 1 / -1; }
+}
 
 /* Embed mode (?embed=<id>): single-widget view for the instructor deck */
 .embed-mode header.site,

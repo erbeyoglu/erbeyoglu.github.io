@@ -171,7 +171,7 @@
     if (!isHost || !$('poll-start')) return;
     const active=meta && meta.phase!=='ended';
     $('poll-start').hidden=!!active; $('poll-start').disabled=busy || !DB;
-    $('poll-end').hidden=!active; $('poll-end').disabled=busy || offline;
+    $('poll-end').hidden=!active || deckHost; $('poll-end').disabled=busy || offline;
     $('poll-open').disabled=busy || offline || !active || meta.phase==='open';
     $('poll-close').disabled=busy || offline || meta?.phase!=='open';
     $('poll-reveal').disabled=busy || offline || meta?.phase!=='closed';

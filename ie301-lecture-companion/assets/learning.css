@@ -119,16 +119,16 @@ header.learning-header { position: static; padding-right: 24px; }
 .poll-live .learning-header .sub { display: none; }
 .poll-live #poll-question:has(.lesson-activity-frame) { padding: 0; overflow: hidden; }
 .lesson-activity-frame { display: block; width: 100%; min-height: 72vh; border: 0; background: var(--surface); }
-@supports (height: 100dvh) {
-  body.poll-live.lesson-activity-active { height: 100dvh; overflow: hidden; display: grid; grid-template-rows: auto minmax(0,1fr); }
+/* Explicit inline sizing matters here: main's inherited auto margins otherwise
+   shrink this grid item to its contents (roughly a phone width on an iPad). */
+  body.poll-live.lesson-activity-active { height: 100vh; height: 100dvh; overflow: hidden; display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); }
   .poll-live.lesson-activity-active .learning-header { padding: 6px 12px; }
   .poll-live.lesson-activity-active .learning-header h1 { font-size: 1rem; margin: 0; }
-  .poll-live.lesson-activity-active #poll-app { display: grid; grid-template-rows: auto minmax(0,1fr); min-height: 0; max-width: none; padding: 0; }
+  .poll-live.lesson-activity-active #poll-app { display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); width: 100%; min-width: 0; min-height: 0; max-width: none; margin: 0; padding: 0; }
   .poll-live.lesson-activity-active #poll-controls, .poll-live.lesson-activity-active footer { display: none; }
   .poll-live.lesson-activity-active #poll-connection { margin: 0; padding: 4px 12px; font-size: .82rem; }
-  .poll-live.lesson-activity-active #poll-question { grid-row: 2; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; }
+  .poll-live.lesson-activity-active #poll-question { grid-row: 2; width: 100%; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; }
   .poll-live.lesson-activity-active .lesson-activity-frame { height: 100%; min-height: 0; }
-}
 .embed-mode .learning-banner, .class-mode .learning-banner { display: none; }
 @media(min-width:900px) {
   .poll-host .learning-shell { max-width: 1440px; }
