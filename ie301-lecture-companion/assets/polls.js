@@ -135,7 +135,7 @@
       const past=Object.values(rounds||{}).map(r=>r.snapshot).filter(s=>s && MODELING.get(s.questionId)).sort((a,b)=>a.closedAt-b.closedAt);
       $('poll-history').innerHTML=past.length ? past.map((s,i)=>{const q=MODELING.get(s.questionId);return `<details><summary>Round ${i+1} · ${escape(q.title)} · ${s.total} responses</summary><p>${s.counts.map((n,j)=>(j<q.options.length?String.fromCharCode(65+j):'?')+': '+n).join(' · ')}</p><p>Answer: ${String.fromCharCode(65+q.answer)}</p></details>`;}).join('') : '<p>No closed rounds yet.</p>';
     });
-    $('poll-local').onclick=() => { const url = new URL(location.href); url.search='?class=1&week='+week+'&q='+selected; window.open(url.href,'_blank','noopener'); };
+    $('poll-local').onclick=() => { const url = new URL(location.href); url.search='?class=1&week='+week+'&q='+selected+'&theme=projector'; window.open(url.href,'_blank','noopener'); };
     renderHost();
   }
   function renderHost() {
@@ -361,6 +361,16 @@
     if(record.revealed)showResults(q,null,!isClassPreview);
     updateProgress();
   }
+  // Key events inside the iframe do not bubble to the lecture deck.
+  window.addEventListener('keydown',event=>{
+    if(!isHost || params.get('deck')!=='1' || parent===window) return;
+    if(event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if(event.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)) return;
+    if(event.key==='ArrowLeft' || event.key==='PageUp') {
+      event.preventDefault();
+      parent.postMessage({type:'ie301-poll-back'}, '*');
+    }
+  });
   window.addEventListener('message',event=>{
     if(isHost && event.source===parent && event.data?.type==='ie301-poll-return') {
       if(meta && meta.phase!=='ended' && !offline) $('poll-wait').click();
