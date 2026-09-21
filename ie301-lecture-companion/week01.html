@@ -833,6 +833,9 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   }
   tabSets.addEventListener('click', () => show('sets'));
   tabFns.addEventListener('click', () => show('fns'));
+  // Reused deck stops retain the same widget id; this mode selects its
+  // functions panel without changing the default public convex-sets view.
+  if (new URLSearchParams(location.search).get('mode') === 'functions') show('fns');
 })();
 
 /* ============================================================

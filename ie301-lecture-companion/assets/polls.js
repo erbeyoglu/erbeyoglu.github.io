@@ -16,6 +16,8 @@
   const localPage=location.protocol==='file:' || ['localhost','127.0.0.1','::1'].includes(location.hostname);
   const isClassPreview=params.get('class')==='1' && (localPage || window.IE301_RELEASES?.isOpen(week));
   const DB = (window.CLASSROOM_DB || '').replace(/\/$/, '');
+  const ACTIVITIES = window.LESSON_ACTIVITIES || {};
+  const deckHost = isHost && parent !== window && params.get('deck') === '1';
   const $ = id => document.getElementById(id);
   const escape = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const read = k => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -29,10 +31,11 @@
   let meta = null, snapshot = null, votes = {}, selected = params.get('q');
   let selectionPinned = !!MODELING.get(selected), hostRestored = false;
   if ((isHost || code) && (!MODELING.get(selected) || MODELING.get(selected).week !== week)) selected = MODELING.forWeek(week)[0].id;
-  let choice = null, savedChoice = null, busy = false, ready = false, offline = false;
+  let choice = null, savedChoice = null, busy = false, ready = false, offline = false, lastMessage = '';
   let renderKey = '', generation = 0, timer;
   const serverTime = () => ({'.sv':'timestamp'});
   const path = suffix => '/sessions/' + code + '/poll/' + suffix;
+  const sessionPath = suffix => '/sessions/' + code + '/' + suffix;
 
   async function request(url, method = 'GET', value, headers = {}) {
     if (!DB) throw new Error('Live voting is not configured. Use the practice view.');
@@ -41,7 +44,7 @@
       const response = await fetch(DB + url + '.json', {method, signal:ctrl.signal,
         headers: {...(method !== 'GET' ? {'Content-Type':'application/json'} : {}), ...headers},
         ...(value === undefined ? {} : {body:JSON.stringify(value)})});
-      if (!response.ok) throw new Error(response.status === 412 ? 'This session code is already in use. Try again.' : 'Cannot reach the classroom database. Check your connection and retry.');
+      if (!response.ok) throw new Error(response.status === 412 ? 'This lesson changed in another instructor view. Refreshing before you try again.' : 'Cannot reach the classroom database. Check your connection and retry.');
       return {data:await response.json(), etag:response.headers.get('ETag')};
     } catch (error) {
       if (error.name === 'AbortError') throw new Error('Connection timed out. Your last confirmed answer is kept.');
@@ -50,9 +53,34 @@
   }
   const get = async suffix => (await request(path(suffix))).data;
   const put = async (suffix, value) => (await request(path(suffix),'PUT',value)).data;
+  const sessionGet = async suffix => (await request(sessionPath(suffix))).data;
+  const sessionPut = async (suffix, value) => (await request(sessionPath(suffix),'PUT',value)).data;
+  function activityFor(key) {
+    const activity=ACTIVITIES[key];
+    if (!activity || activity.key !== key || !MODELING.weeks.includes(activity.week) ||
+      !/^[a-z0-9_-]+$/i.test(String(activity.id || '')) || !String(activity.title || '').trim()) return null;
+    return activity;
+  }
+  function activityFromMeta(value=meta) {
+    const activity=value?.activity, catalog=activity && activityFor(activity.key);
+    if (!catalog || catalog.week !== activity.week || catalog.id !== activity.id ||
+      catalog.scored !== activity.scored || catalog.title !== activity.title || catalog.mode !== activity.mode || !value.roundId ||
+      activity.roundId !== value.roundId) return null;
+    return catalog;
+  }
+  function postLessonState() {
+    if (!deckHost) return;
+    parent.postMessage({type:'ie301-lesson-state',code,meta,busy,offline,message:lastMessage}, '*');
+  }
+  function commandResult(requestId, ok, message) {
+    if (!deckHost || !requestId) return;
+    parent.postMessage({type:'ie301-lesson-command-result',requestId,ok,message}, '*');
+  }
   function status(message, bad = false) {
+    lastMessage=message;
     $('poll-connection').textContent = message;
     $('poll-connection').className = bad ? 'learning-error' : 'learning-muted';
+    postLessonState();
   }
   function currentQuestion() { return MODELING.get(meta?.questionId || selected); }
   function aggregate(tree, q, cutoff = Infinity) {
@@ -106,7 +134,7 @@
     const toggle=document.createElement('button');toggle.id='poll-panel-toggle';toggle.textContent='Hide QR panel';toggle.setAttribute('aria-expanded','true');
     document.querySelector('.learning-header').appendChild(toggle);
     toggle.onclick=()=>{const hidden=document.body.classList.toggle('poll-panel-hidden');toggle.textContent=hidden?'Show QR panel':'Hide QR panel';toggle.setAttribute('aria-expanded',String(!hidden));};
-    $('poll-controls').innerHTML = `<div class="learning-eyebrow">Instructor · Week ${Number(week.slice(4))}</div><div id="poll-join" hidden></div><p id="poll-host-count" role="status" aria-live="polite"></p>
+    $('poll-controls').innerHTML = `<div class="learning-eyebrow">Instructor · Week ${Number(week.slice(4))}</div><div id="poll-join" hidden></div><p id="poll-host-count" role="status" aria-live="polite"></p><p id="lesson-controller-state" class="learning-muted" hidden></p>
       <button id="poll-start" class="primary">Start lesson session</button>
       <details id="poll-settings"><summary>Session &amp; question controls</summary>${selectorHTML()}
       <div class="learning-actions"><button id="poll-next">Next core question</button><button id="poll-end" hidden>End session</button><button id="poll-local">Practice / offline explanation</button></div>
@@ -123,12 +151,13 @@
     $('poll-close').onclick=() => action(closeQuestion);
     $('poll-reveal').onclick=() => action(async()=>{await ensureSnapshot(); await changeMeta({phase:'revealed'});});
     $('poll-wait').onclick=() => action(async()=>{
+      if (meta?.phase==='activity') await closeActivity(meta.activity?.key);
       if (meta?.phase==='open') await closeQuestion();
       if (meta?.phase==='closed') await ensureSnapshot();
       if (meta && meta.phase!=='ended') await changeMeta({phase:'waiting'});
       parent.postMessage({type:'ie301-poll-continue'}, '*');
     });
-    $('poll-end').onclick=() => action(async()=>{if(meta.phase==='open')await closeQuestion(); await changeMeta({phase:'ended'}); save(hostKey,'');});
+    $('poll-end').onclick=() => action(endLesson);
     $('poll-next').onclick=() => action(async()=>{ const all=MODELING.forWeek(week).filter(q=>!q.optional), i=all.findIndex(q=>q.id===selected); selected=all[(i+1)%all.length].id; $('poll-select').value=selected; if(meta && ['closed','revealed'].includes(meta.phase)){await ensureSnapshot();await changeMeta({phase:'waiting'});} });
     $('poll-history-load').onclick=() => action(async()=>{
       const rounds=await get('rounds');
@@ -160,24 +189,51 @@
       $('poll-qr-enlarge').onclick=()=>{$('poll-big-code').textContent=code;$('poll-big-qr').innerHTML=qr.createSvgTag({cellSize:8,margin:32});$('poll-qr-dialog').showModal();};
       join.dataset.code=code;
     }
-    const q=currentQuestion();
-    $('poll-host-count').textContent=meta?.phase==='open' ? aggregate(votes,q).total+' browsers have submitted · choices stay hidden until reveal' : active ? 'Session '+code+' · '+meta.phase : 'Start a session for live voting, or open the offline practice view.';
+    const q=currentQuestion(), activeActivity=activityFromMeta();
+    $('poll-host-count').textContent=meta?.phase==='open' ? aggregate(votes,q).total+' browsers have submitted · choices stay hidden until reveal' : meta?.phase==='activity' && activeActivity ? 'Activity open · '+activeActivity.title+' · '+code : active ? 'Session '+code+' · '+meta.phase : 'Start a session for live voting, or open the offline practice view.';
+    const controller=$('lesson-controller-state');
+    if (controller) {
+      controller.hidden=!deckHost;
+      controller.textContent=meta?.phase==='activity' && activeActivity ? 'Shared lesson activity is open: '+activeActivity.title : active ? 'Shared lesson controller · '+meta.phase : 'Shared lesson controller is ready.';
+    }
+    postLessonState();
   }
   function renderQuestion(force=false) {
     const q=currentQuestion();
     const phase=meta?.phase || 'preview';
     document.body.classList.toggle('poll-revealed', phase==='revealed');
-    const key=[phase,q?.id,meta?.roundId].join(':');
+    const activeActivity=activityFromMeta();
+    document.body.classList.toggle('lesson-activity-active', !isHost && phase==='activity' && !!activeActivity);
+    const key=[phase,q?.id,meta?.roundId,activeActivity?.key].join(':');
     if (!force && key===renderKey) return;
     renderKey=key; $('poll-results').hidden=true;
+    if (!isHost && phase==='activity') {
+      if (!activeActivity) {
+        $('poll-question').hidden=false;
+        $('poll-question').innerHTML='<h2>This activity is unavailable.</h2><p>Wait for your instructor to reopen it.</p>';
+        return;
+      }
+      const url=new URL(activeActivity.week+'.html',location.href);
+      url.searchParams.set('class',code);url.searchParams.set('w',activeActivity.id);
+      url.searchParams.set('round',meta.roundId);url.searchParams.set('lesson','1');
+      if (activeActivity.mode) url.searchParams.set('mode',activeActivity.mode);
+      $('poll-question').hidden=false;
+      // renderKey prevents an unchanged activity iframe from losing student state on refresh.
+      $('poll-question').innerHTML='<iframe id="lesson-activity-frame" class="lesson-activity-frame" title="'+escape(activeActivity.title)+'" src="'+escape(url.href)+'"></iframe>';
+      return;
+    }
     if (!isHost && meta && ['waiting','ended'].includes(phase)) {
       $('poll-question').hidden=false;
-      $('poll-question').innerHTML=phase==='ended' ? '<h2>This lesson session has ended.</h2><p>Scan your instructor’s QR for the next lesson.</p>' : '<h2>You’re connected.</h2><p>Keep this page open. The next question will appear here when your instructor opens it.</p>';
+      $('poll-question').innerHTML=phase==='ended' ? '<h2>This lesson session has ended.</h2><p>Scan your instructor’s QR for the next lesson.</p>' : '<h2>You’re connected.</h2><p>Keep this page open. The next question or activity will appear here when your instructor opens it.</p>';
       return;
     }
     if(!q) { $('poll-question').hidden=true; return; }
     $('poll-question').hidden=false;
     if (isHost) {
+      if (phase==='activity') {
+        $('poll-question').innerHTML=activeActivity ? '<div class="learning-eyebrow">Shared lesson activity</div><h2>'+escape(activeActivity.title)+'</h2><p>Use the activity controls in the current lecture slide. Students join through the stable lesson QR.</p>' : '<h2>Activity details are unavailable.</h2>';
+        return;
+      }
       const display=phase==='waiting' || phase==='ended' ? MODELING.get(selected) : q;
       $('poll-question').innerHTML=questionHTML(display,false);
       if(phase==='revealed' && snapshot)showResults(q,snapshot);
@@ -195,9 +251,24 @@
     }
     if(phase==='revealed' && snapshot)showResults(q,snapshot);
   }
-  async function changeMeta(patch) {
-    const next={...meta,...patch,revision:(meta.revision||0)+1,updatedAt:serverTime()};
-    await put('meta',next); meta=await get('meta'); renderHost(); renderQuestion(true);
+  async function readMetaWithTag() {
+    return request(path('meta'),'GET',undefined,{'X-Firebase-ETag':'true'});
+  }
+  async function changeMeta(patch, validate) {
+    // Always derive a host change from the latest value. Firebase gives an ETag in
+    // production; the header is omitted for lightweight/local test doubles.
+    const current=await readMetaWithTag();
+    const base=current.data;
+    if (!base || base.version!==1) throw new Error('This lesson session is unavailable. Refresh and try again.');
+    if (meta && Number(base.revision || 0)!==Number(meta.revision || 0)) {
+      meta=base;renderHost();renderQuestion(true);
+      throw new Error('This lesson changed in another instructor view. Refreshing before you try again.');
+    }
+    if (validate) validate(base);
+    const next={...base,...patch,revision:(base.revision||0)+1,updatedAt:serverTime()};
+    const headers=current.etag ? {'if-match':current.etag} : {};
+    await request(path('meta'),'PUT',next,headers);
+    meta=await get('meta'); renderHost(); renderQuestion(true);
   }
   async function startSession() {
     generation++;
@@ -216,8 +287,13 @@
   }
   async function openQuestion() {
     if(!MODELING.get(selected) || MODELING.get(selected).week!==week)throw new Error('Choose a question from this week.');
+    if (meta?.phase==='ended') throw new Error('Start a new lesson session before opening a poll.');
+    if (meta?.phase==='activity') await closeActivity(meta.activity?.key);
+    if (meta?.phase==='closed' || meta?.phase==='revealed') await ensureSnapshot();
     votes={};snapshot=null;
-    await changeMeta({phase:'open',questionId:selected,roundId:uuid(),closedAt:null});
+    await changeMeta({phase:'open',questionId:selected,roundId:uuid(),closedAt:null,activity:null}, base=>{
+      if (base.phase==='ended') throw new Error('Start a new lesson session before opening a poll.');
+    });
   }
   async function ensureSnapshot() {
     if(!meta?.roundId || !['closed','revealed'].includes(meta.phase))return;
@@ -229,8 +305,60 @@
     }
   }
   async function closeQuestion() {
+    if (meta?.phase!=='open') return;
     await changeMeta({phase:'closed',closedAt:serverTime()});
     await ensureSnapshot();
+  }
+  async function openActivity(key) {
+    const activity=activityFor(key);
+    if (!activity || activity.week!==week) throw new Error('That activity is not available for this lesson week.');
+    if (meta?.phase==='ended') throw new Error('Start a new lesson session before opening an activity.');
+    if (meta?.phase==='activity') {
+      if (meta.activity?.key===key) throw new Error('This activity is already open.');
+      await closeActivity(meta.activity?.key);
+    }
+    if (meta?.phase==='open') await closeQuestion();
+    if (meta?.phase==='closed' || meta?.phase==='revealed') await ensureSnapshot();
+    const roundId=uuid();
+    const descriptor={key:activity.key,week:activity.week,id:activity.id,title:activity.title,scored:activity.scored,roundId};
+    if (activity.mode) descriptor.mode=activity.mode;
+    await sessionPut('activityRounds/'+roundId+'/meta',{
+      activityKey:activity.key,week:activity.week,widgetId:activity.id,scored:activity.scored,
+      phase:'open',openedAt:serverTime(),closedAt:null
+    });
+    await changeMeta({phase:'activity',activity:descriptor,roundId,questionId:null,closedAt:null}, base=>{
+      if (base.week!==week) throw new Error('This session belongs to another week.');
+      if (base.phase==='ended') throw new Error('Start a new lesson session before opening an activity.');
+      if (base.phase==='activity') throw new Error('Another activity was opened before this one.');
+    });
+  }
+  async function closeActivity(expectedKey) {
+    const active=activityFromMeta();
+    if (meta?.phase!=='activity' || !active) throw new Error('There is no open shared activity to close.');
+    if (expectedKey && active.key!==expectedKey) throw new Error('The requested activity is no longer the active activity.');
+    const roundId=meta.roundId, descriptor=meta.activity;
+    const latestRoot=await get('meta');
+    if (!latestRoot || Number(latestRoot.revision || 0)!==Number(meta.revision || 0)) {
+      meta=latestRoot;renderHost();renderQuestion(true);
+      throw new Error('This lesson changed in another instructor view. Refreshing before you try again.');
+    }
+    const roundMeta=await request(sessionPath('activityRounds/'+roundId+'/meta'),'GET',undefined,{'X-Firebase-ETag':'true'});
+    if (roundMeta.data?.phase!=='closed') {
+      const closing={...roundMeta.data,activityKey:active.key,week:active.week,widgetId:active.id,scored:active.scored,
+        phase:'closed',openedAt:roundMeta.data?.openedAt || serverTime(),closedAt:serverTime()};
+      await request(sessionPath('activityRounds/'+roundId+'/meta'),'PUT',closing,roundMeta.etag ? {'if-match':roundMeta.etag} : {});
+    }
+    await changeMeta({phase:'waiting',activity:descriptor}, base=>{
+      if (base.phase!=='activity' || base.roundId!==roundId || base.activity?.key!==active.key)
+        throw new Error('The active activity changed before it could be closed.');
+    });
+  }
+  async function endLesson() {
+    if (meta?.phase==='activity') await closeActivity(meta.activity?.key);
+    if (meta?.phase==='open') await closeQuestion();
+    if (meta?.phase==='closed' || meta?.phase==='revealed') await ensureSnapshot();
+    if (meta?.phase!=='ended') await changeMeta({phase:'ended'});
+    save(hostKey,'');
   }
   async function action(fn) {
     if(busy)return;generation++;busy=true;renderHost();
@@ -262,6 +390,7 @@
       if(!incoming || incoming.version!==1 || !MODELING.weeks.includes(incoming.week))throw new Error('This session code was not found. Check the code with your instructor.');
       if(isHost && incoming.week!==week)throw new Error('The saved session belongs to another week.');
       if(incoming.questionId && !MODELING.get(incoming.questionId))throw new Error('This question is unavailable. Reload after your instructor checks the course version.');
+      if(incoming.phase==='activity' && !activityFromMeta(incoming))throw new Error('The active lesson activity is unavailable. Ask your instructor to reopen it.');
       let nextVotes={},nextSnapshot=null;
       if(isHost && incoming.phase==='open')nextVotes=await get('rounds/'+incoming.roundId+'/answers') || {};
       if(incoming.phase==='revealed')nextSnapshot=await get('rounds/'+incoming.roundId+'/snapshot');
@@ -276,6 +405,35 @@
       renderHost();renderQuestion(!hadSnapshot && !!snapshot);
       if($('poll-submit'))$('poll-submit').disabled=choice===null;
     } catch(error){offline=true;status(error.message+' Retrying…',true);renderHost();if($('poll-submit'))$('poll-submit').disabled=true;}
+  }
+  async function handleLessonCommand(data) {
+    const requestId=data?.requestId;
+    if (busy) { commandResult(requestId,false,'The lesson controller is busy. Please wait for the current action to finish.'); return; }
+    if (offline) { commandResult(requestId,false,'The lesson controller is offline. Reconnect before trying again.'); return; }
+    const command=data?.command;
+    generation++;
+    busy=true;renderHost();postLessonState();
+    try {
+      if (command==='start') {
+        if (code && meta && meta.phase!=='ended') throw new Error('This lesson session has already started.');
+        await startSession();
+      } else if (command==='open-activity') {
+        if (!data.activityKey) throw new Error('Choose an activity before opening it.');
+        await openActivity(data.activityKey);
+      } else if (command==='close-activity') {
+        await closeActivity(data.activityKey);
+      } else if (command==='end') {
+        await endLesson();
+      } else throw new Error('That lesson command is not recognized.');
+      offline=false;
+      const message=command==='end' ? 'Lesson ended.' : command==='close-activity' ? 'Activity closed.' : command==='open-activity' ? 'Activity opened.' : 'Lesson session started.';
+      status(message);commandResult(requestId,true,message);
+    } catch (error) {
+      const message=error?.message || 'The lesson command could not be completed.';
+      status(message,true);commandResult(requestId,false,message);
+    } finally {
+      busy=false;renderHost();renderQuestion(true);postLessonState();
+    }
   }
   function schedule() {clearTimeout(timer);timer=setTimeout(async()=>{await refresh();schedule();},2000);}
 
@@ -372,6 +530,14 @@
     }
   });
   window.addEventListener('message',event=>{
+    if (deckHost && event.source===parent && event.data?.type==='ie301-lesson-sync') {
+      postLessonState();
+      return;
+    }
+    if (deckHost && event.source===parent && event.data?.type==='ie301-lesson-command') {
+      handleLessonCommand(event.data);
+      return;
+    }
     if(isHost && event.source===parent && event.data?.type==='ie301-poll-return') {
       if(meta && meta.phase!=='ended' && !offline) $('poll-wait').click();
       else parent.postMessage({type:'ie301-poll-continue'}, '*');
@@ -391,10 +557,13 @@
     else status(DB ? 'Ready to start this week’s lesson.' : 'Live voting is not configured. Offline practice is available.',!DB);
   } else if(code) {
     document.body.classList.add('poll-live');
+    document.title='IE301 · Class activities';
+    document.querySelector('.learning-header h1').textContent='IE301 · Class activities';
     $('poll-controls').innerHTML='<p>Keep this page open. To switch lessons, scan the QR on your instructor’s screen.</p>';
     ready=true;status('Joining session '+code+'…');refresh();
   } else setupPractice();
   schedule();
   window.addEventListener('online',()=>refresh());
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
   window.POLL_TEST = {aggregate}; // Pure aggregation also used by the regression checks.
 })();
