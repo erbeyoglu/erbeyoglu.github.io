@@ -136,13 +136,13 @@
         <span class="copy-status" id="copy-status"></span>
       </div>
       <div class="chat-links">
-        <a href="https://chatgpt.com/" target="_blank" rel="noopener"><button>ChatGPT ↗</button></a>
-        <a href="https://claude.ai/" target="_blank" rel="noopener"><button>Claude ↗</button></a>
-        <a href="https://gemini.google.com/" target="_blank" rel="noopener"><button>Gemini ↗</button></a>
+        <a href="https://chatgpt.com/" target="_blank" rel="noopener" data-app="chatgpt"><button>ChatGPT ↗</button></a>
+        <a href="https://claude.ai/" target="_blank" rel="noopener" data-app="claude"><button>Claude ↗</button></a>
+        <a href="https://gemini.google.com/" target="_blank" rel="noopener" data-app="gemini"><button>Gemini ↗</button></a>
       </div>
       <div class="note" style="margin-top:14px">
-        The button only copies text to your clipboard — there is no server and no account
-        behind this tool.
+        The button only copies text to your clipboard — there is no AI server and no account
+        behind this tool. The site only counts, anonymously, that the button was used.
       </div>
     </div>
 
@@ -169,7 +169,8 @@
             chat.</li>
         <li><b>You are about to use a third-party AI service</b> (ChatGPT, Claude, Gemini, …)
             under your own account. That service's terms of use, privacy policy and usage
-            limits apply. This page stores and transmits nothing.</li>
+            limits apply. This page never sees your chat or anything you type; it only
+            counts, anonymously, that the prompt was copied.</li>
       </ul>
     </div>
 
@@ -263,12 +264,20 @@
     });
   }
 
+  // Anonymous counts for the instructor (assets/usage.js): that a copy
+  // happened, never what was copied or written.
+  function track(event) {
+    document.dispatchEvent(new CustomEvent("ie301:usage", { detail: { event: event } }));
+  }
+
   function doCopy() {
     var text = assemblePrompt();
     copyText(text).then(function () {
+      track("tutor:copy");
       showStatus("Copied (" + text.length.toLocaleString("en-US") +
         " characters) — now paste it into a new chat.");
     }, function () {
+      track("tutor:copy-failed");
       showStatus("Copy failed — select the text manually from the box that just opened.");
       // Last resort: show the prompt in a textarea so it can be copied by hand.
       var area = document.getElementById("fallback-text");
@@ -326,8 +335,15 @@
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") { modal.classList.remove("open"); }
   });
+
+  // Which AI app students go to next: the link's own data-app name.
+  Array.prototype.forEach.call(document.querySelectorAll(".chat-links a[data-app]"), function (link) {
+    link.addEventListener("click", function () { track("tutor:open-" + link.getAttribute("data-app")); });
+  });
 })();
 </script>
 
+<script src="assets/classroom-config.js"></script>
+<script src="assets/usage.js"></script>
 </body>
 </html>

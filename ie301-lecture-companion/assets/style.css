@@ -327,6 +327,10 @@ a.card, div.card {
 a.card:hover { border-color: var(--s1); }
 .release-card-locked { opacity: .68; cursor: default; }
 .release-card-locked .release-date { margin-top: 12px; color: var(--s1); font-weight: 700; }
+/* A week not open yet whose warm-up already is: the card stays muted, the warm-up link does not. */
+.release-card-locked.warmup-open { opacity: 1; }
+.release-card-locked.warmup-open > :not(.release-warmup) { opacity: .68; }
+.release-warmup { display: inline-block; margin-top: 8px; font-weight: 700; }
 .release-route-locked header.site nav.widgets { display: none; }
 .release-route-locked main > :not(.release-locked) { display: none !important; }
 .release-time-pending main { visibility: hidden; }

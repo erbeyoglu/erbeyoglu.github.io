@@ -41,7 +41,20 @@
       if (row.status === 'scheduled' && !isDate(row.opensOn)) return null;
       weeks[week] = Object.freeze({ status: row.status, ...(row.opensOn ? { opensOn: row.opensOn } : {}) });
     }
-    return Object.freeze({ timeZone: 'Europe/Istanbul', releaseHour: 8, weeks: Object.freeze(weeks) });
+    // The semester list rides along unchanged: only the instructor's class
+    // analytics read it, so the gate neither checks nor needs it.
+    const semesters = Array.isArray(value.semesters) ? { semesters: Object.freeze(value.semesters.slice()) } : {};
+    return Object.freeze({ timeZone: 'Europe/Istanbul', releaseHour: 8, weeks: Object.freeze(weeks), ...semesters });
+  }
+
+  /* The semester list is written into release-schedule.js as JSON between two
+     markers, so it can be read back from the file's text without running it.
+     An unreadable block reads as no list: the release schedule still works. */
+  function semestersFromSource(source) {
+    const block = typeof source === 'string' && source.match(/\/\* semesters:begin \*\/([\s\S]*?)\/\* semesters:end \*\//);
+    if (!block) return null;
+    try { const list = JSON.parse(block[1]); return Array.isArray(list) ? list : null; }
+    catch (_) { return null; }
   }
 
   function scheduleFromSource(source) {
@@ -52,7 +65,8 @@
       if (!match) return null;
       weeks[week] = { status: match[1], ...(match[2] ? { opensOn: match[2] } : {}) };
     }
-    return normalizedSchedule({ timeZone: 'Europe/Istanbul', releaseHour: 8, weeks });
+    const semesters = semestersFromSource(source);
+    return normalizedSchedule({ timeZone: 'Europe/Istanbul', releaseHour: 8, weeks, ...(semesters ? { semesters } : {}) });
   }
 
   function readSavedSchedule() {
@@ -160,9 +174,35 @@
     return routeFor(value).bypass;
   }
 
+  /* A week's pre-class warm-up opens one release earlier than the week itself:
+     together with the previous teaching week's material, so there is a whole
+     week to do it before its lecture. Week 1 has no earlier week and opens
+     with its own material. A week held as draft or closed keeps its warm-up
+     closed too. */
+  const EPOCH = new Date(0);
+  function instantOf(week) {
+    const row = schedule.weeks[week];
+    if (!row) return null;
+    if (row.status === 'open') return EPOCH;
+    return row.status === 'scheduled' ? instantAtIstanbul(row.opensOn) : null;
+  }
+  function warmupAt(week) {
+    const own = instantOf(week);
+    if (!own) return null;
+    const previous = WEEK_IDS[WEEK_IDS.indexOf(week) - 1];
+    const earlier = previous ? instantOf(previous) : null;
+    return earlier && earlier < own ? earlier : own;
+  }
+  function isWarmupOpen(week, now = releaseNow()) {
+    const at = warmupAt(idFrom(week));
+    return Boolean(at && now instanceof Date && !Number.isNaN(now.getTime()) && now >= at);
+  }
+
   function isOpen(value = window.location, now = releaseNow()) {
     const route = typeof value === 'string' && (WEEK_ID.test(value) || activityWeeks[value]) ? null : routeFor(value);
     if (route?.bypass) return true;
+    // The warm-up page follows the warm-up rule; everything else the week's own.
+    if (route && route.filename === 'polls.html' && route.week) return isWarmupOpen(route.week, now);
     const week = getWeek(value);
     // Pages such as the common AI tutor do not belong to a weekly release.
     if (!week) return true;
@@ -209,12 +249,7 @@
     return week?.status === 'scheduled' ? instantAtIstanbul(week.opensOn) : null;
   }
 
-  function releaseLabel(value = window.location) {
-    const week = getWeek(value);
-    if (!week || week.status === 'open') return 'Available now';
-    if (week.status === 'closed') return 'Temporarily unavailable';
-    const opensAt = releaseAt(week.id);
-    if (!opensAt) return 'Release date to be announced';
+  function openingText(opensAt) {
     const text = new Intl.DateTimeFormat('en-GB', {
       timeZone: schedule.timeZone, day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
@@ -222,24 +257,58 @@
     return `Opens ${text} (Türkiye time)`;
   }
 
-  function renderLockedScreen(container, value = window.location) {
+  function releaseLabel(value = window.location) {
+    const week = getWeek(value);
+    if (!week || week.status === 'open') return 'Available now';
+    if (week.status === 'closed') return 'Temporarily unavailable';
+    const opensAt = releaseAt(week.id);
+    if (!opensAt) return 'Release date to be announced';
+    return openingText(opensAt);
+  }
+
+  function warmupLabel(week) {
+    const at = warmupAt(idFrom(week));
+    if (!at) return 'Release date to be announced';
+    return at <= releaseNow() ? 'Available now' : openingText(at);
+  }
+
+  const warmupHref = week => 'polls.html?week=' + week;
+
+  function renderLockedScreen(container, value = window.location, options = {}) {
     if (!(container instanceof Element)) throw new TypeError('renderLockedScreen needs a DOM element.');
     const week = getWeek(value);
+    const warmupPage = Boolean(options.warmup);
     container.replaceChildren();
     const section = document.createElement('section');
     section.className = 'widget release-locked';
     section.setAttribute('aria-labelledby', 'release-locked-title');
     const title = document.createElement('h2');
     title.id = 'release-locked-title';
-    title.textContent = week ? `Week ${Number(week.id.slice(4))} is not available yet` : 'This material is not available yet';
+    const name = week ? `Week ${Number(week.id.slice(4))}` : '';
+    title.textContent = week
+      ? `${name}${warmupPage ? ' warm-up' : ''} is not available yet`
+      : 'This material is not available yet';
     const message = document.createElement('p');
-    message.textContent = releaseLabel(week?.id);
+    message.textContent = warmupPage ? warmupLabel(week?.id) : releaseLabel(week?.id);
     const note = document.createElement('p');
-    note.textContent = 'The pre-class thinking warm-up, guided activities and in-class interactions will open together. If this page was already open at 08:00, refresh it.';
+    note.textContent = warmupPage
+      ? 'Each week’s warm-up opens a week before its lecture, together with the previous week’s material. If this page was already open at 08:00, refresh it.'
+      : 'The guided activities and in-class interactions open on this date. The week’s pre-class warm-up opens a week earlier. If this page was already open at 08:00, refresh it.';
+    section.append(title, message, note);
+    // A week that is still closed may already have its warm-up open.
+    if (!warmupPage && week && isWarmupOpen(week.id)) {
+      const warmup = document.createElement('a');
+      warmup.className = 'release-warmup';
+      warmup.href = warmupHref(week.id);
+      warmup.textContent = `${name} warm-up is open now →`;
+      const line = document.createElement('p');
+      line.appendChild(warmup);
+      section.appendChild(line);
+    }
     const home = document.createElement('a');
     home.href = '../ie301-lecture-companion.html';
     home.textContent = '← Course home';
-    section.append(title, message, note, home);
+    section.append(home);
     container.append(section);
     return section;
   }
@@ -263,12 +332,23 @@
       label.className = 'release-date';
       label.textContent = releaseLabel(week);
       locked.appendChild(label);
+      if (isWarmupOpen(week)) {
+        locked.classList.add('warmup-open');
+        const warmup = document.createElement('a');
+        warmup.className = 'release-warmup';
+        warmup.href = 'ie301-lecture-companion/' + warmupHref(week);
+        warmup.textContent = 'Warm-up open now →';
+        locked.appendChild(warmup);
+      }
       card.replaceWith(locked);
     });
   }
 
   const currentRoute = routeFor();
-  const blocked = Boolean(currentRoute.week && !currentRoute.bypass && !isOpen(currentRoute.week));
+  // The warm-up page (polls.html?week=…) follows the warm-up rule.
+  const onWarmupPage = currentRoute.filename === 'polls.html';
+  const routeOpen = () => (onWarmupPage ? isWarmupOpen(currentRoute.week) : isOpen(currentRoute.week));
+  const blocked = Boolean(currentRoute.week && !currentRoute.bypass && !routeOpen());
   const schedulePage = currentRoute.week || ['ie301-lecture-companion.html','polls.html','guided.html'].includes(currentRoute.filename);
   if (schedulePage && !currentRoute.bypass) document.documentElement.classList.add('release-time-pending');
   if (blocked) document.documentElement.classList.add('release-route-locked');
@@ -276,12 +356,12 @@
   document.addEventListener('DOMContentLoaded', () => {
     if (blocked) {
       const main = document.querySelector('main');
-      if (main) renderLockedScreen(main, currentRoute.week);
+      if (main) renderLockedScreen(main, currentRoute.week, { warmup: onWarmupPage });
     } else if (filenameFrom() === 'ie301-lecture-companion.html') {
       decorateWeekCards();
     }
     clockSync.then(result => {
-      const correctedBlocked = Boolean(currentRoute.week && !currentRoute.bypass && !isOpen(currentRoute.week));
+      const correctedBlocked = Boolean(currentRoute.week && !currentRoute.bypass && !routeOpen());
       // Reload once from the session-cached config/clock so every dependent
       // script starts with the same state. Storage guards against reload loops.
       const shouldReload = (result.scheduleChanged && result.scheduleStored) ||
@@ -295,19 +375,23 @@
       if (correctedBlocked && !blocked) {
         document.documentElement.classList.add('release-route-locked');
         const main = document.querySelector('main');
-        if (main) renderLockedScreen(main, currentRoute.week);
+        if (main) renderLockedScreen(main, currentRoute.week, { warmup: onWarmupPage });
       }
     });
   });
 
   window.IE301_RELEASES = Object.freeze({
     get schedule() { return schedule; },
+    semestersFromSource,
     activityWeeks,
     weekWidgets,
     routeFor,
     getWeek,
     isBypass,
     isOpen,
+    isWarmupOpen,
+    warmupAt,
+    warmupLabel,
     releaseAt,
     releaseLabel,
     instantAtIstanbul,

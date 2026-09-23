@@ -551,5 +551,6 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
 CLASSROOM.register('inventory', { label: 'total cost ($)', dir: 'min', digits: 2,
   get: () => el('iv-cost').textContent.startsWith('$') ? parseFloat(el('iv-cost').textContent.slice(1)) : null });
 </script>
+<script src="assets/usage.js"></script>
 </body>
 </html>

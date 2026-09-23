@@ -477,7 +477,8 @@
     const purpose='These questions help you start thinking about the ideas we will explore in class. Choose the answer that makes sense to you, then read the explanations to see the reasoning behind each option.';
     if(!MODELING.weeks.includes(params.get('week'))) {
       const releases=window.IE301_RELEASES;
-      const available=w=>!releases || releases.isBypass() || releases.isOpen(w);
+      // Warm-ups open a week before their lecture (release-gate.js).
+      const available=w=>!releases || releases.isBypass() || (isClassPreview ? releases.isOpen(w) : releases.isWarmupOpen(w));
       const libraryIntro=isClassPreview
         ? '<div class="learning-eyebrow">Instructor preview</div><h2>Choose a week</h2><p class="learning-context">Review the three classroom checkpoints for a week.</p>'
         : '<div class="learning-eyebrow">Self-study</div><h2>Choose a week</h2><p class="learning-context">'+purpose+'</p>';
@@ -522,7 +523,13 @@
       choose(Number(b.dataset.choice));record.choice=choice;record.revealed=false;
       $('poll-results').hidden=true;persist();
     });
-    $('poll-submit').onclick=()=>{record.revealed=true;persist();showResults(q,null,!isClassPreview);};
+    $('poll-submit').onclick=()=>{
+      record.revealed=true;persist();showResults(q,null,!isClassPreview);
+      // Anonymous self-study counts (assets/usage.js) listen for this. The class
+      // preview is the instructor's own screen, so it never raises it.
+      if(!isClassPreview)document.dispatchEvent(new CustomEvent('ie301:practice-answer',
+        {detail:{id:q.id,week:q.week,choice:record.choice,right:record.choice===q.answer}}));
+    };
     if(record.choice!==null)choose(record.choice);
     if(record.revealed)showResults(q,null,!isClassPreview);
     updateProgress();

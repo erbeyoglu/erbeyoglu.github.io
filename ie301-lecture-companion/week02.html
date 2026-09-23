@@ -779,5 +779,6 @@ CLASSROOM.register('warehouse', { label: 'weighted distance', dir: 'min', digits
 CLASSROOM.register('tank', { label: 'cost ($)', dir: 'min', digits: 2,
   get: () => (el('tk-ratio').textContent === 'OK' && parseFloat(el('tk-vol').textContent) >= 19.995) ? parseFloat(el('tk-cost').textContent) : null });
 </script>
+<script src="assets/usage.js"></script>
 </body>
 </html>

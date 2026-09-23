@@ -82,6 +82,27 @@
   // between slides.
   const viewId = new URLSearchParams(location.search).get('view');
   const embedId = new URLSearchParams(location.search).get('embed') || viewId;
+
+  /* Inside the instructor deck an activity lives in an iframe. The moment the
+     instructor touches a control, focus is inside that iframe and the deck stops
+     seeing the keyboard, so the arrow keys that drive the lecture go dead. The
+     embedded page therefore hands those keys back to the deck.
+
+     Text entry keeps its arrows, because there the arrows move the caret. A
+     range slider does not: advancing the lecture matters more than nudging a
+     slider by keyboard, and the slider still answers the mouse. */
+  if (new URLSearchParams(location.search).get('embed') && parent !== window) {
+    const TYPING = /^(text|number|search|email|password|tel|url|date|time)$/;
+    document.addEventListener('keydown', event => {
+      if (!['ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp'].includes(event.key)) return;
+      const target = event.target || {};
+      const tag = target.tagName;
+      if (tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return;
+      if (tag === 'INPUT' && TYPING.test((target.type || 'text').toLowerCase())) return;
+      event.preventDefault();
+      parent.postMessage({ type: 'ie301-deck-key', key: event.key }, '*');
+    });
+  }
   if (embedId) {
     document.documentElement.classList.add('embed-mode');
     document.addEventListener('DOMContentLoaded', () => {

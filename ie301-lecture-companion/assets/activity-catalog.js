@@ -6,14 +6,18 @@ window.LESSON_ACTIVITIES = {
     "week": "week01",
     "id": "regression",
     "title": "Beat the computer: least squares by hand",
-    "scored": true
+    "scored": true,
+    "dir": "min",
+    "label": "SSE"
   },
   "week01:box": {
     "key": "week01:box",
     "week": "week01",
     "id": "box",
     "title": "Design the biggest box",
-    "scored": true
+    "scored": true,
+    "dir": "max",
+    "label": "volume (cm³)"
   },
   "week01:explorer": {
     "key": "week01:explorer",
@@ -56,14 +60,18 @@ window.LESSON_ACTIVITIES = {
     "week": "week02",
     "id": "warehouse",
     "title": "Where should the warehouse go?",
-    "scored": true
+    "scored": true,
+    "dir": "min",
+    "label": "weighted distance"
   },
   "week02:tank": {
     "key": "week02:tank",
     "week": "week02",
     "id": "tank",
     "title": "Design the cheapest tank",
-    "scored": true
+    "scored": true,
+    "dir": "min",
+    "label": "cost ($)"
   },
   "week02:bisection": {
     "key": "week02:bisection",
@@ -112,7 +120,9 @@ window.LESSON_ACTIVITIES = {
     "week": "week03",
     "id": "openbox",
     "title": "The 10 m³ open-top container",
-    "scored": true
+    "scored": true,
+    "dir": "min",
+    "label": "metal (m²)"
   },
   "week03:gradient": {
     "key": "week03:gradient",
@@ -203,14 +213,18 @@ window.LESSON_ACTIVITIES = {
     "week": "week07",
     "id": "inventory",
     "title": "Beat $20: the production plan",
-    "scored": true
+    "scored": true,
+    "dir": "min",
+    "label": "total cost ($)"
   },
   "week08:ww": {
     "key": "week08:ww",
     "week": "week08",
     "id": "ww",
     "title": "Place the setups: Wagner-Whitin",
-    "scored": true
+    "scored": true,
+    "dir": "min",
+    "label": "total cost ($)"
   },
   "week08:teams": {
     "key": "week08:teams",
@@ -259,7 +273,9 @@ window.LESSON_ACTIVITIES = {
     "week": "week09",
     "id": "reject",
     "title": "Hit-and-Miss Manufacturing",
-    "scored": true
+    "scored": true,
+    "dir": "min",
+    "label": "expected cost ($)"
   },
   "week10:bayes": {
     "key": "week10:bayes",

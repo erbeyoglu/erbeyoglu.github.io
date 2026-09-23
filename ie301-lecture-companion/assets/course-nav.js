@@ -33,8 +33,18 @@
         const menu=document.createElement('section');menu.id='week-study-menu';
         const hasGuided=Boolean(guided[week]);
         const card=(href,title,detail,tag,recommended=false)=>`<a class="week-study-card${recommended?' recommended':''}" href="${href}"><span class="learning-eyebrow">${tag}</span><strong>${title}</strong><span>${detail}</span><b aria-hidden="true">→</b></a>`;
-        menu.innerHTML='<h2>This week’s activities</h2><p class="week-study-route">Start with the pre-class thinking warm-up. If a guided activity is available, use it to build a complete model. The in-class interactions let you revisit examples from the lecture.</p><div class="week-study-grid">'+
-          card('polls.html?week='+week,'Pre-class thinking warm-up','Start with three short questions; three more questions are optional.','Start here',true)+
+        // The next lecture's warm-up opens with this week's material, a week
+        // before its lecture; it leads the menu while its own week is closed.
+        // Local previews have every week open, so the card never shows there.
+        const releases=window.IE301_RELEASES;
+        const order=['week01','week02','week03','week04','week05','week07','week08','week09','week10','week11','week13','week14'];
+        const next=order[order.indexOf(week)+1];
+        const nextWarmup=Boolean(next && releases && !releases.isBypass() && releases.isWarmupOpen(next) && !releases.isOpen(next));
+        menu.innerHTML='<h2>This week’s activities</h2><p class="week-study-route">'+(nextWarmup
+          ? 'Before the next lecture, try its warm-up: it opens a week early so you have time. '
+          : 'Start with the pre-class thinking warm-up. ')+'If a guided activity is available, use it to build a complete model. The in-class interactions let you revisit examples from the lecture.</p><div class="week-study-grid">'+
+          (nextWarmup?card('polls.html?week='+next,'Week '+Number(next.slice(4))+' warm-up','Three short questions for the next lecture; three more are optional.','Before the next lecture',true):'')+
+          card('polls.html?week='+week,'Pre-class thinking warm-up','Start with three short questions; three more questions are optional.',nextWarmup?'This week':'Start here',!nextWarmup)+
           (hasGuided?card('guided.html?activity='+guided[week],'Guided modeling activity','Build a new model with hints, then try a changed assumption.','Next · Build a model'):'')+
           card(file+'?tools=1','In-class interactions','Revisit the graphs, simulations and examples used during the lecture.','Optional · From class')+'</div>';
         document.querySelector('main').prepend(menu);
