@@ -6,6 +6,7 @@
 <title>IE301 · Week 4 — Nonlinear Optimization, KKT (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/learning.css">
+<link rel="stylesheet" href="assets/lecture-animations.css">
 <script src="assets/theme.js"></script>
 <script src="assets/release-schedule.js"></script>
 <script src="assets/release-gate.js"></script>
@@ -23,9 +24,13 @@
   <nav class="widgets">
     <a href="#cubic">1 · Warm-up cubic</a>
     <a href="#utility">2 · Budget &amp; utility</a>
-    <a href="#adv">3 · Advertising tangency</a>
-    <a href="#chem">4 · Shadow prices</a>
-    <a href="#kkt">5 · KKT checker</a>
+    <a href="#kkt-lagrange">3 · Lagrange</a>
+    <a href="#kkt-move">4 · Change one variable</a>
+    <a href="#kkt-price">5 · λ as a price</a>
+    <a href="#kkt-nonneg">6 · x ≥ 0</a>
+    <a href="#kkt-sufficient">7 · When is KKT enough?</a>
+    <a href="#chem">8 · Shadow prices</a>
+    <a href="#kkt-example2">9 · Example 2</a>
   </nav>
 </header>
 
@@ -96,27 +101,162 @@
   </details></div>
 </section>
 
-<!-- ================= WIDGET 3 : ADVERTISING TANGENCY ================= -->
-<section class="widget" id="adv">
-  <h2>TV vs radio: the tangency picture <span class="chip">Slide 13</span></h2>
-  <p class="howto">
-    $10 000 of budget: TV costs $3000/min, radio $1000/min, so 3x + y = 10 (in minutes and $1000s).
-    Revenue is R(x, y) = −2x² − y² + xy + 8x + 3y. <b>Drag along the budget line</b>: where does the
-    line just kiss a revenue contour?
-  </p>
-  <div class="controls">
-    <span class="readout">TV x = <b id="ad-x">—</b> min</span>
-    <span class="readout">radio y = <b id="ad-y">—</b> min</span>
-    <span class="readout">revenue: <b id="ad-r">—</b> k$</span>
-    <button id="ad-reveal" class="primary">Reveal optimum ★</button>
+<!-- ================= KKT ANIMATION : kkt-lagrange (code in assets/anim-kkt.js) ================= -->
+<section class="widget anim" id="kkt-lagrange">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Lagrange: on the constraint, L equals f</h2>
+    <span class="chip">Slides 6–9, 13</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage k-stage">
+      <div class="stage-caption js-caption"></div>
+      <div class="s3d">
+        <canvas class="js-canvas" aria-label="Rotatable surface of the Lagrangian L, the ghost of R, the budget line and its vertical curtain"></canvas>
+        <div class="view-tools" role="group" aria-label="Camera">
+          <button class="js-view" data-view="persp">3D</button>
+          <button class="js-view" data-view="top">Bird's-eye</button>
+          <button class="js-view" data-view="side">Front view of the line</button>
+          <button class="js-spin" aria-pressed="false">⟳ Rotate</button>
+        </div>
+        <span class="drag-hint">Drag to rotate</span>
+      </div>
+      <div class="k-slider"><span>λ</span><input type="range" class="js-slider" min="0" max="1" step="0.005" value="0" aria-label="Multiplier lambda"><b class="js-slider-value"></b><button type="button" class="js-reset">Reset λ</button></div>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top"><span class="iter js-iter"></span></div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="meters js-meters"></div>
+      <div class="stats js-stats"></div>
+    </aside>
   </div>
-  <canvas class="viz" id="c-ad"></canvas>
-  <p class="status info" id="ad-status">Drag the violet point along the budget line.</p>
-  <div class="note">
-    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>At the optimum x ≈ 2.464, y ≈ 2.607 the budget line is tangent to a contour: ∇R is parallel to
-    ∇g there — exactly the Lagrange condition. The multiplier λ = 0.25 is the shadow price:
-    one more $1000 of budget buys ≈ $250 of extra revenue (slides 18–20).
-  </details></div>
+  <footer class="anim-controls" data-speeds="4400 3300 2200"></footer>
+</div>
+</section>
+
+<!-- ================= KKT ANIMATION : kkt-move ================= -->
+<section class="widget anim" id="kkt-move">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Change one variable by Δ: the term in [ ]</h2>
+    <span class="chip">Slides 19–20</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage k-stage">
+      <div class="stage-caption js-caption"></div>
+      <div class="k-pair">
+        <svg class="plot js-map k-drag" role="img" aria-label="Map with the candidate point on the budget line and the moves of x and y"></svg>
+        <div class="k-col even">
+          <svg class="plot js-water" role="img" aria-label="Gain against cost of one more TV minute and one more radio minute"></svg>
+          <svg class="plot js-line" role="img" aria-label="What 1000 dollars more earns on TV and on radio along the budget line, with the price lambda"></svg>
+        </div>
+      </div>
+      <div class="k-slider"><span>λ</span><input type="range" class="js-slider" min="0" max="3" step="0.01" value="0.25" aria-label="Price lambda"><b class="js-slider-value"></b><button type="button" class="js-reset">Reset x̄ and λ</button></div>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top"><span class="iter js-iter"></span></div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <p class="fine changed-note js-changed" hidden>You changed x̄ or λ, so the text above is about other values. “Reset x̄ and λ” brings back this step.</p>
+      <div class="step-formula js-formula"></div>
+      <div class="cond-list js-conds"></div>
+      <div class="stats js-stats"></div>
+    </aside>
+  </div>
+  <footer class="anim-controls" data-speeds="4400 3300 2200"></footer>
+</div>
+</section>
+
+<!-- ================= KKT ANIMATION : kkt-price ================= -->
+<section class="widget anim" id="kkt-price">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>λ is a price: what one more unit of b is worth</h2>
+    <span class="chip">Slides 18, 21–22</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage k-stage">
+      <div class="stage-caption js-caption"></div>
+      <div class="k-pair">
+        <svg class="plot js-map" role="img" aria-label="Map of the plans: revenue level lines, the budget line and the best plan"></svg>
+        <svg class="plot js-value" role="img" aria-label="Best revenue for each budget b, with the tangent whose slope is lambda"></svg>
+      </div>
+      <div class="k-slider"><span>b</span><input type="range" class="js-slider" min="8" max="13" step="0.05" value="10" aria-label="Budget b"><b class="js-slider-value"></b><button type="button" class="js-reset">Reset b</button></div>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top"><span class="iter js-iter"></span></div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="cond-list js-conds"></div>
+      <div class="stats js-stats"></div>
+    </aside>
+  </div>
+  <footer class="anim-controls" data-speeds="4400 3300 2200"></footer>
+</div>
+</section>
+
+<!-- ================= KKT ANIMATION : kkt-nonneg ================= -->
+<section class="widget anim" id="kkt-nonneg">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Adding x ≥ 0: when can the term in [ ] be negative?</h2>
+    <span class="chip">Slides 25–26</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage k-stage k-noslider">
+      <div class="stage-caption js-caption"></div>
+      <svg class="plot js-map k-drag" role="img" aria-label="Level circles of f, the allowed quarter x ≥ 0 and the best allowed point"></svg>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top"><span class="iter js-iter"></span></div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <ul class="cases js-cases"></ul>
+      <div class="cond-list js-conds"></div>
+    </aside>
+  </div>
+  <footer class="anim-controls" data-speeds="4400 3300 2200"></footer>
+</div>
+</section>
+
+<!-- ================= KKT ANIMATION : kkt-sufficient ================= -->
+<section class="widget anim" id="kkt-sufficient">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>When is a KKT point optimal?</h2>
+    <span class="chip">Slide 27</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage k-stage k-noslider">
+      <div class="stage-caption js-caption"></div>
+      <div class="k-view">
+        <div class="s3d js-s3d">
+          <canvas class="js-canvas" aria-label="Rotatable surface of f: solid over the feasible region, level lines elsewhere, with every KKT point"></canvas>
+          <span class="drag-hint">Drag to rotate</span>
+        </div>
+        <svg class="plot js-map" role="img" aria-label="Feasible region, level curves of f and every point that satisfies the KKT conditions" hidden></svg>
+        <div class="view-tools view-switch" role="group" aria-label="View">
+          <button class="js-mode" data-mode="3d" aria-pressed="true">3D surface</button>
+          <button class="js-mode" data-mode="map" aria-pressed="false">Map from above</button>
+        </div>
+      </div>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top"><span class="iter js-iter"></span></div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <table class="kkt-table"><thead><tr><th>KKT point x̄</th><th>λ</th><th>f(x̄)</th><th>KKT conditions</th><th>optimal?</th></tr></thead><tbody class="js-points"></tbody></table>
+      <p class="cond-head js-cond-head"></p>
+      <div class="cond-list js-conds"></div>
+    </aside>
+  </div>
+  <footer class="anim-controls" data-speeds="4400 3300 2200"></footer>
+</div>
 </section>
 
 <!-- ================= WIDGET 4 : SHADOW PRICES / CHEMICAL MONOPOLIST ================= -->
@@ -157,30 +297,34 @@
   </details></div>
 </section>
 
-<!-- ================= WIDGET 5 : KKT CHECKER ================= -->
-<section class="widget" id="kkt">
-  <h2>Is this point optimal? Check KKT <span class="chip">Slides 33–36</span></h2>
-  <p class="howto">
-    max ln(x₁+1) + x₂ &nbsp;s.t.&nbsp; 2x₁ + x₂ ≤ 3, x ≥ 0. <b>Drag the candidate point</b>; the widget
-    hunts for a multiplier λ ≥ 0 and grades every KKT condition live. Find the one point where the
-    whole list turns green.
-  </p>
-  <div class="controls">
-    <span class="readout">candidate: <b id="kk-pt">—</b></span>
-    <span class="readout">f = <b id="kk-f">—</b></span>
-    <span class="readout">best λ = <b id="kk-lam">—</b></span>
-    <button id="kk-reveal">Reveal the KKT point ★</button>
+<!-- ================= KKT ANIMATION : kkt-example2 ================= -->
+<section class="widget anim" id="kkt-example2">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Example 2: solving the KKT conditions step by step</h2>
+    <span class="chip">Slides 33–36</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage k-stage k-noslider">
+      <div class="stage-caption js-caption"></div>
+      <div class="k-pair">
+        <svg class="plot js-map" role="img" aria-label="The feasible triangle, level curves of f and the candidates left after each deduction"></svg>
+        <div class="k-col">
+          <svg class="plot js-water" role="img" aria-label="Gain against cost of one more unit of x1 and of x2"></svg>
+          <svg class="plot js-line" role="img" aria-label="What is known about lambda"></svg>
+        </div>
+      </div>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top"><span class="iter js-iter"></span></div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="cond-list js-conds"></div>
+    </aside>
   </div>
-  <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
-    <canvas class="viz short" id="c-kk" style="flex:1 1 420px;min-width:300px"></canvas>
-    <ul id="kk-list" style="flex:1 1 320px;min-width:280px;list-style:none;padding:0;margin:0;font-size:0.95rem;line-height:2"></ul>
-  </div>
-  <p class="status info" id="kk-status"></p>
-  <div class="note">
-    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Slide 36’s deduction chain: λ ≥ 1 &gt; 0 forces the constraint tight; 1/(x₁+1) − 2λ &lt; 0 forces
-    x₁ = 0; hence x₂ = 3 and λ = 1. Since f is concave and g linear, KKT is necessary AND sufficient
-    (slide 27) — so the green point is provably optimal.
-  </details></div>
+  <footer class="anim-controls" data-speeds="4400 3300 2200"></footer>
+</div>
 </section>
 
 </main>
@@ -196,30 +340,6 @@
 const el = id => document.getElementById(id);
 const fmt = (v, d = 2) => Number(v).toFixed(d);
 
-/* Contours of (v-c)^T Q (v-c) = k, Q positive definite. */
-function quadContours(p, t, Q, cx, cy, levels) {
-  const { ctx, X, Y } = p;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(p.padL, p.padT, p.w - p.padL - p.padR, p.h - p.padT - p.padB);
-  ctx.clip();
-  ctx.strokeStyle = t.s1;
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = 1.5;
-  levels.forEach(k => {
-    if (k <= 0) return;
-    ctx.beginPath();
-    for (let i = 0; i <= 180; i++) {
-      const phi = 2 * Math.PI * i / 180;
-      const u = Math.cos(phi), v = Math.sin(phi);
-      const q = Q[0][0] * u * u + 2 * Q[0][1] * u * v + Q[1][1] * v * v;
-      const r = Math.sqrt(k / q);
-      i === 0 ? ctx.moveTo(X(cx + r * u), Y(cy + r * v)) : ctx.lineTo(X(cx + r * u), Y(cy + r * v));
-    }
-    ctx.stroke();
-  });
-  ctx.restore();
-}
 
 /* ============================================================
    WIDGET 1 — warm-up cubic (slide 3)
@@ -356,95 +476,6 @@ function quadContours(p, t, Q, cx, cy, levels) {
 })();
 
 /* ============================================================
-   WIDGET 3 — advertising tangency (slide 13)
-   max R = -2x^2 - y^2 + xy + 8x + 3y  s.t.  3x + y = 10
-   Unconstrained peak at (19/7, 20/7); constrained at (69/28, 73/28).
-   ============================================================ */
-(() => {
-  const canvas = el('c-ad');
-  VIZ.hint(canvas, '🖱 drag along the budget line');
-  const view = { x0: -0.4, x1: 4.8, y0: -0.6, y1: 11 };
-  const R = (x, y) => -2 * x * x - y * y + x * y + 8 * x + 3 * y;
-  const C = [19 / 7, 20 / 7];
-  const BASE = R(C[0], C[1]);
-  const Q = [[2, -0.5], [-0.5, 1]];
-  const XS = 69 / 28, YS = 10 - 3 * XS;
-  let x = 0.8, revealed = false, dragging = false, lastPlot = null;
-
-  function draw() {
-    const p = VIZ.plot(canvas, view);
-    const t = VIZ.theme();
-    lastPlot = p;
-    VIZ.axes(p, t, { xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6, 8, 10], xlabel: 'x (TV min)', ylabel: 'y (radio min)' });
-
-    const corners = [[view.x0, view.y0], [view.x0, view.y1], [view.x1, view.y0], [view.x1, view.y1]];
-    const kmax = Math.max(...corners.map(([a, b]) => {
-      const dx = a - C[0], dy = b - C[1];
-      return Q[0][0] * dx * dx + 2 * Q[0][1] * dx * dy + Q[1][1] * dy * dy;
-    }));
-    quadContours(p, t, Q, C[0], C[1], [1, 2, 3, 4, 5, 6].map(i => kmax * (i / 6) ** 2));
-    // contour through the current point
-    const y = 10 - 3 * x;
-    const dx0 = x - C[0], dy0 = y - C[1];
-    const kcur = Q[0][0] * dx0 * dx0 + 2 * Q[0][1] * dx0 * dy0 + Q[1][1] * dy0 * dy0;
-    const { ctx, X, Y } = p;
-    ctx.save();
-    ctx.lineWidth = 2.5;
-    quadContours(p, { ...t, s1: t.s5 }, Q, C[0], C[1], [kcur]);
-    ctx.restore();
-
-    // budget line
-    ctx.save();
-    ctx.strokeStyle = t.ink2;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(X(0), Y(10));
-    ctx.lineTo(X(10 / 3), Y(0));
-    ctx.stroke();
-    ctx.restore();
-    VIZ.label(p, '3x + y = 10', 0.35, 9.3, t.ink2, { size: 13, bold: true });
-
-    if (revealed) {
-      VIZ.star(p, XS, YS, t.s2, 10);
-      VIZ.label(p, '(' + fmt(XS, 3) + ', ' + fmt(YS, 3) + '), R = ' + fmt(R(XS, YS), 2), XS, YS, t.s2, { dx: 13, dy: -8, bold: true });
-    }
-
-    VIZ.dot(p, x, y, t.s5, 8, true);
-
-    el('ad-x').textContent = fmt(x, 3);
-    el('ad-y').textContent = fmt(y, 3);
-    el('ad-r').textContent = fmt(R(x, y), 3);
-
-    const st = el('ad-status');
-    if (revealed) {
-      st.className = 'status info';
-      st.textContent = 'Tangency: at the optimum the violet contour touches the budget line at a single point. λ = 0.25 — each extra $1000 of budget is worth ≈ $250 of revenue.';
-    } else if (Math.abs(x - XS) < 0.02) {
-      st.className = 'status ok';
-      st.textContent = 'The contour through your point is tangent to the budget line — you found the Lagrange point.';
-    } else {
-      st.className = 'status info';
-      st.textContent = 'The violet contour through your point still CROSSES the line — you can slide along it and do better.';
-    }
-  }
-
-  function setFromPointer(ev) {
-    const { px } = VIZ.pointer(canvas, ev);
-    x = Math.max(0.02, Math.min(10 / 3 - 0.02, lastPlot.invX(px)));
-    draw();
-  }
-  canvas.addEventListener('pointerdown', ev => { dragging = true; canvas.setPointerCapture(ev.pointerId); setFromPointer(ev); });
-  canvas.addEventListener('pointermove', ev => { if (dragging) setFromPointer(ev); });
-  canvas.addEventListener('pointerup', () => dragging = false);
-  el('ad-reveal').addEventListener('click', () => {
-    revealed = !revealed;
-    el('ad-reveal').textContent = revealed ? 'Hide optimum' : 'Reveal optimum ★';
-    draw();
-  });
-  VIZ.register(canvas, draw);
-})();
-
-/* ============================================================
    WIDGET 4 — shadow prices, chemical monopolist (slides 28-32)
    For capacity b: while both constraints bind (b < 26):
    lambda1 = 36 - b, lambda2 = 26 - b, x1 = (b-9)/2, x2 = (b+9)/2.
@@ -528,107 +559,10 @@ function quadContours(p, t, Q, cx, cy, levels) {
   VIZ.register(canvas, draw);
 })();
 
-/* ============================================================
-   WIDGET 5 — KKT checker (slides 33-36)
-   max ln(x1+1) + x2  s.t.  2x1 + x2 <= 3, x >= 0
-   ============================================================ */
-(() => {
-  const canvas = el('c-kk');
-  VIZ.hint(canvas, '🖱 drag the candidate point');
-  const view = { x0: -0.15, x1: 1.9, y0: -0.2, y1: 3.5 };
-  let pt = { x: 0.7, y: 1.0 };
-  let dragging = false, lastPlot = null;
-
-  const f = (x, y) => Math.log(x + 1) + y;
-
-  // For a candidate (x,y), scan lambda >= 0 and grade each KKT condition.
-  function grade(x, y) {
-    const TOLE = 2e-3, TOLI = 1e-6;
-    const conds = lam => {
-      const s1 = 1 / (x + 1) - 2 * lam;   // stationarity slack for x1
-      const s2 = 1 - lam;                 // stationarity slack for x2
-      const slack = 3 - 2 * x - y;
-      return [
-        { name: '1/(x₁+1) − 2λ ≤ 0', ok: s1 <= TOLI },
-        { name: '1 − λ ≤ 0', ok: s2 <= TOLI },
-        { name: 'x₁·[1/(x₁+1) − 2λ] = 0', ok: Math.abs(x * s1) <= TOLE },
-        { name: 'x₂·[1 − λ] = 0', ok: Math.abs(y * s2) <= TOLE },
-        { name: 'λ·[3 − 2x₁ − x₂] = 0', ok: Math.abs(lam * slack) <= TOLE },
-        { name: '2x₁ + x₂ ≤ 3 (feasible)', ok: slack >= -TOLI },
-        { name: 'x₁, x₂ ≥ 0, λ ≥ 0', ok: x >= -TOLI && y >= -TOLI },
-      ];
-    };
-    let bestLam = 0, bestList = conds(0), bestCount = bestList.filter(c => c.ok).length;
-    for (let lam = 0; lam <= 3.0001; lam += 0.005) {
-      const list = conds(lam);
-      const count = list.filter(c => c.ok).length;
-      if (count > bestCount) { bestCount = count; bestLam = lam; bestList = list; }
-    }
-    return { lam: bestLam, list: bestList, all: bestCount === bestList.length };
-  }
-
-  function draw() {
-    const p = VIZ.plot(canvas, view);
-    const t = VIZ.theme();
-    lastPlot = p;
-    VIZ.axes(p, t, { xticks: [0, 0.5, 1, 1.5], yticks: [0, 1, 2, 3], xlabel: 'x₁', ylabel: 'x₂' });
-    const { ctx, X, Y } = p;
-
-    // feasible region: 2x1 + x2 <= 3, x >= 0
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(X(0), Y(0));
-    ctx.lineTo(X(1.5), Y(0));
-    ctx.lineTo(X(0), Y(3));
-    ctx.closePath();
-    ctx.fillStyle = t.region;
-    ctx.fill();
-    ctx.strokeStyle = t.axis;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
-    VIZ.label(p, '2x₁ + x₂ = 3', 0.95, 1.25, t.ink2, { size: 13 });
-    VIZ.label(p, 'feasible', 0.3, 0.9, t.ink2, { bold: true });
-
-    const g = grade(pt.x, pt.y);
-    VIZ.dot(p, pt.x, pt.y, g.all ? t.good : t.s5, 8, true);
-
-    el('kk-pt').textContent = '(' + fmt(pt.x, 2) + ', ' + fmt(pt.y, 2) + ')';
-    el('kk-f').textContent = fmt(f(Math.max(0, pt.x), pt.y), 4);
-    el('kk-lam').textContent = fmt(g.lam, 2);
-
-    const ul = el('kk-list');
-    ul.innerHTML = '';
-    g.list.forEach(c => {
-      const li = document.createElement('li');
-      li.textContent = (c.ok ? '✓ ' : '✗ ') + c.name;
-      li.style.color = c.ok ? 'var(--good)' : 'var(--critical)';
-      li.style.fontWeight = c.ok ? '400' : '700';
-      ul.appendChild(li);
-    });
-
-    const st = el('kk-status');
-    if (g.all) {
-      st.className = 'status ok';
-      st.textContent = 'ALL conditions hold with λ = ' + fmt(g.lam, 2) + '. f is concave and g is linear, so KKT is sufficient — this point is OPTIMAL (slide 36).';
-    } else {
-      st.className = 'status info';
-      st.textContent = 'Some condition fails for every λ ≥ 0 — this point cannot be optimal. Where does the red condition push you?';
-    }
-  }
-
-  function setFromPointer(ev) {
-    const { px, py } = VIZ.pointer(canvas, ev);
-    pt = { x: Math.max(0, lastPlot.invX(px)), y: Math.max(0, lastPlot.invY(py)) };
-    draw();
-  }
-  canvas.addEventListener('pointerdown', ev => { dragging = true; canvas.setPointerCapture(ev.pointerId); setFromPointer(ev); });
-  canvas.addEventListener('pointermove', ev => { if (dragging) setFromPointer(ev); });
-  canvas.addEventListener('pointerup', () => dragging = false);
-  el('kk-reveal').addEventListener('click', () => { pt = { x: 0, y: 3 }; draw(); });
-  VIZ.register(canvas, draw);
-})();
 </script>
+<!-- Step-by-step animations: deferred, so they run after KaTeX (also deferred) has loaded. -->
+<script defer src="assets/lecture-animations.js"></script>
+<script defer src="assets/anim-kkt.js"></script>
 <script src="assets/classroom-config.js"></script>
 <script src="assets/qrcode.js"></script>
 <script src="assets/classroom.js"></script>

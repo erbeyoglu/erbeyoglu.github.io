@@ -6,6 +6,7 @@
 <title>IE301 · Week 2 — Modeling and NLP in One Variable (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/learning.css">
+<link rel="stylesheet" href="assets/lecture-animations.css">
 <script src="assets/theme.js"></script>
 <script src="assets/release-schedule.js"></script>
 <script src="assets/release-gate.js"></script>
@@ -97,30 +98,50 @@
 </section>
 
 <!-- ================= WIDGET 3 : BISECTION METHOD ================= -->
-<section class="widget" id="bisection">
-  <h2>Bisection method, step by step <span class="chip">Slides 16–22</span></h2>
-  <p class="howto">
-    max f(x) = 12x − 3x⁴ − 2x⁶ on [0, 2], ε = 0.001 — the slides’ example. Before each step, vote:
-    is f′ at the midpoint <b>positive (x* is to the right)</b> or <b>negative (x* is to the left)</b>?
-    Then step and watch the bracket halve.
-  </p>
-  <div class="controls">
-    <button id="bi-step" class="primary">Step one iteration</button>
-    <button id="bi-run">Run to convergence</button>
-    <button id="bi-reset">Reset</button>
-    <span class="readout">bracket width: <b id="bi-width">2.000000</b></span>
+<section class="widget anim" id="bisection">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Bisection: the slope tells us which half to keep</h2>
+    <span class="chip">Slides 17–21</span>
+    <span class="segwrap" role="group" aria-label="Example">
+      <button class="seg js-example" data-example="lecture">Slide 20 example</button>
+      <button class="seg js-example" data-example="parabola">Simple parabola</button>
+    </span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage bi-stage">
+      <div class="stage-caption js-caption"></div>
+      <svg class="plot js-plot" role="img" aria-label="The function, the current bracket, the trial solution and its tangent"></svg>
+      <svg class="plot js-strip" role="img" aria-label="Zoomed view of the current bracket"></svg>
+      <p class="stage-note js-note"></p>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top">
+        <div class="phases js-phases"><span>Slope</span><span>Keep a half</span><span>Move a bound</span><span>New x′</span></div>
+        <span class="iter js-iter"></span>
+      </div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="stats js-stats"></div>
+      <div class="table-wrap js-tablewrap">
+        <table class="iter-table">
+          <thead><tr><th>Iter.</th><th>f′(x′)</th><th><span class="lo">x</span></th><th><span class="hi">x</span></th><th>x′</th><th>f(x′)</th><th><span class="hi">x</span> − <span class="lo">x</span></th></tr></thead>
+          <tbody class="js-rows"></tbody>
+        </table>
+      </div>
+      <p class="fine js-fine"></p>
+    </aside>
   </div>
-  <canvas class="viz short" id="c-bi"></canvas>
-  <p class="status info" id="bi-status"></p>
-  <table class="attempts" id="bi-table">
-    <thead><tr><th>iter</th><th>f′(x′)</th><th>x̲ (lower)</th><th>x̄ (upper)</th><th>x′ (mid)</th><th>f(x′)</th><th>error</th></tr></thead>
-    <tbody></tbody>
-  </table>
-  <p class="note">
-    Logic (slide 17): f concave ⇒ f′(x) &gt; 0 means x* &gt; x (x becomes the lower bound);
-    f′(x) &lt; 0 means x* &lt; x. Stop when the bracket is within 2ε (slide 19). It always converges —
-    but slowly, and it ignores the curvature information in f″ (slide 22).
-  </p>
+  <footer class="anim-controls">
+    <button class="js-back">← Back</button>
+    <button class="primary js-next">Next step →</button>
+    <button class="js-play" aria-pressed="false">▶ Play</button>
+    <label>Speed <select class="js-speed"><option value="2600">Slow</option><option value="1600" selected>Normal</option><option value="900">Fast</option></select></label>
+    <button class="js-restart">↺ Restart</button>
+    <span class="keys">→ next · ← back · P play</span>
+  </footer>
+</div>
 </section>
 
 <!-- ================= WIDGET 4 : NEWTON'S METHOD ================= -->
@@ -436,99 +457,6 @@ const F2pp = x => -36 * x * x - 60 * x ** 4;
 const XSTAR2 = 0.836920; // root of f' on [0,2]
 
 /* ============================================================
-   WIDGET 3 — bisection stepper (slides 16-22)
-   ============================================================ */
-(() => {
-  const canvas = el('c-bi');
-  const view = { x0: -0.08, x1: 2.08, y0: -15, y1: 10.5 };
-  const EPS = 0.001;
-  let rows, done, manual = false;
-
-  function reset() {
-    rows = [{ i: 0, fp: null, lo: 0, hi: 2, xp: 1, f: F2(1), err: 2 }];
-    done = false;
-    manual = false;
-    el('bi-run').classList.add('locked');
-    renderTable();
-    el('bi-status').className = 'status info';
-    el('bi-status').textContent = 'Initial bracket [0, 2], first midpoint x′ = 1.';
-    draw();
-  }
-
-  function step() {
-    if (done) return;
-    const last = rows[rows.length - 1];
-    const fp = F2p(last.xp);
-    const lo = fp > 0 ? last.xp : last.lo;
-    const hi = fp > 0 ? last.hi : last.xp;
-    const xp = (lo + hi) / 2;
-    const err = hi - lo;
-    rows.push({ i: last.i + 1, fp, lo, hi, xp, f: F2(xp), err });
-    const st = el('bi-status');
-    if (err <= 2 * EPS) {
-      done = true;
-      st.className = 'status ok';
-      st.textContent = 'STOP — bracket ≤ 2ε, so x′ = ' + fmt(xp, 6) + ' is within ε of x* (true x* ≈ ' + fmt(XSTAR2, 4) + '). ' + rows.length + ' rows, just like slide 21.';
-    } else {
-      st.className = 'status info';
-      st.textContent = 'f′(' + fmt(last.xp, 6) + ') = ' + fmt(fp, 3) + (fp > 0 ? ' > 0 → the max is to the RIGHT: midpoint becomes the new lower bound.' : ' < 0 → the max is to the LEFT: midpoint becomes the new upper bound.');
-    }
-    renderTable();
-    draw();
-  }
-
-  function renderTable() {
-    const body = el('bi-table').querySelector('tbody');
-    body.innerHTML = '';
-    rows.forEach(q => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + q.i + '</td><td>' + (q.fp === null ? '—' : fmt(q.fp, 3)) + '</td><td>' + fmt(q.lo, 6) +
-        '</td><td>' + fmt(q.hi, 6) + '</td><td>' + fmt(q.xp, 6) + '</td><td>' + fmt(q.f, 4) + '</td><td>' + fmt(q.err, 5) + '</td>';
-      body.appendChild(tr);
-    });
-    el('bi-width').textContent = fmt(rows[rows.length - 1].err, 6);
-  }
-
-  function draw() {
-    const p = VIZ.plot(canvas, view);
-    const t = VIZ.theme();
-    VIZ.axes(p, t, { xticks: [0, 0.5, 1, 1.5, 2], yticks: [-15, -10, -5, 5, 10], xlabel: 'x', ylabel: 'f(x)' });
-    const { ctx, X, Y } = p;
-    const last = rows[rows.length - 1];
-
-    // current bracket
-    ctx.save();
-    ctx.fillStyle = t.region;
-    ctx.globalAlpha = 0.6;
-    ctx.fillRect(X(last.lo), p.padT, X(last.hi) - X(last.lo), p.h - p.padT - p.padB);
-    ctx.restore();
-    VIZ.label(p, 'x̲ = ' + fmt(last.lo, 4), last.lo, view.y1 - 0.5, t.ink2, { dx: 4, size: 12, baseline: 'top' });
-    VIZ.label(p, 'x̄ = ' + fmt(last.hi, 4), last.hi, view.y1 - 0.5, t.ink2, { dx: 4, size: 12, baseline: 'top' });
-
-    VIZ.curve(p, F2, t.s1, 2.5);
-    VIZ.label(p, 'f(x) = 12x − 3x⁴ − 2x⁶', 1.15, 8.6, t.s1, { bold: true });
-
-    // past midpoints, fading
-    rows.slice(0, -1).forEach(q => VIZ.dot(p, q.xp, F2(q.xp), t.axis, 4));
-    VIZ.dot(p, last.xp, last.f, t.s5, 7, true);
-    VIZ.label(p, "x′ = " + fmt(last.xp, 4), last.xp, last.f, t.s5, { dy: -12, bold: true, align: 'center' });
-
-    if (done) {
-      VIZ.star(p, XSTAR2, F2(XSTAR2), t.s2, 10);
-    }
-  }
-
-  el('bi-step').addEventListener('click', () => { manual = true; el('bi-run').classList.remove('locked'); step(); });
-  el('bi-run').addEventListener('click', () => {
-    if (!manual) { const st = el('bi-status'); st.className = 'status info'; st.textContent = 'Step at least once by hand first — the class should predict each move before automating.'; return; }
-    let g = 0; while (!done && g++ < 60) step();
-  });
-  el('bi-reset').addEventListener('click', reset);
-  reset();
-  VIZ.register(canvas, draw);
-})();
-
-/* ============================================================
    WIDGET 4 — Newton stepper (slides 23-28)
    ============================================================ */
 (() => {
@@ -770,6 +698,9 @@ const XSTAR2 = 0.836920; // root of f' on [0,2]
   VIZ.register(canvas, draw);
 })();
 </script>
+<!-- Step-by-step animations: deferred, so they run after KaTeX (also deferred) has loaded. -->
+<script defer src="assets/lecture-animations.js"></script>
+<script defer src="assets/anim-bisection.js"></script>
 <script src="assets/classroom-config.js"></script>
 <script src="assets/qrcode.js"></script>
 <script src="assets/classroom.js"></script>

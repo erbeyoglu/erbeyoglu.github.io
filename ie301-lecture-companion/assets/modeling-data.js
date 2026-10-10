@@ -61,7 +61,7 @@ window.MODELING = (() => {
     'How should λ be interpreted?',
     ['The total profit at capacity b','The exact gain from any size capacity expansion','The local gain in optimal profit per extra unit of capacity'],2,
     ['The multiplier measures sensitivity, not the level V(b).','A large change can alter the active constraints and the multiplier.','Locally V(b+Δb)≈V(b)+λΔb. The units are profit per capacity unit.']);
-  add('04','binding','kkt',35,'Use complementary slackness carefully',
+  add('04','binding','kkt-example2',35,'Use complementary slackness carefully',
     'For a resource constraint g(x)≤b with multiplier λ≥0, λ(b−g(x))=0.',
     'Which implication must hold?',
     ['λ>0 implies g(x)=b','g(x)=b implies λ>0','λ=0 implies g(x)<b'],0,

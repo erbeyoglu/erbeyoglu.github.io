@@ -95,6 +95,9 @@
     const TYPING = /^(text|number|search|email|password|tel|url|date|time)$/;
     document.addEventListener('keydown', event => {
       if (!['ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp'].includes(event.key)) return;
+      // A step-by-step animation (lecture-animations.js) uses these keys for its
+      // own steps and hands them to the deck itself at its first or last step.
+      if (document.querySelector('section.anim.embed-target')) return;
       const target = event.target || {};
       const tag = target.tagName;
       if (tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return;

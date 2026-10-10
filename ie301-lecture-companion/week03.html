@@ -6,6 +6,7 @@
 <title>IE301 · Week 3 — NLP in Multiple Variables (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/learning.css">
+<link rel="stylesheet" href="assets/lecture-animations.css">
 <script src="assets/theme.js"></script>
 <script src="assets/release-schedule.js"></script>
 <script src="assets/release-gate.js"></script>
@@ -124,35 +125,57 @@
 </section>
 
 <!-- ================= WIDGET 4 : GRADIENT SEARCH ================= -->
-<section class="widget" id="gradient">
-  <h2>Gradient search: climb the hill <span class="chip">Slides 13–29</span></h2>
-  <p class="howto">
-    The arrow is the gradient ∇f — the steepest-ascent direction, always perpendicular to the contour.
-    Each step moves along the gradient until f stops increasing (the optimal step size t*), then
-    re-aims. <b>Click anywhere to choose a starting point</b>, then step. Why doesn’t it go straight
-    to the top?
-  </p>
-  <div class="controls">
-    <span class="segwrap">
-      <button class="seg active" id="gs-mA">Example 1 — one clean step</button>
-      <button class="seg" id="gs-mB">Example 2 — the zigzag</button>
+<section class="widget anim" id="gradient">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Gradient search: first a direction, then a distance</h2>
+    <span class="chip">Slides 17–28</span>
+    <span class="segwrap" role="group" aria-label="Example">
+      <button class="seg js-example" data-example="ex1">Example 1 · slides 25–26</button>
+      <button class="seg js-example" data-example="ex2">Example 2 · slides 27–28</button>
+      <button class="seg js-pick" aria-pressed="false">Choose your start</button>
     </span>
-    <button id="gs-step" class="primary">Step</button>
-    <button id="gs-run">Run to convergence</button>
-    <button id="gs-reset">Reset</button>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage gr-stage">
+      <div class="stage-caption js-caption"></div>
+      <div class="s3d">
+        <canvas class="js-canvas" aria-label="Rotatable surface of f with the gradient, the vertical slice along it and the search path"></canvas>
+        <div class="view-tools" role="group" aria-label="Camera">
+          <button class="js-view" data-view="persp">3D</button>
+          <button class="js-view" data-view="top">Bird's-eye</button>
+          <button class="js-view" data-view="side">Side view of the slice</button>
+          <button class="js-isolate" aria-pressed="false">Show only the slice</button>
+          <button class="js-spin" aria-pressed="false">⟳ Rotate</button>
+        </div>
+        <span class="drag-hint">Drag to rotate</span>
+      </div>
+      <div class="gr-phi-wrap">
+        <svg class="chart gr-phi js-phi" role="img" aria-label="phi of t: f along the fixed direction"></svg>
+        <input type="range" class="js-t" min="0" max="1" step="0.0005" value="0" aria-label="Step multiplier t" disabled>
+      </div>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top">
+        <div class="phases js-phases"><span>Gradient</span><span>Slice φ(t)</span><span>Best t*</span><span>Move</span><span>Check</span></div>
+        <span class="iter js-iter"></span>
+      </div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="stats js-stats"></div>
+      <p class="fine js-fine"></p>
+    </aside>
   </div>
-  <div class="readout" id="gs-formula" style="display:inline-block;margin-bottom:10px"></div>
-  <canvas class="viz" id="c-gs"></canvas>
-  <p class="status info" id="gs-status"></p>
-  <table class="attempts" id="gs-table">
-    <thead><tr><th>iter</th><th>x′</th><th>∇f(x′)</th><th>t*</th><th>f(x′)</th></tr></thead>
-    <tbody></tbody>
-  </table>
-  <p class="note">
-    The procedure (slide 24): express f(x′ + t∇f(x′)) as a function of t, maximize over t ≥ 0, move,
-    repeat until ‖∇f‖ ≤ ε. Consecutive directions are orthogonal — that is the zigzag. For
-    minimization, walk against the gradient instead (slide 29).
-  </p>
+  <footer class="anim-controls">
+    <button class="js-back">← Back</button>
+    <button class="primary js-next">Next step →</button>
+    <button class="js-play" aria-pressed="false">▶ Play</button>
+    <label>Speed <select class="js-speed"><option value="3000">Slow</option><option value="1900" selected>Normal</option><option value="1000">Fast</option></select></label>
+    <button class="js-restart">↺ Restart</button>
+    <span class="keys">→ next · ← back · P play</span>
+  </footer>
+</div>
 </section>
 
 </main>
@@ -497,176 +520,10 @@ function quadContours(p, t, Q, cx, cy, levels) {
   VIZ.register(canvas, draw);
 })();
 
-/* ============================================================
-   WIDGET 4 — gradient search (slides 13-29)
-   ============================================================ */
-(() => {
-  const canvas = el('c-gs');
-  VIZ.hint(canvas, '🖱 tap to choose a start point');
-  const EPS = 0.01;
-  const MODES = {
-    A: {
-      html: 'f(x₁, x₂) = −(x₁ − 3)² − (x₂ − 2)² &nbsp;·&nbsp; start (1, 1) — slide 25',
-      f: (x, y) => -((x - 3) ** 2) - ((y - 2) ** 2),
-      grad: (x, y) => [-2 * (x - 3), -2 * (y - 2)],
-      Q: [[1, 0], [0, 1]], c: [3, 2],
-      start: [1, 1],
-      view: { x0: -0.3, x1: 5.6, y0: -0.4, y1: 4.4 },
-      ticksX: [0, 1, 2, 3, 4, 5], ticksY: [0, 1, 2, 3, 4],
-    },
-    B: {
-      html: 'f(x₁, x₂) = 2x₁x₂ + 2x₂ − x₁² − 2x₂² &nbsp;·&nbsp; start (0, 0) — slide 27',
-      f: (x, y) => 2 * x * y + 2 * y - x * x - 2 * y * y,
-      grad: (x, y) => [2 * y - 2 * x, 2 * x + 2 - 4 * y],
-      Q: [[1, -1], [-1, 2]], c: [1, 1],
-      start: [0, 0],
-      view: { x0: -0.35, x1: 1.75, y0: -0.3, y1: 1.5 },
-      ticksX: [0, 0.5, 1, 1.5], ticksY: [0, 0.5, 1],
-    },
-  };
-  let mode = 'A', path, done, manual = false;
-
-  // 1-D line search: maximize f(x + t g) over t >= 0 by grid + refinement
-  function lineMax(m, x, g) {
-    let lo = 0, hi = 4 / Math.max(0.2, Math.hypot(g[0], g[1]));
-    for (let round = 0; round < 4; round++) {
-      let bt = lo, bv = -Infinity;
-      for (let i = 0; i <= 200; i++) {
-        const tt = lo + (hi - lo) * i / 200;
-        const v = m.f(x[0] + tt * g[0], x[1] + tt * g[1]);
-        if (v > bv) { bv = v; bt = tt; }
-      }
-      const step = (hi - lo) / 200;
-      lo = Math.max(0, bt - step); hi = bt + step;
-    }
-    return (lo + hi) / 2;
-  }
-
-  function reset(start) {
-    const m = MODES[mode];
-    path = [start ? start.slice() : m.start.slice()];
-    done = false;
-    manual = false;
-    el('gs-run').classList.add('locked');
-    el('gs-formula').innerHTML = m.html;
-    el('gs-status').className = 'status info';
-    el('gs-status').textContent = 'Start at (' + fmt(path[0][0], 2) + ', ' + fmt(path[0][1], 2) + '). The arrow shows ∇f — perpendicular to the contour through the point.';
-    renderTable();
-    draw();
-  }
-
-  function step() {
-    if (done) return;
-    const m = MODES[mode];
-    const x = path[path.length - 1];
-    const g = m.grad(x[0], x[1]);
-    const gn = Math.hypot(g[0], g[1]);
-    const st = el('gs-status');
-    if (gn <= EPS) {
-      done = true;
-      st.className = 'status ok';
-      st.textContent = 'TERMINATE — ∇f ≈ (0, 0) at (' + fmt(x[0], 3) + ', ' + fmt(x[1], 3) + '), f = ' + fmt(m.f(x[0], x[1]), 4) + '. ' +
-        (path.length - 1) + ' step(s).' + (mode === 'A' ? ' One perfectly aimed step — because the contours are round.' : ' Count the zigzags — each new direction is perpendicular to the previous one.');
-      draw();
-      return;
-    }
-    const ts = lineMax(m, x, g);
-    const nx = [x[0] + ts * g[0], x[1] + ts * g[1]];
-    nx.tstar = ts;
-    path.push(nx);
-    const g2 = m.grad(nx[0], nx[1]);
-    if (Math.hypot(g2[0], g2[1]) <= EPS) {
-      done = true;
-      st.className = 'status ok';
-      st.textContent = 'TERMINATE — ∇f ≈ (0, 0) at (' + fmt(nx[0], 3) + ', ' + fmt(nx[1], 3) + '), f = ' + fmt(m.f(nx[0], nx[1]), 4) + '. ' + (path.length - 1) + ' step(s).';
-    } else {
-      st.className = 'status info';
-      st.textContent = 'Moved with t* = ' + fmt(ts, 3) + ' to (' + fmt(nx[0], 3) + ', ' + fmt(nx[1], 3) + '). New gradient re-aimed — note the right angle with the previous direction.';
-    }
-    renderTable();
-    draw();
-  }
-
-  function renderTable() {
-    const m = MODES[mode];
-    const body = el('gs-table').querySelector('tbody');
-    body.innerHTML = '';
-    path.forEach((x, i) => {
-      const g = m.grad(x[0], x[1]);
-      const tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + i + '</td><td>(' + fmt(x[0], 3) + ', ' + fmt(x[1], 3) + ')</td><td>(' + fmt(g[0], 3) + ', ' + fmt(g[1], 3) +
-        ')</td><td>' + (x.tstar === undefined ? '—' : fmt(x.tstar, 3)) + '</td><td>' + fmt(m.f(x[0], x[1]), 4) + '</td>';
-      body.appendChild(tr);
-    });
-  }
-
-  function draw() {
-    const m = MODES[mode];
-    const p = VIZ.plot(canvas, m.view);
-    const t = VIZ.theme();
-    VIZ.axes(p, t, { xticks: m.ticksX, yticks: m.ticksY, xlabel: 'x₁', ylabel: 'x₂' });
-
-    const corners = [[m.view.x0, m.view.y0], [m.view.x0, m.view.y1], [m.view.x1, m.view.y0], [m.view.x1, m.view.y1]];
-    const kmax = Math.max(...corners.map(([a, b]) => {
-      const dx = a - m.c[0], dy = b - m.c[1];
-      return m.Q[0][0] * dx * dx + 2 * m.Q[0][1] * dx * dy + m.Q[1][1] * dy * dy;
-    }));
-    quadContours(p, t, m.Q, m.c[0], m.c[1], [1, 2, 3, 4, 5, 6].map(i => kmax * (i / 6) ** 2));
-
-    const { ctx, X, Y } = p;
-    // path
-    ctx.save();
-    ctx.strokeStyle = t.s5;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    path.forEach((q, i) => i === 0 ? ctx.moveTo(X(q[0]), Y(q[1])) : ctx.lineTo(X(q[0]), Y(q[1])));
-    ctx.stroke();
-    ctx.restore();
-    path.forEach((q, i) => VIZ.dot(p, q[0], q[1], i === path.length - 1 ? t.s5 : t.axis, i === path.length - 1 ? 7 : 4, i === path.length - 1));
-
-    // gradient arrow at the current point
-    const x = path[path.length - 1];
-    const g = m.grad(x[0], x[1]);
-    const gn = Math.hypot(g[0], g[1]);
-    if (!done && gn > EPS) {
-      const scale = 0.16 * (m.view.x1 - m.view.x0) / Math.max(1, gn);
-      const tip = [x[0] + g[0] * scale, x[1] + g[1] * scale];
-      ctx.save();
-      ctx.strokeStyle = t.s2;
-      ctx.fillStyle = t.s2;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.moveTo(X(x[0]), Y(x[1])); ctx.lineTo(X(tip[0]), Y(tip[1])); ctx.stroke();
-      const ang = Math.atan2(Y(tip[1]) - Y(x[1]), X(tip[0]) - X(x[0]));
-      ctx.beginPath();
-      ctx.moveTo(X(tip[0]), Y(tip[1]));
-      ctx.lineTo(X(tip[0]) - 10 * Math.cos(ang - 0.4), Y(tip[1]) - 10 * Math.sin(ang - 0.4));
-      ctx.lineTo(X(tip[0]) - 10 * Math.cos(ang + 0.4), Y(tip[1]) - 10 * Math.sin(ang + 0.4));
-      ctx.closePath(); ctx.fill();
-      ctx.restore();
-      VIZ.label(p, '∇f = (' + fmt(g[0], 2) + ', ' + fmt(g[1], 2) + ')', tip[0], tip[1], t.s2, { dx: 8, dy: -6, size: 13, bold: true });
-    }
-    if (done) VIZ.star(p, m.c[0], m.c[1], t.s2, 10);
-  }
-
-  canvas.addEventListener('pointerdown', ev => {
-    const m = MODES[mode];
-    const p = VIZ.plot(canvas, m.view);
-    const { px, py } = VIZ.pointer(canvas, ev);
-    reset([p.invX(px), p.invY(py)]);
-  });
-
-  el('gs-mA').addEventListener('click', () => { mode = 'A'; el('gs-mA').classList.add('active'); el('gs-mB').classList.remove('active'); reset(); });
-  el('gs-mB').addEventListener('click', () => { mode = 'B'; el('gs-mB').classList.add('active'); el('gs-mA').classList.remove('active'); reset(); });
-  el('gs-step').addEventListener('click', () => { manual = true; el('gs-run').classList.remove('locked'); step(); });
-  el('gs-run').addEventListener('click', () => {
-    if (!manual) { const st = el('gs-status'); st.className = 'status info'; st.textContent = 'Take at least one step by hand first — predict the direction before automating.'; return; }
-    let g = 0; while (!done && g++ < 50) step();
-  });
-  el('gs-reset').addEventListener('click', () => reset());
-  reset();
-  VIZ.register(canvas, draw);
-})();
 </script>
+<!-- Step-by-step animations: deferred, so they run after KaTeX (also deferred) has loaded. -->
+<script defer src="assets/lecture-animations.js"></script>
+<script defer src="assets/anim-gradient.js"></script>
 <script src="assets/classroom-config.js"></script>
 <script src="assets/qrcode.js"></script>
 <script src="assets/classroom.js"></script>

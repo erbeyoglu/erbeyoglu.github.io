@@ -73,13 +73,6 @@ window.LESSON_ACTIVITIES = {
     "dir": "min",
     "label": "cost ($)"
   },
-  "week02:bisection": {
-    "key": "week02:bisection",
-    "week": "week02",
-    "id": "bisection",
-    "title": "Bisection method, step by step",
-    "scored": false
-  },
   "week02:newton": {
     "key": "week02:newton",
     "week": "week02",
@@ -124,13 +117,6 @@ window.LESSON_ACTIVITIES = {
     "dir": "min",
     "label": "metal (m²)"
   },
-  "week03:gradient": {
-    "key": "week03:gradient",
-    "week": "week03",
-    "id": "gradient",
-    "title": "Gradient search: climb the hill",
-    "scored": false
-  },
   "week04:cubic": {
     "key": "week04:cubic",
     "week": "week04",
@@ -145,25 +131,11 @@ window.LESSON_ACTIVITIES = {
     "title": "Spend the budget: Lagrange in action",
     "scored": false
   },
-  "week04:adv": {
-    "key": "week04:adv",
-    "week": "week04",
-    "id": "adv",
-    "title": "TV vs radio: the tangency picture",
-    "scored": false
-  },
   "week04:chem": {
     "key": "week04:chem",
     "week": "week04",
     "id": "chem",
     "title": "Shadow prices live: the chemical monopolist",
-    "scored": false
-  },
-  "week04:kkt": {
-    "key": "week04:kkt",
-    "week": "week04",
-    "id": "kkt",
-    "title": "Is this point optimal? Check KKT",
     "scored": false
   },
   "week05:geometry": {

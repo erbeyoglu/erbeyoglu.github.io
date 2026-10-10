@@ -1,0 +1,157 @@
+/* Step-by-step lecture animations (Week 2 bisection, Week 3 gradient search,
+   Week 4 KKT scenes). Every rule is scoped to section.anim, so the rest of a
+   week page is untouched.
+
+   Markup: <section class="widget anim" id="…"><div class="anim-frame">
+   header · body (stage + side panel) · controls </div></section>.
+   The section stays a normal widget (the site's own rules show or hide it);
+   only .anim-frame is laid out here.
+
+   WHY the sizes: in the instructor deck an animation gets the whole iframe
+   (the screen under a 54 px bar, 1280×666 on a 720p projector). Graph,
+   explanation and controls must all be visible without scrolling, so every
+   size is in em and the base font follows the viewport. */
+
+/* On a week page the card sits in the 1060 px column, so its type is smaller;
+   in the deck it follows the screen. */
+section.widget.anim { --anim-fs: clamp(13px, calc(0.42vw + 0.5vh + 4px), 16.5px); font-size: var(--anim-fs); }
+.embed-mode section.widget.anim.embed-target { --anim-fs: clamp(15px, calc(0.62vw + 0.62vh + 3px), 24px); }
+:root[data-theme="projector"].embed-mode section.widget.anim.embed-target { --anim-fs: clamp(16px, calc(0.64vw + 0.68vh + 3px), 25px); }
+
+/* On a week page: a card about one screen tall. */
+section.anim .anim-frame { height: min(92vh, 980px); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: .5em; }
+
+/* In the deck (?embed=<id>): the animation fills the iframe, nothing scrolls. */
+.embed-mode:has(section.anim.embed-target) body { overflow: hidden; }
+.embed-mode:has(section.anim.embed-target) main { padding: 0; margin: 0; max-width: none; }
+.embed-mode section.widget.anim.embed-target { margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; max-width: none; }
+.embed-mode section.anim.embed-target .anim-frame { height: 100vh; height: 100dvh; padding: .55em .9em .5em; }
+
+section.anim button, section.anim select { font-size: .84em; padding: .4em .9em; border-radius: 8px; }
+section.anim button:disabled { opacity: .4; cursor: default; }
+section.anim .anim-head { display: flex; align-items: center; gap: .4em .8em; flex-wrap: wrap; min-width: 0; }
+section.anim .anim-head h2 { margin: 0; font-size: 1.16em; line-height: 1.25; }
+section.anim .anim-head .chip { font-size: .64em; }
+section.anim .anim-head .segwrap { margin-left: auto; }
+section.anim .anim-head .segwrap button { font-size: .74em; padding: .32em .8em; }
+
+section.anim .anim-body { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 33%, 580px); gap: .75em; }
+section.anim .anim-stage { min-height: 0; min-width: 0; display: grid; gap: .3em; background: var(--surface); border: 1px solid var(--grid); border-radius: 12px; padding: .45em .55em; }
+section.anim .stage-caption { font-size: .92em; min-height: 1.6em; display: flex; flex-wrap: wrap; gap: .2em 1.4em; align-items: baseline; }
+section.anim .stage-note { margin: 0; color: var(--ink-2); font-size: .7em; min-height: 1.1em; }
+section.anim .anim-side { min-height: 0; min-width: 0; overflow: auto; display: flex; flex-direction: column; gap: .45em; padding-right: .15em; }
+section.anim .anim-controls { display: flex; align-items: center; gap: .4em .55em; flex-wrap: wrap; }
+section.anim .anim-controls label { color: var(--ink-2); font-size: .8em; }
+section.anim .anim-controls .keys { margin-left: auto; color: var(--muted); font-size: .72em; }
+
+section.anim .side-top { display: flex; align-items: center; justify-content: space-between; gap: .4em; flex-wrap: wrap; }
+section.anim .phases { display: flex; gap: .25em; flex-wrap: wrap; }
+section.anim .phases span { font-size: .7em; padding: .18em .62em; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-2); white-space: nowrap; }
+section.anim .phases span.on { background: var(--s1); border-color: var(--s1); color: #fff; font-weight: 650; }
+section.anim .iter { color: var(--ink-2); font-size: .74em; font-variant-numeric: tabular-nums; }
+section.anim .step-title { margin: .1em 0 0; font-size: 1.28em; line-height: 1.2; }
+section.anim .step-text { margin: 0; line-height: 1.42; }
+section.anim .step-formula { padding: .4em .65em; border-left: 4px solid var(--s1); background: var(--page); border-radius: 0 8px 8px 0; font-size: 1.02em; overflow-x: auto; overflow-y: hidden; min-height: 2.4em; }
+section.anim .step-formula .katex { font-size: 1.12em; }
+section.anim .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.6em, 1fr)); gap: .35em; }
+section.anim .stat { background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: .25em .55em; min-width: 0; }
+section.anim .stat > span { display: block; color: var(--ink-2); font-size: .7em; line-height: 1.3; }
+section.anim .stat b { font-size: 1.08em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+section.anim .fine { color: var(--ink-2); font-size: .74em; line-height: 1.4; margin: 0; }
+section.anim .lo { text-decoration: underline; }
+section.anim .hi { text-decoration: overline; }
+section.anim svg.plot, section.anim svg.chart { display: block; width: 100%; height: 100%; min-height: 0; }
+section.anim svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+/* === BISECTION === */
+section.anim .bi-stage { grid-template-rows: auto minmax(0, 1fr) 3.9em auto; }
+section.anim .table-wrap { min-height: 4.5em; flex: 1 1 auto; overflow: auto; border: 1px solid var(--grid); border-radius: 8px; }
+section.anim .iter-table { border-collapse: collapse; width: 100%; font-size: .72em; font-variant-numeric: tabular-nums; }
+section.anim .iter-table th, section.anim .iter-table td { padding: .18em .4em; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+section.anim .iter-table th { position: sticky; top: 0; background: var(--surface); color: var(--ink-2); font-weight: 600; }
+section.anim .iter-table td:first-child, section.anim .iter-table th:first-child { text-align: left; }
+section.anim .iter-table tr.now td { background: var(--region-fill); font-weight: 650; }
+section.anim .iter-table tr.stop td { color: var(--good); font-weight: 700; }
+
+/* === 3D SURFACE BOX (gradient search, Lagrange, KKT scene 6) === */
+section.anim .s3d { position: relative; min-height: 0; border-radius: 9px; overflow: hidden; background: var(--page); }
+section.anim .s3d canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+section.anim .s3d canvas:active { cursor: grabbing; }
+section.anim .view-tools { position: absolute; left: .4em; top: .4em; display: flex; gap: .25em; flex-wrap: wrap; }
+section.anim .view-tools button { font-size: .7em; padding: .28em .7em; background: var(--surface); }
+section.anim .view-tools button[aria-pressed="true"] { background: var(--s1); border-color: var(--s1); color: #fff; }
+section.anim .drag-hint { position: absolute; right: .6em; bottom: .4em; color: var(--muted); font-size: .66em; pointer-events: none; }
+
+/* === GRADIENT === */
+section.anim .gr-stage { grid-template-rows: auto minmax(0, 1.75fr) minmax(0, 1fr); }
+section.anim .gr-phi-wrap { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+section.anim .gr-phi { touch-action: none; cursor: ew-resize; }
+section.anim .gr-phi-wrap input[type="range"] { width: auto; margin: 0 var(--phi-pad-r, 1em) 0 var(--phi-pad-l, 3em); accent-color: var(--s5); }
+
+/* === KKT SCENES === */
+section.anim .k-stage { grid-template-rows: auto minmax(0, 1fr) auto; }
+section.anim .k-stage.k-noslider { grid-template-rows: auto minmax(0, 1fr); }
+section.anim .k-pair { min-height: 0; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: .5em; }
+section.anim .k-pair > * { min-height: 0; min-width: 0; }
+section.anim .k-col { min-height: 0; display: grid; grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr); gap: .3em; }
+section.anim .k-col.even { grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+section.anim .k-view { position: relative; min-height: 0; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); }
+section.anim .k-view > .s3d, section.anim .k-view > svg { grid-area: 1 / 1; min-height: 0; height: 100%; }
+section.anim .k-view > [hidden] { display: none; }
+section.anim .view-tools.view-switch { left: auto; right: .4em; }
+section.anim .changed-note { color: var(--ink); background: var(--region-fill); border-radius: 6px; padding: .2em .5em; }
+section.anim .k-slider { display: flex; align-items: center; gap: .6em; font-size: .86em; color: var(--ink-2); padding: 0 .3em; }
+section.anim .k-slider input[type="range"] { flex: 1; width: auto; accent-color: var(--s5); }
+section.anim .k-slider b { color: var(--ink); min-width: 4.2em; font-variant-numeric: tabular-nums; }
+section.anim .k-slider input:disabled + b { color: var(--muted); }
+section.anim .k-slider button { font-size: .8em; padding: .28em .8em; white-space: nowrap; }
+section.anim svg.k-drag { touch-action: none; cursor: grab; }
+section.anim .cond-list { display: grid; gap: .12em; }
+section.anim .cond-row { display: grid; grid-template-columns: 8.6em minmax(0, 1fr); gap: .45em; align-items: center; padding: .1em .4em; border-radius: 6px; border: 1px solid transparent; }
+section.anim .cond-row .tag { font-size: .66em; color: var(--ink-2); line-height: 1.2; }
+section.anim .cond-row .math { display: flex; flex-wrap: wrap; column-gap: 1.4em; overflow-x: auto; overflow-y: hidden; }
+section.anim .cond-row .math > span { white-space: nowrap; }   /* KaTeX would otherwise break "= 0" onto a line of its own */
+section.anim .cond-row .katex { font-size: 1em; }
+section.anim .cond-row.on { background: var(--region-fill); border-color: var(--s1); }
+section.anim .cond-row.on .tag { color: var(--ink); font-weight: 650; }
+section.anim .cond-row.done .tag::before { content: '✓ '; color: var(--good); font-weight: 700; }
+section.anim .cond-row.fail .tag::before { content: '✗ '; color: var(--critical); font-weight: 700; }
+section.anim .cond-row.dim { opacity: .38; }
+section.anim .cond-head { margin: 0; color: var(--ink-2); font-size: .74em; }
+section.anim .meters { display: grid; gap: .3em; }
+section.anim .meters .m-heading { color: var(--ink-2); font-size: .74em; }
+section.anim .meter { display: grid; grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr) 3.4em; gap: .5em; align-items: center; }
+section.anim .meter .m-label .katex { font-size: .95em; }
+section.anim .meter .m-bar { position: relative; height: .7em; background: var(--page); border: 1px solid var(--grid); border-radius: 4px; }
+section.anim .meter .m-bar::after { content: ''; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; background: var(--ink-2); }
+section.anim .meter .m-bar i { position: absolute; top: 0; bottom: 0; background: var(--s5); border-radius: 3px; }
+section.anim .meter b { text-align: right; font-variant-numeric: tabular-nums; font-size: .9em; }
+section.anim .meter.zero b { color: var(--good); }
+section.anim .cases { list-style: none; margin: 0; padding: 0; display: grid; gap: .2em; }
+section.anim .cases li { padding: .2em .5em; border-radius: 6px; border: 1px solid var(--grid); font-size: .86em; line-height: 1.35; }
+section.anim .cases li.on { background: var(--region-fill); border-color: var(--s1); font-weight: 650; }
+section.anim .kkt-table { border-collapse: collapse; width: 100%; font-size: .8em; font-variant-numeric: tabular-nums; }
+section.anim .kkt-table th, section.anim .kkt-table td { padding: .1em .45em; border-bottom: 1px solid var(--grid); text-align: left; white-space: normal; }   /* tight: the condition list sits below */
+section.anim .kkt-table th { color: var(--ink-2); font-weight: 600; }
+section.anim .kkt-table tr.best td { font-weight: 700; }
+section.anim .kkt-table tr.sel td { background: var(--region-fill); }
+section.anim .kkt-table .pt { font: inherit; line-height: 1.25; padding: 0 .4em; border-radius: 6px; }
+section.anim .kkt-table .yes { color: var(--good); font-weight: 700; }
+section.anim .kkt-table .no { color: var(--critical); font-weight: 700; }
+
+/* === PHONES AND SHORT SCREENS: let the card grow instead of squeezing === */
+@media (max-width: 860px), (max-height: 470px) {
+  .embed-mode:has(section.anim.embed-target) body { overflow: auto; }
+  section.anim .anim-frame,
+  .embed-mode section.anim.embed-target .anim-frame { height: auto; min-height: 0; }
+  section.anim .anim-body { grid-template-columns: minmax(0, 1fr); }
+  section.anim .anim-head .segwrap { margin-left: 0; }
+  section.anim .bi-stage { height: 64vh; min-height: 340px; }
+  section.anim .gr-stage { height: 82vh; min-height: 460px; }
+  section.anim .k-stage { height: 86vh; min-height: 520px; }
+  section.anim .k-pair { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1.2fr) minmax(0, 1fr); }
+  section.anim .anim-side { overflow: visible; }
+  section.anim .table-wrap { max-height: 14em; }
+  section.anim .anim-controls { position: sticky; bottom: 0; background: var(--page); padding: .35em 0; z-index: 3; }
+  section.anim .anim-controls .keys { display: none; }
+}
