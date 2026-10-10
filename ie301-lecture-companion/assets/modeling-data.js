@@ -51,11 +51,6 @@ window.MODELING = (() => {
     'What does this imply about choosing x and y?',
     ['The marginal profit of x can depend on y','The problem must have an integer solution','x and y can always be optimized independently'],0,
     ['The derivative of bxy with respect to x is by, so the other decision matters.','A cross term says nothing about an integer domain.','Independent optimizations can miss the interaction represented by bxy.'],true);
-  add('04','budget','utility',10,'Write the stated resource limit',
-    'Choose x₁,x₂>0 to obtain utility a ln x₁+(1−a) ln x₂, where 0<a<1. Prices c₁,c₂ are positive. Spending may not exceed d.',
-    'Which inequality directly translates the spending limit?',
-    ['c₁x₁+c₂x₂ ≥ d','c₁x₁+c₂x₂ ≤ d','x₁+x₂ ≤ d'],1,
-    ['This requires a minimum spend, not a maximum.','This is the stated limit. Increasing utility and positive prices also justify equality at an optimum here.','The budget is in money, so quantities must be multiplied by prices.']);
   add('04','shadow','chem',28,'What does a multiplier measure?',
     'V(b) is maximum profit with capacity b. At a smooth point, the capacity multiplier is λ.',
     'How should λ be interpreted?',

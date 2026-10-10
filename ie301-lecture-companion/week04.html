@@ -22,85 +22,17 @@
   <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← Course home</a> · interactive companion, used alongside the slides</div>
   <div class="theme-switch" id="theme-switch"></div>
   <nav class="widgets">
-    <a href="#cubic">1 · Warm-up cubic</a>
-    <a href="#utility">2 · Budget &amp; utility</a>
-    <a href="#kkt-lagrange">3 · Lagrange</a>
-    <a href="#kkt-move">4 · Change one variable</a>
-    <a href="#kkt-price">5 · λ as a price</a>
-    <a href="#kkt-nonneg">6 · x ≥ 0</a>
-    <a href="#kkt-sufficient">7 · When is KKT enough?</a>
-    <a href="#chem">8 · Shadow prices</a>
-    <a href="#kkt-example2">9 · Example 2</a>
+    <a href="#kkt-lagrange">1 · Lagrange</a>
+    <a href="#kkt-move">2 · Change one variable</a>
+    <a href="#kkt-price">3 · λ as a price</a>
+    <a href="#kkt-nonneg">4 · x ≥ 0</a>
+    <a href="#kkt-sufficient">5 · When is KKT enough?</a>
+    <a href="#chem">6 · Shadow prices</a>
+    <a href="#kkt-example2">7 · Example 2</a>
   </nav>
 </header>
 
 <main>
-<!-- ================= WIDGET 1 : WARM-UP CUBIC ================= -->
-<section class="widget" id="cubic">
-  <h2>Warm-up: does f(x) = 48x − 60x² + x³ have a global max? <span class="chip">Slide 3</span></h2>
-  <p class="howto">
-    Vote first: global max — yes or no? Then find both local extrema (you’ll need to zoom) and watch
-    what the tails do.
-  </p>
-  <div class="controls">
-    <span class="segwrap">
-      <button class="seg active" id="cu-far">Full picture</button>
-      <button class="seg" id="cu-near">Zoom to the small one</button>
-    </span>
-    <button id="cu-reveal" class="primary">Reveal extrema</button>
-  </div>
-  <canvas class="viz short" id="c-cu"></canvas>
-  <p class="status info" id="cu-status"></p>
-  <p class="note">
-    f′(x) = 48 − 120x + 3x² = 0 gives x ≈ 0.404 (f″ &lt; 0: local max, f ≈ 9.68) and x ≈ 39.60
-    (f″ &gt; 0: local min, f ≈ −32036). But x³ dominates: f → +∞ as x → +∞ and −∞ as x → −∞,
-    so there is <em>no</em> global max or min — local analysis alone can’t certify global optimality.
-  </p>
-</section>
-
-<!-- ================= WIDGET 2 : BUDGET & UTILITY (LAGRANGE) ================= -->
-<section class="widget" id="utility">
-  <h2>Spend the budget: Lagrange in action <span class="chip">Slides 10–12</span></h2>
-  <p class="howto">
-    You have $10 and buy x₁, x₂ at prices c₁, c₂ to maximize utility a·ln x₁ + (1−a)·ln x₂ with the
-    budget spent exactly (equality constraint). <b>Slide along the budget line</b> to find the best mix —
-    then change a price and watch the slides’ surprising comparative statics.
-  </p>
-  <div class="controls">
-    <div class="group">
-      <label for="ut-s">position on budget line</label>
-      <input type="range" id="ut-s" min="0.03" max="0.97" step="0.005" value="0.3" style="width:230px">
-    </div>
-    <div class="group">
-      <label for="ut-c1">c₁</label>
-      <input type="range" id="ut-c1" min="1" max="5" step="0.25" value="2" style="width:110px">
-      <span class="readout"><b id="ut-c1v">2.00</b></span>
-    </div>
-    <div class="group">
-      <label for="ut-c2">c₂</label>
-      <input type="range" id="ut-c2" min="1" max="5" step="0.25" value="1" style="width:110px">
-      <span class="readout"><b id="ut-c2v">1.00</b></span>
-    </div>
-    <div class="group">
-      <label for="ut-a">a</label>
-      <input type="range" id="ut-a" min="0.2" max="0.8" step="0.05" value="0.5" style="width:110px">
-      <span class="readout"><b id="ut-av">0.50</b></span>
-    </div>
-  </div>
-  <div class="controls">
-    <span class="readout">x₁ = <b id="ut-x1">—</b>, x₂ = <b id="ut-x2">—</b></span>
-    <span class="readout">utility: <b id="ut-u">—</b></span>
-    <button id="ut-reveal" class="primary">Reveal optimum ★</button>
-  </div>
-  <canvas class="viz short" id="c-ut"></canvas>
-  <p class="status info" id="ut-status"></p>
-  <div class="note">
-    Lagrangian (slide 11): \(L = a\ln x_1 + (1-a)\ln x_2 + \lambda(d - c_1x_1 - c_2x_2)\); <details class="spoiler"><summary>spoiler — open after the class has answered</summary>setting ∂L = 0 gives
-    \(x_1^* = \frac{da}{c_1}\) and \(x_2^* = \frac{d(1-a)}{c_2}\). So raising c₁ lowers x₁* — but leaves x₂* <em>completely
-    unchanged</em> (slide 12). Try it: move the c₁ slider after revealing.
-  </details></div>
-</section>
-
 <!-- ================= KKT ANIMATION : kkt-lagrange (code in assets/anim-kkt.js) ================= -->
 <section class="widget anim" id="kkt-lagrange">
 <div class="anim-frame">
@@ -340,140 +272,6 @@
 const el = id => document.getElementById(id);
 const fmt = (v, d = 2) => Number(v).toFixed(d);
 
-
-/* ============================================================
-   WIDGET 1 — warm-up cubic (slide 3)
-   ============================================================ */
-(() => {
-  const canvas = el('c-cu');
-  const f = x => 48 * x - 60 * x * x + x ** 3;
-  const x1 = (120 - Math.sqrt(120 * 120 - 4 * 3 * 48)) / 6; // local max ~0.404
-  const x2 = (120 + Math.sqrt(120 * 120 - 4 * 3 * 48)) / 6; // local min ~39.6
-  const VIEWS = {
-    far: { x0: -12, x1: 52, y0: -36000, y1: 22000, xt: [-10, 0, 10, 20, 30, 40, 50], yt: [-30000, -20000, -10000, 10000, 20000] },
-    near: { x0: -0.6, x1: 2.2, y0: -70, y1: 60, xt: [-0.5, 0.5, 1, 1.5, 2], yt: [-60, -40, -20, 20, 40] },
-  };
-  let view = 'far', revealed = false;
-
-  function draw() {
-    const v = VIEWS[view];
-    const p = VIZ.plot(canvas, v);
-    const t = VIZ.theme();
-    VIZ.axes(p, t, { xticks: v.xt, yticks: v.yt, xlabel: 'x', ylabel: 'f(x)' });
-    VIZ.curve(p, f, t.s1, 2.5);
-    if (revealed) {
-      if (x1 > v.x0 && x1 < v.x1) {
-        VIZ.star(p, x1, f(x1), t.s2, 10);
-        VIZ.label(p, 'local max (0.40, 9.7)', x1, f(x1), t.s2, { dy: -12, bold: true });
-      }
-      if (x2 > v.x0 && x2 < v.x1) {
-        VIZ.star(p, x2, f(x2), t.bad, 10);
-        VIZ.label(p, 'local min (39.6, −32036)', x2, f(x2), t.bad, { dy: 20, bold: true, align: 'center', baseline: 'top' });
-      }
-    }
-  }
-
-  el('cu-far').addEventListener('click', () => { view = 'far'; el('cu-far').classList.add('active'); el('cu-near').classList.remove('active'); draw(); });
-  el('cu-near').addEventListener('click', () => { view = 'near'; el('cu-near').classList.add('active'); el('cu-far').classList.remove('active'); draw(); });
-  el('cu-reveal').addEventListener('click', () => {
-    revealed = !revealed;
-    el('cu-reveal').textContent = revealed ? 'Hide extrema' : 'Reveal extrema';
-    const st = el('cu-status');
-    st.className = 'status info';
-    st.textContent = revealed ? 'Two local extrema — yet NO global max or min: the cubic term runs away to ±∞ in the tails.' : '';
-    draw();
-  });
-  VIZ.register(canvas, draw);
-})();
-
-/* ============================================================
-   WIDGET 2 — budget & utility, Lagrange (slides 10-12)
-   max a ln x1 + (1-a) ln x2  s.t. c1 x1 + c2 x2 = d (= 10)
-   ============================================================ */
-(() => {
-  const canvas = el('c-ut');
-  const D = 10;
-  let c1 = 2, c2 = 1, a = 0.5, s = 0.3, revealed = false;
-  const view = { x0: -0.4, x1: 10.8, y0: -0.4, y1: 10.8 };
-
-  const u = (x, y) => a * Math.log(x) + (1 - a) * Math.log(y);
-  const curX1 = () => s * D / c1;
-  const curX2 = () => (D - c1 * curX1()) / c2;
-
-  function indiff(p, t, level, color, alpha, width) {
-    // x2 = exp((level - a ln x1) / (1-a))
-    const { ctx } = p;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    VIZ.curve(p, x => x <= 0.01 ? NaN : Math.exp((level - a * Math.log(x)) / (1 - a)), color, width);
-    ctx.restore();
-  }
-
-  function draw() {
-    const p = VIZ.plot(canvas, view);
-    const t = VIZ.theme();
-    VIZ.axes(p, t, { xticks: [0, 2, 4, 6, 8, 10], yticks: [0, 2, 4, 6, 8, 10], xlabel: 'x₁', ylabel: 'x₂' });
-
-    // budget line
-    const { ctx, X, Y } = p;
-    ctx.save();
-    ctx.strokeStyle = t.ink2;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(X(0), Y(D / c2));
-    ctx.lineTo(X(D / c1), Y(0));
-    ctx.stroke();
-    ctx.restore();
-    VIZ.label(p, 'budget: c₁x₁ + c₂x₂ = 10', Math.min(9.8, D / c1 * 0.62), Math.max(0.6, (D - c1 * Math.min(9.8, D / c1 * 0.62)) / c2), t.ink2, { dx: 8, size: 13 });
-
-    const x1 = curX1(), x2 = curX2();
-    const uc = u(x1, x2);
-    const x1s = D * a / c1, x2s = D * (1 - a) / c2;
-    const us = u(x1s, x2s);
-
-    // background indifference curves + the one through the current point
-    [us - 0.7, us - 0.35, us + 0.35].forEach(lv => indiff(p, t, lv, t.axis, 0.7, 1));
-    indiff(p, t, uc, t.s1, 1, 2.5);
-    VIZ.label(p, 'your indifference curve', 0.35, Math.min(10.2, Math.exp((uc - a * Math.log(0.35)) / (1 - a))), t.s1, { dy: -8, size: 13, bold: true });
-
-    if (revealed) {
-      indiff(p, t, us, t.s2, 1, 2);
-      VIZ.star(p, x1s, x2s, t.s2, 10);
-      VIZ.label(p, '(' + fmt(x1s, 2) + ', ' + fmt(x2s, 2) + ')', x1s, x2s, t.s2, { dx: 13, dy: -6, bold: true });
-    }
-
-    VIZ.dot(p, x1, x2, t.s5, 8, true);
-
-    el('ut-x1').textContent = fmt(x1, 2);
-    el('ut-x2').textContent = fmt(x2, 2);
-    el('ut-u').textContent = fmt(uc, 4);
-
-    const st = el('ut-status');
-    if (revealed) {
-      st.className = 'status info';
-      st.textContent = 'x₁* = da/c₁ = ' + fmt(x1s, 2) + ', x₂* = d(1−a)/c₂ = ' + fmt(x2s, 2) +
-        '. Now change c₁ — x₁* moves, x₂* stays put.';
-    } else if (Math.abs(uc - us) < 0.003) {
-      st.className = 'status ok';
-      st.textContent = 'That is essentially the tangency point — the indifference curve just touches the budget line.';
-    } else {
-      st.className = 'status info';
-      st.textContent = 'Slide along the budget line: utility rises until your indifference curve is tangent to it.';
-    }
-  }
-
-  const upd = () => { el('ut-c1v').textContent = fmt(c1); el('ut-c2v').textContent = fmt(c2); el('ut-av').textContent = fmt(a); draw(); };
-  el('ut-s').addEventListener('input', e => { s = +e.target.value; draw(); });
-  el('ut-c1').addEventListener('input', e => { c1 = +e.target.value; upd(); });
-  el('ut-c2').addEventListener('input', e => { c2 = +e.target.value; upd(); });
-  el('ut-a').addEventListener('input', e => { a = +e.target.value; upd(); });
-  el('ut-reveal').addEventListener('click', () => {
-    revealed = !revealed;
-    el('ut-reveal').textContent = revealed ? 'Hide optimum' : 'Reveal optimum ★';
-    draw();
-  });
-  VIZ.register(canvas, draw);
-})();
 
 /* ============================================================
    WIDGET 4 — shadow prices, chemical monopolist (slides 28-32)

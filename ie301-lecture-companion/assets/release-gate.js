@@ -16,7 +16,7 @@
     week01: Object.freeze(['regression','box','explorer','hunt','convexity','hessian']),
     week02: Object.freeze(['warehouse','tank','bisection','newton','candidates','monopolist']),
     week03: Object.freeze(['classify','profit','openbox','gradient']),
-    week04: Object.freeze(['cubic','utility','kkt-lagrange','kkt-move','kkt-price','kkt-nonneg','kkt-sufficient','chem','kkt-example2']),
+    week04: Object.freeze(['kkt-lagrange','kkt-move','kkt-price','kkt-nonneg','kkt-sufficient','chem','kkt-example2']),
     week05: Object.freeze(['geometry','notation','simplex']),
     week07: Object.freeze(['matches','network','efficiency','inventory']),
     week08: Object.freeze(['ww','teams','glueco','fishery']),

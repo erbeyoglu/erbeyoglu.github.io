@@ -163,7 +163,10 @@ window.KKT = (() => {
     ANIM.stats($('.js-stats'), [
       ['λ', fracText(Math.round(state.lam * 1000) / 1000)],
       [index === 0 ? 'top of R' : 'top of L', '(' + num(top[0], 3) + ', ' + num(top[1], 3) + ')'],
-      ['3x + y there', num(3 * top[0] + top[1], 3)]
+      // Say whether that point keeps the budget: only 3x + y = 10 is feasible.
+      ['3x + y there', Math.abs(3 * top[0] + top[1] - B) < 5e-4
+        ? num(3 * top[0] + top[1], 3) + ' ✓ feasible'
+        : num(3 * top[0] + top[1], 3) + ' ≠ 10: infeasible']
     ]);
   }
   root.querySelectorAll('.js-view').forEach(btn => btn.addEventListener('click', () => {

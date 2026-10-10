@@ -117,20 +117,6 @@ window.LESSON_ACTIVITIES = {
     "dir": "min",
     "label": "metal (m²)"
   },
-  "week04:cubic": {
-    "key": "week04:cubic",
-    "week": "week04",
-    "id": "cubic",
-    "title": "Warm-up: does f(x) = 48x − 60x² + x³ have a global max?",
-    "scored": false
-  },
-  "week04:utility": {
-    "key": "week04:utility",
-    "week": "week04",
-    "id": "utility",
-    "title": "Spend the budget: Lagrange in action",
-    "scored": false
-  },
   "week04:chem": {
     "key": "week04:chem",
     "week": "week04",
