@@ -85,7 +85,7 @@ window.MODELING = (() => {
     'Starting inventory is 4, demand is 1, production capacity is 5, and end-of-month storage capacity is 4. Production is a nonnegative integer.',
     'Which set contains exactly the feasible production quantities?',
     ['{0,1,2,3,4,5}','{1,2,3,4,5}','{0,1}'],2,
-    ['Production above 1 leaves more than 4 in storage.','Starting stock already covers demand; production need not be positive, and storage still limits it.','End stock is 3+x, so 0≤x≤1. Both choices meet demand and both capacities.'],true);
+    ['Production above 1 leaves more than 4 in storage.','Starting stock already covers demand; production need not be positive, and storage still limits it.','End stock is 3+x, so 0≤x≤1. Both choices meet demand and both capacities.']);
   add('08','stage','teams',14,'A stage need not be a date',
     'Five medical teams must be allocated among three countries. Each country has its own benefit table for the number assigned.',
     'Which stage/state pair supports a resource-allocation DP?',
