@@ -6,6 +6,7 @@
 <title>IE301 · Week 11 — Discrete-Time Markov Chains, Part 1 (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/learning.css">
+<link rel="stylesheet" href="assets/lecture-animations.css">
 <script src="assets/theme.js"></script>
 <script src="assets/release-schedule.js"></script>
 <script src="assets/release-gate.js"></script>
@@ -16,6 +17,8 @@
   table.dp input { width: 58px; font: inherit; text-align: right; border: 1px solid var(--border); border-radius: 5px; background: var(--page); color: var(--ink); }
   .pathlist { font-variant-numeric: tabular-nums; font-size: 0.95rem; line-height: 1.9; }
 </style>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
 <script src="assets/course-nav.js"></script>
 </head>
 <body>
@@ -25,16 +28,46 @@
   <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← Course home</a> · interactive companion, used alongside the slides</div>
   <div class="theme-switch" id="theme-switch"></div>
   <nav class="widgets">
-    <a href="#weather">1 · Weather chain</a>
-    <a href="#gambler">2 · Gambler’s ruin</a>
-    <a href="#paths">3 · n-step paths</a>
-    <a href="#classify">4 · Classify the states</a>
-    <a href="#insurance">5 · Build the matrix</a>
+    <a href="#nextword">1 · Warm-up: the next word</a>
+    <a href="#weather">2 · Weather chain</a>
+    <a href="#gambler">3 · Gambler’s ruin</a>
+    <a href="#diagram">4 · Arrows and matrix</a>
+    <a href="#paths">5 · n-step paths</a>
+    <a href="#classify">6 · Classify the states</a>
+    <a href="#insurance">7 · Build the matrix</a>
   </nav>
 </header>
 
 <main>
 <!-- ================= WIDGET 1 : WEATHER CHAIN ================= -->
+<section class="widget anim" id="nextword">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Warm-up: how does your phone guess the next word?</h2>
+    <span class="chip">Before slide 4</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage mk-stage">
+      <div class="stage-caption"><button class="js-again" hidden>Another message</button></div>
+      <svg class="plot js-plot" role="img" aria-label="Messages, the word chain or its matrix, for the current step"></svg>
+      <p class="stage-note js-note"></p>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top">
+        <div class="phases js-phases"></div>
+        <span class="iter js-iter"></span>
+      </div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="stats js-stats"></div>
+      <p class="fine js-fine"></p>
+    </aside>
+  </div>
+  <footer class="anim-controls"></footer>
+</div>
+</section>
+
 <section class="widget" id="weather">
   <h2>Centerville weather: watching memory fade <span class="chip">Slides 7, 16, 28</span></h2>
   <p class="howto">
@@ -95,6 +128,37 @@
 </section>
 
 <!-- ================= WIDGET 3 : N-STEP PATHS ================= -->
+<section class="widget anim" id="diagram">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Arrows and matrix: the same numbers</h2>
+    <span class="chip">Slides 16–22</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage mk-stage">
+      <div class="stage-caption"><span class="segwrap" role="group" aria-label="Example"><button class="seg js-preset" data-preset="balls">Balls (slides 18–19)</button><button class="seg js-preset" data-preset="weather">Weather (slide 16)</button><button class="seg js-preset" data-preset="beer">Beer (slide 22)</button></span></div>
+      <div class="mk-split">
+        <svg class="plot js-plot" role="img" aria-label="State transition diagram"></svg>
+        <div class="mk-matrix-wrap js-matrix"></div>
+      </div>
+      <p class="stage-note js-note"></p>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top">
+        <div class="phases js-phases"></div>
+        <span class="iter js-iter"></span>
+      </div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="stats js-stats"></div>
+      <p class="fine js-fine"></p>
+    </aside>
+  </div>
+  <footer class="anim-controls"></footer>
+</div>
+</section>
+
 <section class="widget" id="paths">
   <h2>Where does P² come from? <span class="chip">Slides 22–33</span></h2>
   <p class="howto">
@@ -642,6 +706,8 @@ const matPow = (P, n) => { let R = P; for (let k = 1; k < n; k++) R = matMul(R, 
   });
 })();
 </script>
+<script defer src="assets/lecture-animations.js"></script>
+<script defer src="assets/anim-markov.js"></script>
 <script src="assets/classroom-config.js"></script>
 <script src="assets/qrcode.js"></script>
 <script src="assets/classroom.js"></script>

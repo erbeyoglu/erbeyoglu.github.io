@@ -135,7 +135,7 @@ window.LESSON_ACTIVITIES = {
     "key": "week05:notation",
     "week": "week05",
     "id": "notation",
-    "title": "Spot Q and c",
+    "title": "Spot Q, c, A and b",
     "scored": false
   },
   "week05:simplex": {

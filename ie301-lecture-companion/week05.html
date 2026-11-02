@@ -39,7 +39,7 @@
   <div class="theme-switch" id="theme-switch"></div>
   <nav class="widgets">
     <a href="#geometry">1 · A QPP in pictures</a>
-    <a href="#notation">2 · Spot Q and c</a>
+    <a href="#notation">2 · Spot Q, c, A and b</a>
     <a href="#simplex">3 · Modified simplex machine</a>
   </nav>
 </header>
@@ -51,8 +51,16 @@
   <p class="howto">
     The opening example: max f = 15x₁ + 30x₂ + 4x₁x₂ − 2x₁² − 4x₂² s.t. x₁ + 2x₂ ≤ 30, x ≥ 0.
     <b>Drag the point</b> and hunt the max. Quadratic objective + linear constraints — where can the
-    optimum sit this time?
+    optimum sit this time? Then compare the same region with a linear objective (straight level lines)
+    and with a variation whose peak lies inside.
   </p>
+  <div class="controls">
+    <span class="segwrap">
+      <button class="seg" id="qg-lp">Linear: 15x₁ + 20x₂</button>
+      <button class="seg active" id="qg-qp">Slide 3 QP</button>
+      <button class="seg" id="qg-in">Variation: peak inside</button>
+    </span>
+  </div>
   <div class="controls">
     <span class="readout">f = <b id="qg-val">—</b></span>
     <span class="readout">your best: <b id="qg-best">—</b></span>
@@ -63,16 +71,19 @@
   <div class="note">
     <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The unconstrained peak (15, 11.25) is <em>outside</em> the region, so the optimum slides down to the
     boundary: (12, 9) with f = 270, where ∇f = (3, 6) = 3·(1, 2) — parallel to the constraint normal,
-    with multiplier u = 3.
+    with multiplier u = 3. With the linear objective the level lines are straight and the best point is
+    the corner (30, 0). In the variation (6x₁ + 12x₂ + 4x₁x₂ − 2x₁² − 4x₂², not on the slides) the peak
+    (6, 4.5) is feasible, so no constraint binds. A quadratic optimum can be at a corner, on an edge or inside.
   </details></div>
 </section>
 
 <!-- ================= WIDGET 2 : SPOT Q AND C ================= -->
 <section class="widget" id="notation">
-  <h2>Spot Q and c <span class="chip">Slides 4–7</span></h2>
+  <h2>Spot Q, c, A and b <span class="chip">Slides 4–7, 23</span></h2>
   <p class="howto">
-    Write the objective as f(x) = cᵀx − ½ xᵀQx (with Q symmetric). Fill in the entries and check —
-    the −½ and the cross-term split are where everyone slips.
+    Write the problem in the slide-4 form: max f(x) = cᵀx − ½ xᵀQx subject to Ax ≤ b, x ≥ 0
+    (with Q symmetric). Fill in the entries and check — the −½ and the cross-term split are where
+    everyone slips.
   </p>
   <div class="controls">
     <span class="segwrap">
@@ -80,6 +91,7 @@
       <button class="seg" id="qn-pB">5x₁ − x₁² + 7x₂ − x₂²</button>
     </span>
   </div>
+  <p id="qn-problem" style="font-size:1.05rem"></p>
   <div class="controls" style="align-items:center">
     <span style="font-size:1.05rem">c =</span>
     <span class="matrix" style="grid-template-columns:auto">
@@ -93,14 +105,29 @@
       <input type="number" id="qn-q21" step="any" style="width:70px;font:inherit;text-align:center">
       <input type="number" id="qn-q22" step="any" style="width:70px;font:inherit;text-align:center">
     </span>
+    <span style="font-size:1.05rem">&nbsp;A =</span>
+    <span class="matrix">
+      <input type="number" id="qn-a11" step="any" style="width:70px;font:inherit;text-align:center">
+      <input type="number" id="qn-a12" step="any" style="width:70px;font:inherit;text-align:center">
+      <input type="number" id="qn-a21" class="qn-row2" step="any" style="width:70px;font:inherit;text-align:center">
+      <input type="number" id="qn-a22" class="qn-row2" step="any" style="width:70px;font:inherit;text-align:center">
+    </span>
+    <span style="font-size:1.05rem">&nbsp;b =</span>
+    <span class="matrix" style="grid-template-columns:auto">
+      <input type="number" id="qn-b1" step="any" style="width:70px;font:inherit;text-align:center">
+      <input type="number" id="qn-b2" class="qn-row2" step="any" style="width:70px;font:inherit;text-align:center">
+    </span>
+  </div>
+  <div class="controls">
     <button id="qn-check" class="primary">Check</button>
     <button id="qn-show">Show answer</button>
   </div>
   <p class="status info" id="qn-status"></p>
   <div class="note">
     <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Slide 7’s recipe: qⱼⱼ = −2 × (coefficient of xⱼ²) and qᵢⱼ = qⱼᵢ = −(coefficient of xᵢxⱼ), because the
-    ½ halves the diagonal and the symmetric pair qᵢⱼ + qⱼᵢ shares the cross term. Q positive semidefinite
-    ⇔ f concave ⇔ KKT is necessary AND sufficient (slide 9).
+    ½ halves the diagonal and the symmetric pair qᵢⱼ + qⱼᵢ shares the cross term. A and b come straight
+    from the ≤ constraints: one row of A per constraint, its right-hand side in b; x ≥ 0 stays separate
+    and is not a row of A. Q positive semidefinite ⇔ f concave ⇔ KKT is necessary AND sufficient (slide 9).
   </details></div>
 </section>
 
@@ -180,9 +207,18 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
   const canvas = el('c-qg');
   VIZ.hint(canvas, '🖱 drag the decision point');
   const view = { x0: -1.5, x1: 33, y0: -1, y1: 17.5 };
-  const f = (x, y) => 15 * x + 30 * y + 4 * x * y - 2 * x * x - 4 * y * y;
-  const C = [15, 11.25];
-  const Q2 = [[2, -2], [-2, 4]]; // f = f(C) - (v-C)^T Q2 (v-C)
+  const Q2 = [[2, -2], [-2, 4]]; // both quadratic objectives: f = f(C) - (v-C)^T Q2 (v-C)
+  // Three objectives on the same triangle. 'qp' is slide 3; 'lp' and 'inside' are
+  // variations for comparison and are labelled as such on the page.
+  const OBJECTIVES = {
+    lp: { f: (x, y) => 15 * x + 20 * y, linear: [15, 20], opt: [30, 0], value: 450,
+          done: 'Straight level lines: the best point is the corner (30, 0), f = 450, as in Week 1 and in LP.' },
+    qp: { f: (x, y) => 15 * x + 30 * y + 4 * x * y - 2 * x * x - 4 * y * y, peak: [15, 11.25], opt: [12, 9], value: 270,
+          done: 'The optimum is ON the boundary but NOT at a corner — the QP analogue of Week 1’s lesson. The contour is tangent to the constraint line at (12, 9).' },
+    inside: { f: (x, y) => 6 * x + 12 * y + 4 * x * y - 2 * x * x - 4 * y * y, peak: [6, 4.5], opt: [6, 4.5], value: 45,
+              done: 'The unconstrained peak (6, 4.5) is feasible, so it is the optimum, f = 45: no constraint is binding.' },
+  };
+  let mode = 'qp';
   let pt = { x: 5, y: 4 }, best = null, revealed = false, dragging = false, lastPlot = null;
 
   const feasible = (x, y) => x >= -1e-9 && y >= -1e-9 && x + 2 * y <= 30 + 1e-9;
@@ -207,28 +243,63 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
     ctx.restore();
     VIZ.label(p, 'x₁ + 2x₂ ≤ 30', 17, 7.6, t.ink2, { size: 13 });
 
-    const corners = [[view.x0, view.y0], [view.x0, view.y1], [view.x1, view.y0], [view.x1, view.y1]];
-    const kmax = Math.max(...corners.map(([a, b]) => {
-      const dx = a - C[0], dy = b - C[1];
-      return Q2[0][0] * dx * dx + 2 * Q2[0][1] * dx * dy + Q2[1][1] * dy * dy;
-    }));
-    quadContours(p, t, Q2, C[0], C[1], [1, 2, 3, 4, 5, 6].map(i => kmax * (i / 6) ** 2));
-
-    // unconstrained peak, shown hollow
-    ctx.save();
-    ctx.beginPath(); ctx.arc(X(C[0]), Y(C[1]), 6, 0, 2 * Math.PI);
-    ctx.strokeStyle = t.s1; ctx.lineWidth = 2; ctx.stroke();
-    ctx.restore();
-    VIZ.label(p, 'unconstrained peak — infeasible!', C[0], C[1], t.s1, { dx: 10, dy: -8, size: 13 });
+    const obj = OBJECTIVES[mode];
+    if (obj.linear) {
+      // Level lines c1 x1 + c2 x2 = const, with the improving direction.
+      const [c1, c2] = obj.linear;
+      ctx.save();
+      ctx.strokeStyle = t.s1;
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 1.2;
+      for (let level = 75; level <= 600; level += 75) {
+        ctx.beginPath();
+        ctx.moveTo(X(view.x0), Y((level - c1 * view.x0) / c2));
+        ctx.lineTo(X(view.x1), Y((level - c1 * view.x1) / c2));
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 2;
+      const ax = 22, ay = 13, len = 4 / Math.hypot(c1, c2);
+      const tipX = X(ax + c1 * len), tipY = Y(ay + c2 * len);
+      ctx.beginPath();
+      ctx.moveTo(X(ax), Y(ay)); ctx.lineTo(tipX, tipY); ctx.stroke();
+      const angle = Math.atan2(tipY - Y(ay), tipX - X(ax));
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - 11 * Math.cos(angle - 0.4), tipY - 11 * Math.sin(angle - 0.4));
+      ctx.lineTo(tipX - 11 * Math.cos(angle + 0.4), tipY - 11 * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fillStyle = t.s1;
+      ctx.fill();
+      ctx.restore();
+      VIZ.label(p, 'improving direction', ax + c1 * len, ay + c2 * len, t.s1, { dx: 6, size: 13 });
+    } else {
+      const C = obj.peak;
+      const corners = [[view.x0, view.y0], [view.x0, view.y1], [view.x1, view.y0], [view.x1, view.y1]];
+      const kmax = Math.max(...corners.map(([a, b]) => {
+        const dx = a - C[0], dy = b - C[1];
+        return Q2[0][0] * dx * dx + 2 * Q2[0][1] * dx * dy + Q2[1][1] * dy * dy;
+      }));
+      quadContours(p, t, Q2, C[0], C[1], [1, 2, 3, 4, 5, 6].map(i => kmax * (i / 6) ** 2));
+      // unconstrained peak, shown hollow
+      ctx.save();
+      ctx.beginPath(); ctx.arc(X(C[0]), Y(C[1]), 6, 0, 2 * Math.PI);
+      ctx.strokeStyle = t.s1; ctx.lineWidth = 2; ctx.stroke();
+      ctx.restore();
+      VIZ.label(p, feasible(C[0], C[1]) ? 'unconstrained peak — feasible' : 'unconstrained peak — infeasible!',
+        C[0], C[1], t.s1, { dx: 10, dy: -8, size: 13 });
+    }
 
     if (revealed) {
-      VIZ.star(p, 12, 9, t.s2, 11);
-      VIZ.label(p, '(12, 9), f = 270', 12, 9, t.s2, { dx: 12, dy: 18, bold: true, baseline: 'top' });
+      const [ox, oy] = obj.opt;
+      VIZ.star(p, ox, oy, t.s2, 11);
+      VIZ.label(p, '(' + ox + ', ' + oy + '), f = ' + obj.value, ox, oy, t.s2,
+        { dx: ox > 25 ? -12 : 12, dy: oy < 2 ? -24 : 18, bold: true, baseline: 'top', align: ox > 25 ? 'right' : 'left' });
     }
 
     const ok = feasible(pt.x, pt.y);
     VIZ.dot(p, pt.x, pt.y, ok ? t.s5 : t.bad, 8, true);
-    const v = f(pt.x, pt.y);
+    const v = obj.f(pt.x, pt.y);
     if (ok && (best === null || v > best)) best = v;
     el('qg-val').textContent = fmt(v, 1) + (ok ? '' : ' (infeasible)');
     el('qg-best').textContent = best === null ? '—' : fmt(best, 1);
@@ -236,10 +307,10 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
     const st = el('qg-status');
     if (revealed) {
       st.className = 'status info';
-      st.textContent = 'The optimum is ON the boundary but NOT at a corner — the QP analogue of Week 1’s lesson. The contour is tangent to the constraint line at (12, 9).';
-    } else if (ok && v > 269) {
+      st.textContent = obj.done;
+    } else if (ok && v > obj.value - 1) {
       st.className = 'status ok';
-      st.textContent = 'f ≥ 269 — you are hugging the optimum.';
+      st.textContent = 'f ≥ ' + (obj.value - 1) + ' — you are hugging the optimum.';
     } else {
       st.className = 'status info';
       st.textContent = ok ? 'Drag the violet point.' : 'You left the feasible region!';
@@ -259,6 +330,14 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
     el('qg-reveal').textContent = revealed ? 'Hide optimum' : 'Reveal optimum ★';
     draw();
   });
+  for (const [id, key] of [['qg-lp', 'lp'], ['qg-qp', 'qp'], ['qg-in', 'inside']]) {
+    el(id).addEventListener('click', () => {
+      mode = key; best = null; revealed = false;
+      el('qg-reveal').textContent = 'Reveal optimum ★';
+      ['qg-lp', 'qg-qp', 'qg-in'].forEach(other => el(other).classList.toggle('active', other === id));
+      draw();
+    });
+  }
   VIZ.register(canvas, draw);
 })();
 
@@ -266,19 +345,30 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
    WIDGET 2 — spot Q and c (slides 4-7)
    ============================================================ */
 (() => {
+  // A: the slide-3 example (one constraint). B: the slide-23 example (two constraints).
   const PRESETS = {
-    A: { c: [15, 30], Q: [[4, -4], [-4, 8]] },
-    B: { c: [5, 7], Q: [[2, 0], [0, 2]] },
+    A: { c: [15, 30], Q: [[4, -4], [-4, 8]], A: [[1, 2]], b: [30],
+         text: 'max 15x₁ + 30x₂ + 4x₁x₂ − 2x₁² − 4x₂²  s.t.  x₁ + 2x₂ ≤ 30,  x₁, x₂ ≥ 0' },
+    B: { c: [5, 7], Q: [[2, 0], [0, 2]], A: [[4, 1], [1, 4]], b: [20, 20],
+         text: 'max 5x₁ − x₁² + 7x₂ − x₂²  s.t.  4x₁ + x₂ ≤ 20,  x₁ + 4x₂ ≤ 20,  x₁, x₂ ≥ 0' },
   };
+  const INPUTS = ['qn-c1', 'qn-c2', 'qn-q11', 'qn-q12', 'qn-q21', 'qn-q22',
+                  'qn-a11', 'qn-a12', 'qn-a21', 'qn-a22', 'qn-b1', 'qn-b2'];
   let cur = 'A';
 
   const read = () => ({
     c: [+el('qn-c1').value, +el('qn-c2').value],
     Q: [[+el('qn-q11').value, +el('qn-q12').value], [+el('qn-q21').value, +el('qn-q22').value]],
+    A: [[+el('qn-a11').value, +el('qn-a12').value], [+el('qn-a21').value, +el('qn-a22').value]],
+    b: [+el('qn-b1').value, +el('qn-b2').value],
   });
 
   function clearInputs() {
-    ['qn-c1', 'qn-c2', 'qn-q11', 'qn-q12', 'qn-q21', 'qn-q22'].forEach(id => el(id).value = '');
+    INPUTS.forEach(id => el(id).value = '');
+    // One constraint in problem A: hide the second row of A and b.
+    const rows = PRESETS[cur].A.length;
+    document.querySelectorAll('#notation .qn-row2').forEach(input => { input.hidden = rows < 2; });
+    el('qn-problem').textContent = PRESETS[cur].text;
     el('qn-status').textContent = '';
     el('qn-status').className = 'status info';
   }
@@ -290,7 +380,9 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
     const eq = (a, b) => Math.abs(a - b) < 1e-9;
     const okC = eq(got.c[0], ans.c[0]) && eq(got.c[1], ans.c[1]);
     const okQ = eq(got.Q[0][0], ans.Q[0][0]) && eq(got.Q[0][1], ans.Q[0][1]) && eq(got.Q[1][0], ans.Q[1][0]) && eq(got.Q[1][1], ans.Q[1][1]);
-    if (okC && okQ) {
+    const okA = ans.A.every((row, i) => row.every((v, j) => eq(got.A[i][j], v)));
+    const okB = ans.b.every((v, i) => eq(got.b[i], v));
+    if (okC && okQ && okA && okB) {
       st.className = 'status ok';
       st.textContent = '✓ Correct! And since x'.concat('ᵀQx ≥ 0 (positive semidefinite), f is concave — KKT will be necessary and sufficient.');
       return;
@@ -302,6 +394,8 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
     if (eq(got.Q[0][0], ans.Q[0][0] / 2) || eq(got.Q[1][1], ans.Q[1][1] / 2)) hints.push('Diagonal: remember the −½ — qⱼⱼ is −2× the coefficient of xⱼ².');
     if (!eq(got.Q[0][1], ans.Q[0][1]) && eq(got.Q[0][1], ans.Q[0][1] * 2)) hints.push('Cross term: q₁₂ + q₂₁ together absorb it — each gets half the doubled value.');
     if (got.Q[0][1] * ans.Q[0][1] < 0) hints.push('Sign of the cross entries: f has −½xᵀQx, so a POSITIVE x₁x₂ term needs NEGATIVE q₁₂.');
+    if (!okA) hints.push('A holds the constraint coefficients, one row per ≤ constraint; x ≥ 0 is not a row of A.');
+    if (!okB) hints.push('b holds the right-hand sides of the ≤ constraints.');
     st.textContent = '✗ Not yet. ' + (hints.length ? hints.join(' ') : 'Re-derive each entry from f = cᵀx − ½xᵀQx.');
   }
 
@@ -310,15 +404,19 @@ function quadContours(p, t, Q, cx, cy, levels, color) {
     el('qn-c1').value = ans.c[0]; el('qn-c2').value = ans.c[1];
     el('qn-q11').value = ans.Q[0][0]; el('qn-q12').value = ans.Q[0][1];
     el('qn-q21').value = ans.Q[1][0]; el('qn-q22').value = ans.Q[1][1];
+    ans.A.forEach((row, i) => row.forEach((v, j) => { el('qn-a' + (i + 1) + (j + 1)).value = v; }));
+    ans.b.forEach((v, i) => { el('qn-b' + (i + 1)).value = v; });
     const st = el('qn-status');
     st.className = 'status info';
-    st.textContent = 'c = (' + ans.c + '), Q = [[' + ans.Q[0] + '], [' + ans.Q[1] + ']] — check each entry against the recipe below.';
+    st.textContent = 'c = (' + ans.c + '), Q = [[' + ans.Q[0] + '], [' + ans.Q[1] + ']], A = '
+      + ans.A.map(row => '[' + row + ']').join(' ') + ', b = (' + ans.b + ') — check each entry against the recipe below.';
   }
 
   el('qn-pA').addEventListener('click', () => { cur = 'A'; el('qn-pA').classList.add('active'); el('qn-pB').classList.remove('active'); clearInputs(); });
   el('qn-pB').addEventListener('click', () => { cur = 'B'; el('qn-pB').classList.add('active'); el('qn-pA').classList.remove('active'); clearInputs(); });
   el('qn-check').addEventListener('click', check);
   el('qn-show').addEventListener('click', show);
+  clearInputs();
 })();
 
 /* ============================================================

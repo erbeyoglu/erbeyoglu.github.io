@@ -6,6 +6,7 @@
 <title>IE301 · Week 7 — Deterministic Dynamic Programming, Part 1 (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/learning.css">
+<link rel="stylesheet" href="assets/lecture-animations.css">
 <script src="assets/theme.js"></script>
 <script src="assets/release-schedule.js"></script>
 <script src="assets/release-gate.js"></script>
@@ -22,6 +23,8 @@
   .dp-month { margin-top: 10px; }
   .dp-month h4 { margin: 12px 0 2px; font-size: 1rem; }
 </style>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script defer src="assets/katex/katex.min.js"></script>
 <script src="assets/course-nav.js"></script>
 </head>
 <body>
@@ -31,15 +34,51 @@
   <div class="sub"><a href="../ie301-lecture-companion.html" style="color:inherit">← Course home</a> · interactive companion, used alongside the slides</div>
   <div class="theme-switch" id="theme-switch"></div>
   <nav class="widgets">
-    <a href="#matches">1 · The match puzzle</a>
-    <a href="#network">2 · NYC → LA network</a>
-    <a href="#efficiency">3 · Why DP wins</a>
-    <a href="#inventory">4 · Inventory planner</a>
+    <a href="#dp-warmup">1 · Warm-up: Fibonacci and the ATM</a>
+    <a href="#matches">2 · The match puzzle</a>
+    <a href="#network">3 · NYC → LA network</a>
+    <a href="#efficiency">4 · Why DP wins</a>
+    <a href="#inventory">5 · Inventory planner</a>
   </nav>
 </header>
 
 <main>
-<!-- ================= WIDGET 1 : MATCH PUZZLE ================= -->
+<!-- ================= WIDGET 1 : DP WARM-UP (step-by-step animation, assets/anim-dpwarmup.js) ================= -->
+<section class="widget anim" id="dp-warmup">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>Warm-up: remember answers, look ahead</h2>
+    <span class="chip">Before slide 4</span>
+    <span class="segwrap" role="group" aria-label="Part">
+      <button class="seg js-part" data-part="fib">1 · Fibonacci: store the answers</button>
+      <button class="seg js-part" data-part="atm">2 · ATM: greedy or DP?</button>
+    </span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage dw-stage">
+      <div class="stage-caption js-caption"></div>
+      <svg class="plot js-plot" role="img" aria-label="The picture for the current step: call tree, chart, bills or DP table"></svg>
+      <label class="k-slider js-nrow" hidden>n <input class="js-n" type="range" min="5" max="45" step="1" value="40"> <b class="js-nval">40</b></label>
+      <p class="stage-note js-note"></p>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top">
+        <div class="phases js-phases"></div>
+        <span class="iter js-iter"></span>
+      </div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <pre class="dw-code js-code" hidden></pre>
+      <div class="stats js-stats"></div>
+      <p class="fine js-fine"></p>
+    </aside>
+  </div>
+  <footer class="anim-controls"></footer>
+</div>
+</section>
+
+<!-- ================= WIDGET 2 : MATCH PUZZLE ================= -->
 <section class="widget" id="matches">
   <h2>Beat me if you can: the match puzzle <span class="chip">Slides 4–7</span></h2>
   <p class="howto">
@@ -63,7 +102,7 @@
   </details></div>
 </section>
 
-<!-- ================= WIDGET 2 : NYC-LA NETWORK ================= -->
+<!-- ================= WIDGET 3 : NYC-LA NETWORK ================= -->
 <section class="widget" id="network">
   <h2>Joe’s trip: NYC → LA <span class="chip">Slides 8–18</span></h2>
   <p class="howto">
@@ -91,7 +130,7 @@
   </details></div>
 </section>
 
-<!-- ================= WIDGET 3 : EFFICIENCY ================= -->
+<!-- ================= WIDGET 4 : EFFICIENCY ================= -->
 <section class="widget" id="efficiency">
   <h2>Why DP wins: count the additions <span class="chip">Slides 19–22</span></h2>
   <p class="howto">
@@ -110,6 +149,7 @@
       <span class="readout"><b id="ef-kv">5</b></span>
     </div>
   </div>
+  <canvas class="viz short" id="c-ef" style="height:280px" aria-label="Layered network with the chosen number of stages and cities"></canvas>
   <div class="controls">
     <span class="readout">paths: <b id="ef-paths">—</b></span>
     <span class="readout">enumeration additions: <b id="ef-enum">—</b></span>
@@ -124,7 +164,7 @@
   </p>
 </section>
 
-<!-- ================= WIDGET 4 : INVENTORY PLANNER ================= -->
+<!-- ================= WIDGET 5 : INVENTORY PLANNER ================= -->
 <section class="widget" id="inventory">
   <h2>Beat $20: the production plan <span class="chip">Slides 31–44</span></h2>
   <p class="howto">
@@ -421,10 +461,60 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
    WIDGET 3 — efficiency (slides 19-22)
    ============================================================ */
 (() => {
+  const canvas = el('c-ef');
+
+  // The network the sliders describe: source, m middle stages of k cities, destination.
+  // One highlighted route shows that a path picks one city per middle stage.
+  function draw() {
+    const m = +el('ef-m').value, k = +el('ef-k').value;
+    const { ctx, w, h } = VIZ.setup(canvas);
+    const t = VIZ.theme();
+    ctx.clearRect(0, 0, w, h);
+    const cols = m + 2, padX = 34, padTop = 18, padBottom = 34;
+    const x = c => padX + c * (w - 2 * padX) / (cols - 1);
+    const y = (i, n) => n === 1 ? (padTop + h - padBottom) / 2
+      : padTop + i * (h - padTop - padBottom) / (n - 1);
+    const column = c => (c === 0 || c === cols - 1) ? [y(0, 1)] : Array.from({ length: k }, (_, i) => y(i, k));
+    const nodes = Array.from({ length: cols }, (_, c) => column(c));
+    const route = nodes.map((ys, c) => ys[(c * 2) % ys.length]);  // one example path
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = t.grid;
+    for (let c = 0; c < cols - 1; c++) {
+      for (const y1 of nodes[c]) for (const y2 of nodes[c + 1]) {
+        ctx.beginPath(); ctx.moveTo(x(c), y1); ctx.lineTo(x(c + 1), y2); ctx.stroke();
+      }
+    }
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = t.s1;
+    ctx.beginPath();
+    route.forEach((yy, c) => (c ? ctx.lineTo(x(c), yy) : ctx.moveTo(x(c), yy)));
+    ctx.stroke();
+    const r = Math.max(3, Math.min(7, (h - padTop - padBottom) / (2.6 * k)));
+    nodes.forEach((ys, c) => ys.forEach(yy => {
+      ctx.beginPath();
+      ctx.arc(x(c), yy, c === 0 || c === cols - 1 ? r + 2 : r, 0, 2 * Math.PI);
+      ctx.fillStyle = yy === route[c] ? t.s1 : t.axis;
+      ctx.fill();
+    }));
+    ctx.fillStyle = t.muted;
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    // Stage numbers as on slides 20-22: the start city is stage 1, the end city stage m + 2.
+    for (let c = 0; c < cols; c++) {
+      const label = c === 0 ? 'stage 1' : c === cols - 1 ? 'stage ' + cols : String(c + 1);
+      ctx.fillText(label, x(c), h - padBottom + 10);
+    }
+    ctx.restore();
+  }
+  VIZ.register(canvas, draw);
+
   function update() {
     const m = +el('ef-m').value, k = +el('ef-k').value;
     el('ef-mv').textContent = m;
     el('ef-kv').textContent = k;
+    if (canvas.clientWidth > 0 && canvas.clientHeight > 0) draw();
     const paths = Math.pow(k, m);
     const enumAdds = paths * m; // m+1 legs per path => m additions
     const dpAdds = (m - 1) * k * k + k;
@@ -435,7 +525,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
     const st = el('ef-status');
     st.className = 'status info';
     st.textContent = m === 5 && k === 5 ? 'These are exactly slide 22’s numbers: 15 625 vs 105.' :
-      (enumAdds > 1e6 ? 'Enumeration is already in the millions — DP still finishes in ' + dpAdds.toLocaleString('en-US') + ' additions.' : '');
+      (enumAdds > 1e6 ? 'Enumeration needs more than a million additions — DP still finishes in ' + dpAdds.toLocaleString('en-US') + ' additions.' : '');
   }
   el('ef-m').addEventListener('input', update);
   el('ef-k').addEventListener('input', update);
@@ -544,6 +634,8 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   update();
 })();
 </script>
+<script defer src="assets/lecture-animations.js"></script>
+<script defer src="assets/anim-dpwarmup.js"></script>
 <script src="assets/classroom-config.js"></script>
 <script src="assets/qrcode.js"></script>
 <script src="assets/classroom.js"></script>

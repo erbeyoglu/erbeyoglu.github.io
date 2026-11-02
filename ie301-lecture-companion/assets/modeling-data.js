@@ -61,16 +61,11 @@ window.MODELING = (() => {
     'Which implication must hold?',
     ['λ>0 implies g(x)=b','g(x)=b implies λ>0','λ=0 implies g(x)<b'],0,
     ['A positive multiplier forces zero slack.','A constraint can be binding with a zero multiplier.','A zero multiplier is compatible with either zero or positive slack.'],true);
-  add('05','qmatrix','notation',6,'Encode the cross term',
-    'Write 15x₁+30x₂+4x₁x₂−2x₁²−4x₂² as cᵀx−½xᵀQx, with Q symmetric.',
-    'Which Q is correct?',
-    ['[[4, −4], [−4, 8]]','[[2, −2], [−2, 4]]','[[4, 4], [4, 8]]'],0,
-    ['The diagonal gives −2x₁²−4x₂². The two off-diagonal terms and −½ produce +4x₁x₂.','The −½ convention would halve the required quadratic terms.','These off-diagonal signs produce −4x₁x₂.']);
-  add('05','family','geometry',3,'Recognize the model family',
-    'The course QP form uses a quadratic objective, linear constraints and continuous variables.',
+  add('05','family','geometry',4,'Recognize the model family',
+    'Use the QPP definition on slide 3: every objective term has degree 2, 1 or 0, and all constraints are linear.',
     'Which change takes a model outside this form?',
-    ['Changing a linear capacity from 20 to 25','Adding the constraint x₁x₂≤20','Changing a quadratic objective coefficient'],1,
-    ['The constraint remains linear.','The new constraint is nonlinear, so this is no longer the stated QP form.','The objective remains quadratic.']);
+    ['Changing a linear capacity from 20 to 25','Adding the constraint x₁x₂≤20','Adding the term 4x₁x₂ to the objective'],1,
+    ['The constraint remains linear.','x₁x₂ has degree 2, and constraints must be linear, so this is no longer a QPP.','x₁x₂ has degree 2, which is allowed in the objective; the slide-3 example has exactly this term.']);
   add('05','complements','simplex',34,'Why is that column blocked?',
     'In the displayed initial modified-simplex basis, v₁ and v₂ are basic. Complementary pairs include (u₁,v₁) and (u₂,v₂).',
     'Why are u₁ and u₂ initially blocked by the restricted-entry rule?',

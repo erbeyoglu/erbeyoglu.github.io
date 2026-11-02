@@ -1,7 +1,9 @@
 /* =====================================================================
    Step-by-step lecture animations — shared shell: stepping, keyboard,
-   formatting, 2D plots, the 3D surface view and the KKT panels.
-   Each animation (anim-bisection.js, anim-gradient.js, anim-kkt.js) is one
+   formatting, 2D plots, the 3D surface view, the KKT panels and the
+   Markov chain panels (random numbers, state diagram, share bars).
+   Each animation (anim-bisection.js, anim-gradient.js, anim-kkt.js,
+   anim-dpwarmup.js, anim-markov.js) is one
    <section class="widget anim"> on its week page and registers a module
    { activate, deactivate, step(dir) -> moved?, restart, togglePlay }.
    In the instructor deck (?embed=<id>) the animation fills the iframe and
@@ -129,6 +131,8 @@ window.ANIM = (() => {
     return {
       step(dir) { stop(); return move(dir); },
       go(target) { stop(); go(target, false); },
+      // Play the current step's animation again (e.g. after a new random draw).
+      replay() { stop(); go(index, true); },
       stop, togglePlay,
       repaint() { paint(1); },
       get index() { return index; }
@@ -643,6 +647,146 @@ window.ANIM = (() => {
     };
   }
 
+  // === MARKOV CHAIN PANELS (Weeks 11, 13, 14): random numbers, state diagram, share bars ===
+  // A seeded generator (mulberry32): a sample path drawn for a step looks the
+  // same every time the step is shown, and a check can replay it.
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  // The index chosen with the given probabilities (they sum to 1), for u uniform in [0, 1).
+  function pick(probs, u) {
+    let acc = 0;
+    for (let k = 0; k < probs.length; k++) { acc += probs[k]; if (u < acc) return k; }
+    return probs.length - 1;
+  }
+  // An exponential time with the given rate, for u uniform in [0, 1).
+  const expTime = (rate, u) => -Math.log(1 - u) / rate;
+
+  // State diagram in SVG. Nodes are labelled boxes at (x, y) in [0, 1] of the
+  // picture; arrows carry labels. When i→j and j→i both exist the two arrows
+  // bend apart (an edge may set its own `bend`); a self-loop sits above its
+  // node. `look(kind, item)` returns { fill, stroke, ink, width, opacity } for a
+  // node or an edge, so a step can highlight one row or one arrow.
+  // `onHover(item|null)` and `onClick(item)` report the node/edge under the pointer.
+  // spec: { nodes: [{ id, label, x, y }], edges: [{ from, to, label, bend?, via? }], look?, scale?, padTop?, padBottom?, onHover?, onClick? }
+  function stateDiagram(svg, root, spec) {
+    const W = svg.clientWidth, H = svg.clientHeight;
+    if (!W || !H) return null;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.replaceChildren();
+    const c = colors(), fs = px(root) * (spec.scale || 1), size = Math.round(fs * 0.8);
+    const look = spec.look || (() => ({}));
+    const defs = svgEl(svg, 'defs');
+    const heads = new Map();
+    const head = color => {
+      if (!heads.has(color)) {
+        const id = 'sd' + Math.random().toString(36).slice(2, 9);
+        const marker = svgEl(defs, 'marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: fs * 0.7, markerHeight: fs * 0.7, markerUnits: 'userSpaceOnUse', orient: 'auto-start-reverse' });
+        svgEl(marker, 'path', { d: 'M0,0 L10,5 L0,10 Z', fill: color });
+        heads.set(color, `url(#${id})`);
+      }
+      return heads.get(color);
+    };
+    // Box sizes come from the measured label widths.
+    const probe = svgEl(svg, 'text', { 'font-size': size, 'font-weight': 650 });
+    const hh = fs * 0.95;
+    const halfWidth = new Map(spec.nodes.map(n => { probe.textContent = n.label; return [n.id, Math.max(hh * 1.25, probe.getComputedTextLength() / 2 + fs * 0.55)]; }));
+    probe.remove();
+    const maxHw = Math.max(...halfWidth.values());
+    // padTop / padBottom (in font sizes): room above and below the boxes for self-loops and long arcs.
+    const mx = maxHw + fs * 0.4, myTop = hh + fs * (spec.padTop ?? 2.4), myBottom = hh + fs * (spec.padBottom ?? 0.6);
+    const place = ([x, y]) => [mx + x * (W - 2 * mx), myTop + y * (H - myTop - myBottom)];
+    const pos = new Map(spec.nodes.map(n => [n.id, place([n.x, n.y])]));
+    const edgeLayer = svgEl(svg, 'g'), nodeLayer = svgEl(svg, 'g'), labelLayer = svgEl(svg, 'g');
+    const halo = { 'paint-order': 'stroke', stroke: c.surface, 'stroke-width': 4, 'stroke-linejoin': 'round' };
+    const has = new Set(spec.edges.map(e => e.from + '>' + e.to));
+    const boundary = (id, ux, uy) => {
+      const hw = halfWidth.get(id), t = Math.min(Math.abs(ux) > 1e-9 ? hw / Math.abs(ux) : Infinity, Math.abs(uy) > 1e-9 ? hh / Math.abs(uy) : Infinity);
+      const [x, y] = pos.get(id);
+      return [x + ux * (t + 2), y + uy * (t + 2)];
+    };
+    const geometry = new Map();
+    const hover = (el, item) => {
+      if (spec.onHover) { el.addEventListener('pointerenter', () => spec.onHover(item)); el.addEventListener('pointerleave', () => spec.onHover(null)); }
+      if (spec.onClick) el.addEventListener('click', () => spec.onClick(item));
+    };
+    spec.edges.forEach(e => {
+      const st = { stroke: c.axis, width: 2, opacity: 1, ink: c.ink, ...look('edge', e) };
+      const [ax, ay] = pos.get(e.from);
+      let d, lx, ly, at;
+      if (e.from === e.to) {
+        const hw = halfWidth.get(e.from), s = [ax - hw * 0.45, ay - hh], t = [ax + hw * 0.45, ay - hh];
+        const c1 = [ax - hw * 0.95, ay - hh - fs * 2.3], c2 = [ax + hw * 0.95, ay - hh - fs * 2.3];
+        d = `M${s[0]},${s[1]} C${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${t[0]},${t[1]}`;
+        [lx, ly] = [ax, ay - hh - fs * 2.0];
+        at = k => { const m = 1 - k; return [m ** 3 * s[0] + 3 * m * m * k * c1[0] + 3 * m * k * k * c2[0] + k ** 3 * t[0], m ** 3 * s[1] + 3 * m * m * k * c1[1] + 3 * m * k * k * c2[1] + k ** 3 * t[1]]; };
+      } else {
+        const [bx, by] = pos.get(e.to);
+        const dist = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / dist, uy = (by - ay) / dist;
+        // `via` ([x, y] in the same 0–1 units, may lie outside) routes a long arrow around other boxes.
+        const bend = e.bend ?? (has.has(e.to + '>' + e.from) ? 0.18 : 0);
+        const ctrl = e.via ? place(e.via) : [(ax + bx) / 2 - uy * bend * dist, (ay + by) / 2 + ux * bend * dist];
+        const dir = (p, q) => { const L = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1; return [(q[0] - p[0]) / L, (q[1] - p[1]) / L]; };
+        const s = boundary(e.from, ...dir([ax, ay], ctrl)), t = boundary(e.to, ...dir([bx, by], ctrl));
+        d = `M${s[0]},${s[1]} Q${ctrl[0]},${ctrl[1]} ${t[0]},${t[1]}`;
+        at = k => { const m = 1 - k; return [m * m * s[0] + 2 * m * k * ctrl[0] + k * k * t[0], m * m * s[1] + 2 * m * k * ctrl[1] + k * k * t[1]]; };
+        const mid = at(0.5), side = bend >= 0 ? 1 : -1;
+        [lx, ly] = [mid[0] - uy * fs * 0.62 * side, mid[1] + ux * fs * 0.62 * side + size * 0.35];
+      }
+      geometry.set(e.from + '>' + e.to, at);
+      svgEl(edgeLayer, 'path', { d, fill: 'none', stroke: st.stroke, 'stroke-width': st.width, opacity: st.opacity, 'marker-end': head(st.stroke), 'data-edge': e.from + '>' + e.to });
+      if (spec.onHover || spec.onClick) hover(svgEl(edgeLayer, 'path', { d, fill: 'none', stroke: 'transparent', 'stroke-width': fs * 1.1, style: 'cursor:pointer' }), { kind: 'edge', ...e });
+      if (e.label != null && e.label !== '') svgEl(labelLayer, 'text', { x: lx, y: ly, 'text-anchor': 'middle', 'font-size': Math.round(size * 0.92), 'font-weight': 650, fill: st.ink, opacity: st.opacity, ...halo }, e.label);
+    });
+    spec.nodes.forEach(n => {
+      const st = { fill: c.surface, stroke: c.s1, ink: c.ink, width: 2, opacity: 1, ...look('node', n) };
+      const [x, y] = pos.get(n.id), hw = halfWidth.get(n.id);
+      const box = svgEl(nodeLayer, 'rect', { x: x - hw, y: y - hh, width: 2 * hw, height: 2 * hh, rx: hh * 0.7, fill: st.fill, stroke: st.stroke, 'stroke-width': st.width, opacity: st.opacity });
+      svgEl(nodeLayer, 'text', { x, y: y + size * 0.36, 'text-anchor': 'middle', 'font-size': size, 'font-weight': 650, fill: st.ink, opacity: st.opacity, 'pointer-events': 'none' }, n.label);
+      if (spec.onHover || spec.onClick) { box.style.cursor = 'pointer'; hover(box, { kind: 'node', ...n }); }
+    });
+    return {
+      svg, c, fs, size, hh, at: id => pos.get(id), halfWidth: id => halfWidth.get(id),
+      // A point on the drawn arrow from → to, k in [0, 1] (for a moving marker).
+      along: (from, to, k) => (geometry.get(from + '>' + to) || (() => pos.get(to)))(k)
+    };
+  }
+
+  // Grouped bars of shares (0 to 1): one group per state, one bar per series,
+  // the value written on each bar. series: [{ name, values, color }]
+  function shareBars(svg, root, { categories, series, title = '', fmt = v => num(v, 3) }) {
+    const p = plot2d(svg, root, { x: [0, categories.length], y: [0, 1] }, { padL: 2.6, padT: 2.4, padB: 2.2 });
+    if (!p) return null;
+    const { X, Y, fs, c, size } = p;
+    p.grid([], [0, 0.25, 0.5, 0.75, 1], { fy: v => num(v, 2) });
+    const groupW = X(1) - X(0), barW = Math.min(fs * 3.2, groupW * 0.8 / series.length);
+    categories.forEach((name, i) => {
+      svgEl(svg, 'text', { x: X(i + 0.5), y: Y(0) + fs * 1.15, 'text-anchor': 'middle', fill: c.ink, 'font-size': size, 'font-weight': 650 }, name);
+      series.forEach((s, k) => {
+        const v = s.values[i];
+        if (v == null) return;
+        const x = X(i + 0.5) + (k - (series.length - 1) / 2) * (barW + 2) - barW / 2;
+        svgEl(svg, 'rect', { x, y: Y(v), width: barW, height: Math.max(0, Y(0) - Y(v)), fill: s.color, rx: 3 });
+        svgEl(svg, 'text', { x: x + barW / 2, y: Y(v) - fs * 0.3, 'text-anchor': 'middle', fill: c.ink, 'font-size': Math.round(size * 0.9), 'font-weight': 650 }, fmt(v));
+      });
+    });
+    let lx = X(0);
+    series.forEach(s => {
+      svgEl(svg, 'rect', { x: lx, y: fs * 0.35, width: fs * 0.8, height: fs * 0.8, rx: 2, fill: s.color });
+      const label = svgEl(svg, 'text', { x: lx + fs * 1.1, y: fs * 1.05, fill: c.ink2, 'font-size': size }, s.name);
+      lx += fs * 1.9 + label.getComputedTextLength();
+    });
+    if (title) svgEl(svg, 'text', { x: X(categories.length), y: fs * 1.05, 'text-anchor': 'end', fill: c.ink2, 'font-size': size, 'font-style': 'italic' }, title);
+    return p;
+  }
+
   // === KKT SCENE SCAFFOLD ===
   // A step sets the scene's state when it is entered (and while it animates);
   // sliders and dragging may change the state afterwards, and a repaint keeps
@@ -773,6 +917,7 @@ window.ANIM = (() => {
   return {
     params, reduced, num, fixed, fracText, fracTex, ratTex, texNum, tex, svgEl, px, colors, hexToRgb, ease,
     ellipse, clipHalfPlane, plot2d, conditionList, meters, stats, setText, gainCost, numberLine,
-    surface3d, kktScene, stepper, register, MINUS, get activeId() { return activeId; }
+    surface3d, kktScene, stepper, register, MINUS, rng, pick, expTime, stateDiagram, shareBars,
+    get activeId() { return activeId; }
   };
 })();

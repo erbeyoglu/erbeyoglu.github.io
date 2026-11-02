@@ -6,6 +6,7 @@
 <title>IE301 · Week 13 — Discrete-Time Markov Chains, Part 2 (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/learning.css">
+<link rel="stylesheet" href="assets/lecture-animations.css">
 <script src="assets/theme.js"></script>
 <script src="assets/release-schedule.js"></script>
 <script src="assets/release-gate.js"></script>
@@ -27,12 +28,13 @@
   <div class="theme-switch" id="theme-switch"></div>
   <nav class="widgets">
     <a href="#steady">1 · Reaching steady state</a>
-    <a href="#premium">2 · Long-run premium</a>
-    <a href="#camera">3 · Camera store</a>
-    <a href="#accounts">4 · Accounts receivable</a>
-    <a href="#freezco">5 · Freezco warranty</a>
-    <a href="#hth">6 · The HTH game</a>
-    <a href="#board">7 · The board game (extra)</a>
+    <a href="#twocounts">2 · What π means</a>
+    <a href="#premium">3 · Long-run premium</a>
+    <a href="#camera">4 · Camera store</a>
+    <a href="#accounts">5 · Accounts receivable</a>
+    <a href="#freezco">6 · Freezco warranty</a>
+    <a href="#hth">7 · The HTH game</a>
+    <a href="#board">8 · The board game (extra)</a>
   </nav>
 </header>
 
@@ -64,6 +66,36 @@
 </section>
 
 <!-- ================= WIDGET 2 : INSURANCE PREMIUM ================= -->
+<section class="widget anim" id="twocounts">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>What π means: one path or a thousand?</h2>
+    <span class="chip">Slides 3–13</span>
+    <span class="segwrap" role="group" aria-label="Part"><button class="seg js-part" data-part="weather">1 · Weather (slide 3)</button><button class="seg js-part" data-part="periodic">2 · Periodic (slide 11)</button></span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage mk-stage mk-two">
+      <div class="stage-caption"></div>
+      <svg class="plot js-top" role="img" aria-label="Sample paths as rows of coloured days"></svg>
+      <svg class="plot js-plot" role="img" aria-label="Shares of days over time, or the comparison of the shares"></svg>
+      <p class="stage-note js-note"></p>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top">
+        <div class="phases js-phases"></div>
+        <span class="iter js-iter"></span>
+      </div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="stats js-stats"></div>
+      <p class="fine js-fine"></p>
+    </aside>
+  </div>
+  <footer class="anim-controls"></footer>
+</div>
+</section>
+
 <section class="widget" id="premium">
   <h2>The long-run premium <span class="chip">Slides 24–27</span></h2>
   <p class="howto">
@@ -968,6 +1000,8 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
   render();
 })();
 </script>
+<script defer src="assets/lecture-animations.js"></script>
+<script defer src="assets/anim-markov.js"></script>
 <script src="assets/classroom-config.js"></script>
 <script src="assets/qrcode.js"></script>
 <script src="assets/classroom.js"></script>

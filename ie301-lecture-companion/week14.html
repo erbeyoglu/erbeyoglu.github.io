@@ -6,6 +6,7 @@
 <title>IE301 · Week 14 — Continuous-Time Markov Chains (Interactive)</title>
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/learning.css">
+<link rel="stylesheet" href="assets/lecture-animations.css">
 <script src="assets/theme.js"></script>
 <script src="assets/release-schedule.js"></script>
 <script src="assets/release-gate.js"></script>
@@ -24,6 +25,7 @@
     <a href="#updown">1 · Up / down machine</a>
     <a href="#balance">2 · Balance equation lab</a>
     <a href="#barbersim">3 · Run the barbershop</a>
+    <a href="#salesman">4 · The salesman’s clock</a>
   </nav>
 </header>
 
@@ -115,6 +117,34 @@
     state matches the balance-equation solution. Slide 24’s two questions read straight off:
     E[customers] = π₁ + 2π₂ and P(enter) = π₀ + π₁.
   </p>
+</section>
+
+<section class="widget anim" id="salesman">
+<div class="anim-frame">
+  <header class="anim-head">
+    <h2>The salesman’s clock: time spent or trips made?</h2>
+    <span class="chip">Slides 8–16, 29–31</span>
+  </header>
+  <div class="anim-body">
+    <div class="anim-stage mk-stage">
+      <div class="stage-caption"></div>
+      <svg class="plot js-plot" role="img" aria-label="Towns and rates, the clocks, the timeline or the shares"></svg>
+      <p class="stage-note js-note"></p>
+    </div>
+    <aside class="anim-side" aria-live="polite">
+      <div class="side-top">
+        <div class="phases js-phases"></div>
+        <span class="iter js-iter"></span>
+      </div>
+      <h3 class="step-title js-title"></h3>
+      <p class="step-text js-text"></p>
+      <div class="step-formula js-formula"></div>
+      <div class="stats js-stats"></div>
+      <p class="fine js-fine"></p>
+    </aside>
+  </div>
+  <footer class="anim-controls"></footer>
+</div>
 </section>
 
 </main>
@@ -436,6 +466,8 @@ const rexp = rate => -Math.log(1 - Math.random()) / rate;
   VIZ.register(canvas, draw);
 })();
 </script>
+<script defer src="assets/lecture-animations.js"></script>
+<script defer src="assets/anim-markov.js"></script>
 <script src="assets/classroom-config.js"></script>
 <script src="assets/qrcode.js"></script>
 <script src="assets/classroom.js"></script>
