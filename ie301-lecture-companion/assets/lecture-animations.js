@@ -82,11 +82,12 @@ window.ANIM = (() => {
   const ease = p => p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
 
   // === STEPPER: Back / Next / Play / Restart for one module ===
-  function stepper({ root, total, render, duration = 650 }) {
+  // restartAt(): where Restart goes (default: the first step).
+  function stepper({ root, total, render, duration = 650, restartAt = () => 0 }) {
     const q = sel => root.querySelector(sel);
     const back = q('.js-back'), next = q('.js-next'), play = q('.js-play');
     const restart = q('.js-restart'), speed = q('.js-speed');
-    let index = 0, timer = null, raf = 0;
+    let index = 0, timer = null, raf = 0, lastSpan = 0;
     function paint(progress) {
       render(index, progress);
       back.disabled = index === 0;
@@ -96,9 +97,11 @@ window.ANIM = (() => {
     function go(target, animate) {
       cancelAnimationFrame(raf);
       index = Math.max(0, Math.min(total() - 1, target));
+      lastSpan = 0;
       if (!animate || reduced) { paint(1); return; }
       const began = performance.now();
       const span = typeof duration === 'function' ? duration(index) : duration;
+      lastSpan = span;
       const tick = now => {
         const p = Math.min(1, (now - began) / span);
         paint(ease(p));
@@ -114,19 +117,24 @@ window.ANIM = (() => {
       return true;
     }
     function stop() {
-      clearInterval(timer); timer = null;
+      clearTimeout(timer); timer = null;
       play.textContent = '▶ Play'; play.setAttribute('aria-pressed', 'false');
+    }
+    // Play waits for a long step's own animation (plus a short pause) before
+    // the next step, so a 13-second step is not cut off after the speed setting.
+    function schedule() {
+      timer = setTimeout(() => { if (move(1)) schedule(); else stop(); }, Math.max(Number(speed.value), lastSpan + 600));
     }
     function togglePlay() {
       if (timer) { stop(); return; }
       if (index >= total() - 1) go(0, false);
-      timer = setInterval(() => { if (!move(1)) stop(); }, Number(speed.value));
+      schedule();
       play.textContent = '❚❚ Pause'; play.setAttribute('aria-pressed', 'true');
     }
     back.onclick = () => { stop(); move(-1); };
     next.onclick = () => { stop(); move(1); };
     play.onclick = togglePlay;
-    restart.onclick = () => { stop(); go(0, false); };
+    restart.onclick = () => { stop(); go(restartAt(), false); };
     speed.onchange = () => { if (timer) { stop(); togglePlay(); } };
     return {
       step(dir) { stop(); return move(dir); },

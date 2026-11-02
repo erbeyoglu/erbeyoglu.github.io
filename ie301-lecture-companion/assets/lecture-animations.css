@@ -172,6 +172,7 @@ section.anim .anim-key.k-new::before { background: var(--s1); }
 section.anim .anim-key.k-again::before { background: var(--critical); }
 section.anim .anim-key.k-memo::before { background: var(--s2); }
 section.anim .anim-key.k-gone::before { background: transparent; border: 1.5px solid var(--muted); opacity: .6; }
+section.anim .anim-key.k-ring::before { background: transparent; border: 3px solid var(--s5); }
 section.anim .anim-key.k-greedy::before { background: var(--s5); border-radius: 3px; }
 @media (max-width: 860px), (max-height: 470px) {
   section.anim .dw-stage { height: 74vh; min-height: 460px; }
