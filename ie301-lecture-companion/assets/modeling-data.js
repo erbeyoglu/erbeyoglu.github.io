@@ -72,10 +72,10 @@ window.MODELING = (() => {
     ['Their reduced costs are positive','Their complementary partners are basic','Multipliers may never enter a basis'],1,
     ['They are tempting precisely because of their negative reduced costs in this tableau.','The restriction preserves the complementarity structure of the KKT system.','Multipliers can enter when the complementary-partner restriction permits it.'],true);
   add('07','state','inventory',35,'How much history is enough?',
-    'The current month and all demands are known. Production cost has no dependence on earlier setups. Future costs and limits depend on inventory and future production.',
-    'Which listed description is sufficient and simplest for the state?',
+    'We plan production month by month. We know which month it is and all future demands. The cost of producing this month does not depend on what we produced before. What happens next depends only on the stock we have and what we produce from now on.',
+    'To decide this month’s production, what is the least we must remember? (This is the state.)',
     ['Last month’s production','Inventory at the start of this month','The complete production history'],1,
-    ['The same last production can follow different inventories, leaving different stock today.','With the month known, inventory carries the information needed for future feasibility and cost.','The history can reconstruct inventory, so it is sufficient, but carries redundant information.']);
+    ['Two plans can have the same production last month but a different stock today, so this is not enough.','We know the month, so the stock at the start of the month tells us everything that matters for future costs and limits.','The full history tells us the stock, so it is enough, but it remembers much more than we need.']);
   add('07','transition','inventory',36,'Write the state transition',
     'Start the month with i units. Produce x, then meet known demand d. The next state is next month’s starting inventory.',
     'Which transition is consistent with that timing?',

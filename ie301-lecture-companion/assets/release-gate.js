@@ -18,13 +18,13 @@
     week03: Object.freeze(['classify','profit','openbox','gradient']),
     week04: Object.freeze(['kkt-lagrange','kkt-move','kkt-price','kkt-nonneg','kkt-sufficient','chem','kkt-example2']),
     week05: Object.freeze(['geometry','notation','simplex']),
-    week07: Object.freeze(['matches','network','efficiency','inventory']),
+    week07: Object.freeze(['dp-warmup','matches','network','efficiency','inventory']),
     week08: Object.freeze(['ww','teams','glueco','fishery']),
     week09: Object.freeze(['milk','pinv','sally','reject']),
     week10: Object.freeze(['bayes','voter','memoryless','race','poisson']),
-    week11: Object.freeze(['weather','gambler','paths','classify','insurance']),
-    week13: Object.freeze(['steady','premium','camera','accounts','freezco','hth']),
-    week14: Object.freeze(['updown','balance','barbersim'])
+    week11: Object.freeze(['nextword','weather','gambler','diagram','paths','classify','insurance']),
+    week13: Object.freeze(['steady','twocounts','premium','camera','accounts','freezco','hth']),
+    week14: Object.freeze(['updown','balance','barbersim','salesman'])
   });
   const formatters = {};
   const CLOCK_KEY = 'ie301-release-clock-v1';

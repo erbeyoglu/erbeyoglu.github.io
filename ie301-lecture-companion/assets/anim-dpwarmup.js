@@ -152,7 +152,7 @@
     { part: 'atm', kind: 'greedy', phase: 1, preset: 'odd', again: true, dur: () => ATM_ITEM_MS * Math.max(1, atm.greedy.length) + 400 },
     { part: 'atm', kind: 'ask', phase: 2, preset: 'stuck', again: true },
     { part: 'atm', kind: 'greedy', phase: 2, preset: 'stuck', again: true, dur: () => ATM_ITEM_MS * Math.max(1, atm.greedy.length) + 400 },
-    { part: 'atm', kind: 'words', phase: 3, dur: 2400 }
+    { part: 'atm', kind: 'compare', phase: 3, dur: () => ATM_ITEM_MS * Object.keys(PRESETS).length + 400 }
   ];
   const PHASES = { fib: ['Recursion', 'Repeats', 'Memo', 'Bigger n'], atm: ['ATM 1', 'ATM 2', 'ATM 3', 'What DP does'] };
   const firstOf = part => STEPS.findIndex(s => s.part === part);
@@ -370,27 +370,22 @@
     write(W / 2, H * 0.8, 'still to pay: ' + chain.join(' → '), { 'font-size': Math.round(fs * 0.9), 'font-weight': 600 });
     if (p >= 1 && atm.left > 0) write(W / 2, H * 0.8 + fs * 1.6, atm.left + ' TL left, and no bill is that small: greedy is stuck.', { fill: c.bad, 'font-weight': 700, 'font-size': Math.round(fs * 0.85) });
   }
-  // The DP words on the answer itself: states in boxes, decisions on the arrows.
-  function drawWords(k, p) {
-    const { W, H, c, fs, add, write } = k;
-    const states = [atm.amount]; atm.policy.forEach(b => states.push(states[states.length - 1] - b));
-    if (atm.best === Infinity) { write(W / 2, H / 2, 'No combination of these bills pays ' + atm.amount + ' TL.', { 'font-weight': 650 }); return; }
-    const head = arrowHead(k, 'dw-a3', c.s2);
-    const n = states.length, bw = Math.min(fs * 4.2, W / (n * 1.9)), gap = (W - n * bw) / (n + 1), y = H * 0.42, bh = fs * 2.2;
-    write(fs * 0.5, y - bh * 1.1, 'state = amount still to pay', { 'text-anchor': 'start', fill: c.ink2, 'font-size': Math.round(fs * 0.75), 'font-style': 'italic' });
-    states.forEach((m, i) => {
-      const a = clamp01(p * n - i + 0.5);
-      const x = gap + i * (bw + gap);
-      add('rect', { x, y: y - bh / 2, width: bw, height: bh, rx: 8, fill: c.region, stroke: c.s2, 'stroke-width': 2, opacity: a });
-      write(x + bw / 2, y + fs * 0.35, String(m), { 'font-weight': 750, 'font-size': Math.round(fs * 1.0), opacity: a });
-      if (i < n - 1) {
-        const a2 = clamp01(p * n - i - 0.5);
-        add('line', { x1: x + bw + 3, y1: y, x2: x + bw + gap - 5, y2: y, stroke: c.s2, 'stroke-width': 2.5, 'marker-end': head, opacity: a2 });
-        write(x + bw + gap / 2, y - fs * 0.55, 'give ' + atm.policy[i], { 'font-weight': 650, 'font-size': Math.round(fs * 0.74), opacity: a2 });
-        write(x + bw + gap / 2, y + bh * 0.5 + fs * 1.1, 'stage ' + (i + 1), { fill: c.ink2, 'font-size': Math.round(fs * 0.7), opacity: a2 });
-      }
+  // The three ATMs side by side, one block each: what greedy gives and what DP
+  // gives (the fewest bills), independent of the ATM shown before.
+  const SOLVED = Object.fromEntries(Object.entries(PRESETS).map(([key, pr]) => [key, solveAtm(pr.bills, pr.amount)]));
+  function drawCompare(k, p) {
+    const { W, H, c, fs, write } = k;
+    const keys = Object.keys(PRESETS), blockH = H / keys.length;
+    keys.forEach((key, i) => {
+      if (p * keys.length < i + 0.05) return;
+      const a = SOLVED[key], y = i * blockH + fs * 0.4;
+      write(fs * 0.6, y + fs * 0.9, 'ATM ' + (i + 1) + ': bills ' + a.bills.join(', ') + ' · pay ' + a.amount + ' TL', { 'text-anchor': 'start', 'font-weight': 700, 'font-size': Math.round(fs * 0.85) });
+      const g = billRow(k, a.greedy, y + fs * 1.5, c.s5, { label: 'Greedy' });
+      const note = a.left > 0 ? 'stuck: ' + a.left + ' TL left' : a.greedy.length + ' bills';
+      write(W - fs * 0.6, y + fs * 1.5 + g.h / 2 + fs * 0.3, note, { 'text-anchor': 'end', 'font-weight': 700, 'font-size': Math.round(fs * 0.8), fill: a.left > 0 || a.greedy.length > a.best ? c.bad : c.ink });
+      const d = billRow(k, a.policy, y + fs * 1.5 + g.h + fs * 0.5, c.s2, { label: 'DP' });
+      write(W - fs * 0.6, y + fs * 2.0 + g.h + d.h / 2 + fs * 0.3, a.best + ' bills ✓', { 'text-anchor': 'end', 'font-weight': 700, 'font-size': Math.round(fs * 0.8), fill: c.s2 });
     });
-    write(W / 2, H * 0.82, 'decision = which bill to give · the arrows are the decisions', { fill: c.ink2, 'font-size': Math.round(fs * 0.75), 'font-style': 'italic' });
   }
   const ATM_ITEM_MS = 1000;   // one bill, one arrow or one answer step per second
   function drawAtm(s, p) {
@@ -399,7 +394,7 @@
     if (!k) return;
     if (s.kind === 'ask') drawAsk(k);
     else if (s.kind === 'greedy') drawGreedy(k, p);
-    else drawWords(k, p);
+    else drawCompare(k, p);
   }
 
   // === SIDE PANEL TEXT ===
@@ -479,13 +474,16 @@
     };
     return {
       title: 'Greedy breaks; DP looks ahead',
-      text: (atm.best < Infinity ? 'DP would pay ' + plus(atm.policy) + '. ' : '') + 'It never gives a bill before it knows that what is left can be paid well. Its words: state = the amount still to pay, decision = which bill to give, stage = the 1st, 2nd, 3rd bill. How DP finds the answer: the match puzzle of slide 4.',
+      text: 'On all three ATMs DP finds the fewest bills; greedy is right only on the first. DP never gives a bill before it knows that what is left can be paid well. Its words: state = the amount still to pay, decision = which bill to give, stage = the 1st, 2nd, 3rd bill. How DP finds the answer: the match puzzle of slide 4.',
       formula: '\\begin{aligned} f(\\text{state}) = \\min\\limits_{\\text{decision}} \\{\\, &\\text{cost of the decision} \\\\ &+ f(\\text{next state}) \\,\\} \\end{aligned}'
     };
   }
   function atmStats(s) {
     if (s.kind === 'greedy') return [['Greedy bills', atm.left > 0 ? 'stuck' : String(atm.greedy.length)]];
-    if (s.kind === 'words') return [['DP bills', atm.best === Infinity ? '—' : String(atm.best)], ['Greedy bills', atm.left > 0 ? 'stuck' : String(atm.greedy.length)]];
+    if (s.kind === 'compare') {
+      const right = Object.values(SOLVED).filter(a => a.left === 0 && a.greedy.length === a.best).length;
+      return [['Greedy is right on', right + ' of ' + Object.keys(SOLVED).length + ' ATMs'], ['DP is right on', Object.keys(SOLVED).length + ' of ' + Object.keys(SOLVED).length]];
+    }
     return [];
   }
 
@@ -553,6 +551,7 @@
       return '';
     }
     if (kind === 'greedy') return dot('k-greedy', 'bills greedy gives');
+    if (kind === 'compare') return dot('k-greedy', 'greedy') + dot('k-memo', 'DP: the fewest bills');
     return '';
   }
 
@@ -568,6 +567,8 @@
       if (s.preset && s.preset !== atmPreset) { atmPreset = s.preset; atm = solveAtm(PRESETS[s.preset].bills, PRESETS[s.preset].amount); atmMessage(''); syncAtmInputs(); }
     }
     setCaption(s.part);
+    // The comparison shows all three ATMs, so no single preset button is lit there.
+    root.querySelectorAll('.js-preset').forEach(b => b.classList.toggle('active', s.kind !== 'compare' && b.dataset.preset === atmPreset));
     root.dataset.part = s.part;
     root.querySelectorAll('.js-part').forEach(b => b.classList.toggle('active', b.dataset.part === s.part));
     const inPart = partSteps(s.part), at = inPart.indexOf(s);

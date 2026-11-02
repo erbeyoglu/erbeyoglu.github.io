@@ -22,6 +22,18 @@
   table.dp tr.best td { color: var(--good); font-weight: 700; }
   .dp-month { margin-top: 10px; }
   .dp-month h4 { margin: 12px 0 2px; font-size: 1rem; }
+  /* Match puzzle: the move buttons wear the colour of the side whose turn it is. */
+  #matches[data-turn="instructor"] .mt-move { background: var(--critical); border-color: var(--critical); color: #fff; }
+  #matches[data-turn="students"] .mt-move { background: var(--s1); border-color: var(--s1); color: #fff; }
+  #matches .mt-move:disabled { opacity: .45; cursor: default; }
+  #matches[data-turn="instructor"] .mt-turn b { color: var(--critical); }
+  #matches[data-turn="students"] .mt-turn b { color: var(--s1); }
+  .mt-ink-i { color: var(--critical); }
+  .mt-ink-s { color: var(--s1); }
+  .mt-log { columns: 4 15em; column-gap: 2em; margin: 6px 0 10px; padding-left: 2em; font-size: .92rem; font-variant-numeric: tabular-nums; }
+  .mt-log li { break-inside: avoid; }
+  .mt-log li.mt-i::marker, .mt-log li.mt-i b { color: var(--critical); }
+  .mt-log li.mt-s::marker, .mt-log li.mt-s b { color: var(--s1); }
 </style>
 <link rel="stylesheet" href="assets/katex/katex.min.css">
 <script defer src="assets/katex/katex.min.js"></script>
@@ -82,19 +94,25 @@
 <section class="widget" id="matches">
   <h2>Beat me if you can: the match puzzle <span class="chip">Slides 4–7</span></h2>
   <p class="howto">
-    30 matches. On each turn take 1, 2 or 3 — whoever takes the <b>last match loses</b>. You move first.
-    The computer plays the DP strategy. Can anyone in class beat it? (There is exactly one way.)
+    30 matches. Two sides take turns; each turn takes 1, 2 or 3 — whoever takes the <b>last match loses</b>.
+    In class the <b class="mt-ink-i">instructor</b> plays against the <b class="mt-ink-s">students</b>: the instructor
+    moves first, then the class agrees on its move and the instructor clicks it. The buttons take the colour of
+    the side whose turn it is. At home, tick <b>Simulate instructor</b>: the instructor's moves are then made
+    for you. Can the students win?
   </p>
   <div class="controls">
     <span class="readout">matches left: <b id="mt-left">30</b></span>
-    <button class="primary" id="mt-t1">Take 1</button>
-    <button class="primary" id="mt-t2">Take 2</button>
-    <button class="primary" id="mt-t3">Take 3</button>
+    <span class="readout mt-turn" id="mt-turn">turn: <b>Instructor</b></span>
+    <button class="mt-move" id="mt-t1">Take 1</button>
+    <button class="mt-move" id="mt-t2">Take 2</button>
+    <button class="mt-move" id="mt-t3">Take 3</button>
     <button id="mt-new">New game</button>
     <button id="mt-hint">Show the strategy</button>
+    <label class="group"><input type="checkbox" id="mt-sim"> Simulate instructor</label>
   </div>
-  <canvas class="viz short" id="c-mt" style="height:180px"></canvas>
-  <p class="status info" id="mt-status">Your move. Think backwards: which counts would you hate to face?</p>
+  <canvas class="viz short" id="c-mt" style="height:180px" aria-label="The matches: the ones still on the table, and the ones each side took"></canvas>
+  <p class="status info" id="mt-status" aria-live="polite"></p>
+  <ol class="mt-log" id="mt-log" aria-label="Moves so far"></ol>
   <div class="note">
     <details class="spoiler"><summary>spoiler — open after the class has answered</summary>Working backwards (slides 6–7): facing 1 match you lose; facing 2–4 you win; facing 5 you lose…
     the losing counts are 1, 5, 9, 13, 17, 21, 25, 29 — every 4k+1. From 30, taking 1 leaves 29 and you
@@ -205,24 +223,34 @@ const el = id => document.getElementById(id);
 const fmt = (v, d = 2) => Number(v).toFixed(d);
 
 /* ============================================================
-   WIDGET 1 — match puzzle (slides 4-7)
-   Losing counts (for the player to move): 1, 5, 9, ... (4k+1).
+   WIDGET 2 — match puzzle (slides 4-7)
+   Two sides take turns, the instructor first (owner, 2026-11-02): in class
+   every move is clicked by hand, nothing moves on its own. "Simulate
+   instructor" (home) lets the page make the instructor's moves with the DP
+   strategy: leave a losing count 1, 5, 9, ... (4k+1) for the other side.
    ============================================================ */
 (() => {
-  const canvas = el('c-mt');
-  let left = 30, over = false, showHint = false;
+  const TOTAL = 30, SIM_DELAY_MS = 1200;
+  const SIDE = { instructor: 'Instructor', students: 'Students' };
+  const root = el('matches'), canvas = el('c-mt');
+  let left = TOTAL, turn = 'instructor', over = false, showHint = false, simTimer = 0;
+  let takenBy = [];   // takenBy[i]: the side that took match i (matches go from the right end)
+  const simulating = () => el('mt-sim').checked;
 
   function draw() {
     const { ctx, w, h } = VIZ.setup(canvas);
     const t = VIZ.theme();
     ctx.clearRect(0, 0, w, h);
-    const cols = 30, gap = Math.min(24, (w - 40) / cols);
-    const x0 = (w - gap * (cols - 1)) / 2, y0 = h / 2;
-    for (let i = 0; i < 30; i++) {
+    const gap = Math.min(24, (w - 40) / TOTAL);
+    const x0 = (w - gap * (TOTAL - 1)) / 2, y0 = h / 2;
+    for (let i = 0; i < TOTAL; i++) {
       const alive = i < left;
       const isLosing = showHint && (i + 1) % 4 === 1;
+      // A taken match stays faintly in the colour of the side that took it.
+      const color = alive ? (isLosing ? t.bad : t.s1) : (takenBy[i] === 'instructor' ? t.bad : t.s1);
       ctx.save();
-      ctx.strokeStyle = alive ? (isLosing ? t.bad : t.s1) : t.grid;
+      ctx.globalAlpha = alive ? 1 : 0.22;
+      ctx.strokeStyle = color;
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(x0 + i * gap, y0 + 28);
@@ -230,7 +258,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
       ctx.stroke();
       ctx.beginPath();
       ctx.arc(x0 + i * gap, y0 - 26, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = alive ? (isLosing ? t.bad : t.s3 || '#eda100') : t.grid;
+      ctx.fillStyle = alive ? (isLosing ? t.bad : '#eda100') : color;
       ctx.fill();
       ctx.restore();
       if (showHint && isLosing && alive) {
@@ -245,54 +273,81 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
     el('mt-left').textContent = left;
   }
 
-  function endIfOver(byYou) {
-    if (left > 0) return false;
-    over = true;
+  // Buttons, turn chip and status follow the side to move.
+  function showTurn() {
+    root.dataset.turn = over ? '' : turn;
+    el('mt-turn').innerHTML = over ? 'game over' : 'turn: <b>' + SIDE[turn] + '</b>';
+    const auto = simulating() && turn === 'instructor';
+    [1, 2, 3].forEach(k => { el('mt-t' + k).disabled = over || auto || k > left; });
+    if (over) return;
     const st = el('mt-status');
-    if (byYou) { st.className = 'status bad'; st.textContent = 'You took the last match — you LOSE. Where did you first hand me a 4k+1 count?'; }
-    else { st.className = 'status ok'; st.textContent = 'I took the last match — YOU WIN! You held the 4k+1 ladder all the way down.'; }
-    return true;
+    st.className = 'status info';
+    if (auto) st.textContent = 'The instructor is thinking…';
+    else if (turn === 'instructor') st.textContent = 'Instructor\'s turn: click the instructor\'s move.';
+    else st.textContent = simulating() ? 'Your turn (students): think backwards — which counts would you hate to face?'
+      : 'Students\' turn: the class agrees on a move, then the instructor clicks it.';
   }
 
-  function computerMove() {
-    // leave 4k+1 if possible, else take 1
-    let take = (left - 1) % 4;
-    if (take === 0) take = 1;
-    take = Math.min(take, 3, left);
-    left -= take;
-    const st = el('mt-status');
-    if (!endIfOver(false)) {
-      st.className = 'status info';
-      st.textContent = 'I take ' + take + ' → ' + left + ' left. Your move.' + ((left % 4 === 1) ? ' (I feel good about this…)' : '');
+  function logMove(side, k) {
+    const li = document.createElement('li');
+    li.className = side === 'instructor' ? 'mt-i' : 'mt-s';
+    li.innerHTML = '<b>' + SIDE[side] + '</b> ' + (side === 'instructor' ? 'takes ' : 'take ') + k + ' → ' + left + ' left';
+    el('mt-log').appendChild(li);
+  }
+
+  function take(k) {
+    if (over || k > left) return;
+    for (let i = left - k; i < left; i++) takenBy[i] = turn;
+    left -= k;
+    logMove(turn, k);
+    if (left === 0) {
+      over = true;
+      const st = el('mt-status');
+      st.className = 'status ' + (turn === 'instructor' ? 'ok' : 'bad');
+      st.textContent = SIDE[turn] + ' took the last match and LOSE' + (turn === 'instructor' ? 'S' : '') + '. ' +
+        (turn === 'instructor' ? 'The students win!' : 'Where did the students first leave the instructor a count that is not 1, 5, 9, …?');
+    } else {
+      turn = turn === 'instructor' ? 'students' : 'instructor';
     }
     draw();
+    showTurn();
+    planInstructor();
   }
 
-  function playerMove(k) {
-    if (over || k > left) return;
-    left -= k;
-    draw();
-    if (endIfOver(true)) return;
-    setTimeout(computerMove, 450);
+  // Simulated instructor: the DP strategy, after a pause so the move can be followed.
+  function planInstructor() {
+    clearTimeout(simTimer);
+    if (over || !simulating() || turn !== 'instructor') return;
+    simTimer = setTimeout(() => {
+      let k = (left - 1) % 4;   // leave 4k+1 if possible, else take 1 and hope
+      if (k === 0) k = 1;
+      take(Math.min(k, 3, left));
+    }, SIM_DELAY_MS);
   }
 
-  [1, 2, 3].forEach(k => el('mt-t' + k).addEventListener('click', () => playerMove(k)));
-  el('mt-new').addEventListener('click', () => {
-    left = 30; over = false;
-    el('mt-status').className = 'status info';
-    el('mt-status').textContent = 'Your move. Think backwards: which counts would you hate to face?';
+  function newGame() {
+    clearTimeout(simTimer);
+    left = TOTAL; turn = 'instructor'; over = false; takenBy = [];
+    el('mt-log').replaceChildren();
     draw();
-  });
+    showTurn();
+    planInstructor();
+  }
+
+  [1, 2, 3].forEach(k => el('mt-t' + k).addEventListener('click', () => take(k)));
+  el('mt-new').addEventListener('click', newGame);
+  el('mt-sim').addEventListener('change', () => { showTurn(); planInstructor(); });
   el('mt-hint').addEventListener('click', () => {
     showHint = !showHint;
     el('mt-hint').textContent = showHint ? 'Hide the strategy' : 'Show the strategy';
     if (showHint) {
       el('mt-status').className = 'status info';
       el('mt-status').textContent = 'Red matches mark the LOSING counts 1, 5, 9, … — whoever must move at one of them loses against perfect play.';
-    }
+    } else showTurn();
     draw();
   });
   VIZ.register(canvas, draw);
+  showTurn();
 })();
 
 /* ============================================================
@@ -301,11 +356,12 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
 (() => {
   const canvas = el('c-nw');
   VIZ.hint(canvas, '🖱 tap a highlighted city');
+  // Laid out as on slide 8 (the plot's y axis points up): 2, 5, 8 on top, 4, 7, 9 at the bottom.
   const NODES = {
     1: { x: 0, y: 2, name: '1 · New York', stage: 1 },
-    2: { x: 1, y: 0.7, name: '2', stage: 2 }, 3: { x: 1, y: 2, name: '3', stage: 2 }, 4: { x: 1, y: 3.3, name: '4', stage: 2 },
-    5: { x: 2, y: 0.7, name: '5 · Kansas City', stage: 3 }, 6: { x: 2, y: 2, name: '6 · Omaha', stage: 3 }, 7: { x: 2, y: 3.3, name: '7 · Dallas', stage: 3 },
-    8: { x: 3, y: 1.2, name: '8 · Denver', stage: 4 }, 9: { x: 3, y: 2.8, name: '9 · San Antonio', stage: 4 },
+    2: { x: 1, y: 3.3, name: '2 · Columbus', stage: 2 }, 3: { x: 1, y: 2, name: '3 · Nashville', stage: 2 }, 4: { x: 1, y: 0.7, name: '4 · Louisville', stage: 2 },
+    5: { x: 2, y: 3.3, name: '5 · Kansas City', stage: 3 }, 6: { x: 2, y: 2, name: '6 · Omaha', stage: 3 }, 7: { x: 2, y: 0.7, name: '7 · Dallas', stage: 3 },
+    8: { x: 3, y: 2.8, name: '8 · Denver', stage: 4 }, 9: { x: 3, y: 1.2, name: '9 · San Antonio', stage: 4 },
     10: { x: 4, y: 2, name: '10 · Los Angeles', stage: 5 },
   };
   const EDGES = {

@@ -87,28 +87,39 @@ window.ANIM = (() => {
     const q = sel => root.querySelector(sel);
     const back = q('.js-back'), next = q('.js-next'), play = q('.js-play');
     const restart = q('.js-restart'), speed = q('.js-speed');
-    let index = 0, timer = null, raf = 0, lastSpan = 0;
+    // anim: the running step animation { began, span, pausedAt } or null when the step is complete.
+    let index = 0, timer = null, raf = 0, lastSpan = 0, anim = null, shown = 1;
     function paint(progress) {
+      shown = progress;
       render(index, progress);
       back.disabled = index === 0;
       next.disabled = index >= total() - 1;
       root.dataset.step = String(index);
     }
+    // The button reads "Pause" while something moves (a step animation or auto-play).
+    function label() {
+      const moving = !!timer || (!!anim && anim.pausedAt == null);
+      play.textContent = moving ? '❚❚ Pause' : '▶ Play';
+      play.setAttribute('aria-pressed', moving ? 'true' : 'false');
+    }
+    function frame(now) {
+      const p = Math.min(1, (now - anim.began) / anim.span);
+      paint(ease(p));
+      if (p < 1) raf = requestAnimationFrame(frame);
+      else { anim = null; label(); }
+    }
     function go(target, animate) {
       cancelAnimationFrame(raf);
+      anim = null;
       index = Math.max(0, Math.min(total() - 1, target));
       lastSpan = 0;
-      if (!animate || reduced) { paint(1); return; }
-      const began = performance.now();
+      if (!animate || reduced) { paint(1); label(); return; }
       const span = typeof duration === 'function' ? duration(index) : duration;
       lastSpan = span;
-      const tick = now => {
-        const p = Math.min(1, (now - began) / span);
-        paint(ease(p));
-        if (p < 1) raf = requestAnimationFrame(tick);
-      };
+      anim = { began: performance.now(), span, pausedAt: null };
       paint(0);
-      raf = requestAnimationFrame(tick);
+      raf = requestAnimationFrame(frame);
+      label();
     }
     function move(dir) {
       const target = index + dir;
@@ -116,33 +127,50 @@ window.ANIM = (() => {
       go(target, dir > 0);
       return true;
     }
+    // Stops auto-play only; a step animation that is running goes on.
     function stop() {
       clearTimeout(timer); timer = null;
-      play.textContent = '▶ Play'; play.setAttribute('aria-pressed', 'false');
+      label();
     }
-    // Play waits for a long step's own animation (plus a short pause) before
+    // Auto-play waits for a long step's own animation (plus a short pause) before
     // the next step, so a 13-second step is not cut off after the speed setting.
     function schedule() {
       timer = setTimeout(() => { if (move(1)) schedule(); else stop(); }, Math.max(Number(speed.value), lastSpan + 600));
     }
+    // Play / Pause (owner, 2026-11-02): while a step animates, it pauses and
+    // resumes THAT animation (and ends auto-play); when the step is complete,
+    // Play runs through the following steps on its own.
     function togglePlay() {
-      if (timer) { stop(); return; }
-      if (index >= total() - 1) go(0, false);
-      schedule();
-      play.textContent = '❚❚ Pause'; play.setAttribute('aria-pressed', 'true');
+      if (anim && anim.pausedAt == null) {
+        cancelAnimationFrame(raf);
+        anim.pausedAt = performance.now() - anim.began;
+        clearTimeout(timer); timer = null;
+      } else if (anim) {
+        anim.began = performance.now() - anim.pausedAt;
+        anim.pausedAt = null;
+        raf = requestAnimationFrame(frame);
+      } else if (timer) {
+        clearTimeout(timer); timer = null;
+      } else {
+        if (index >= total() - 1) go(0, false);
+        lastSpan = 0;   // this step is already complete: the next one comes after the speed setting
+        schedule();
+      }
+      label();
     }
     back.onclick = () => { stop(); move(-1); };
     next.onclick = () => { stop(); move(1); };
     play.onclick = togglePlay;
     restart.onclick = () => { stop(); go(restartAt(), false); };
-    speed.onchange = () => { if (timer) { stop(); togglePlay(); } };
+    speed.onchange = () => { if (timer) { clearTimeout(timer); schedule(); } };
     return {
       step(dir) { stop(); return move(dir); },
       go(target) { stop(); go(target, false); },
       // Play the current step's animation again (e.g. after a new random draw).
       replay() { stop(); go(index, true); },
       stop, togglePlay,
-      repaint() { paint(1); },
+      // Redraw at the progress on screen (a paused animation stays where it is).
+      repaint() { paint(anim ? shown : 1); },
       get index() { return index; }
     };
   }
