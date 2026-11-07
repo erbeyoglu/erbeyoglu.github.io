@@ -1,0 +1,58 @@
+/* Week 11 guided activity "lending" (assets/guided-lending.js): only what the
+   shared assets/guided-kit.css does not cover — the camera shelf, the day log,
+   the probability trees and matrices, the row inputs and the state transition
+   diagram. Every rule is scoped under .gk-lending; own classes use the ld- prefix. */
+
+/* === STEP 1: SHELF AND EVENTS === */
+.gk-lending .ld-shelf { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.gk-lending .ld-cam { border: 2px solid var(--axis); border-radius: 8px; padding: 4px 10px; font-size: .9rem; background: var(--surface); }
+.gk-lending .ld-cam.on { border-color: var(--s2); }
+.gk-lending .ld-cam.away { border-style: dashed; color: var(--ink-2); }
+.gk-lending .ld-event { margin: 6px 0; padding-left: 10px; border-left: 3px solid var(--s1); }
+
+/* Step 2: the story sentences stack as full-width buttons. */
+.gk-lending .ld-stack { flex-direction: column; align-items: stretch; }
+
+/* === TABLES: LOG, TREES, MATRICES === */
+.gk-lending .ld-scroll { max-width: 100%; overflow-x: auto; }
+.gk-lending .ld-table { border-collapse: collapse; margin: 8px 0; font-variant-numeric: tabular-nums; font-size: .92rem; max-width: 100%; }
+.gk-lending .ld-table caption { text-align: left; }
+.gk-lending .ld-table th, .gk-lending .ld-table td { border-bottom: 1px solid var(--grid); padding: 4px 8px; text-align: left; vertical-align: middle; }
+.gk-lending .ld-table th { color: var(--ink-2); font-weight: 600; }
+.gk-lending .ld-table td.num, .gk-lending .ld-table th.num { text-align: center; }
+.gk-lending .ld-table tr.hl td { background: var(--region-fill); }
+.gk-lending .ld-table td.hl { background: var(--region-fill); font-weight: 700; }
+.gk-lending .ld-table td.chg { outline: 2px solid var(--s5); outline-offset: -2px; }
+.gk-lending .ld-tree td.ret { border-right: 1px solid var(--grid); }
+.gk-lending .ld-tree .coin { display: block; font-size: .78rem; color: var(--ink-2); }
+.gk-lending .ld-mats { display: flex; flex-wrap: wrap; gap: 6px 24px; align-items: flex-start; }
+
+/* === INPUTS === */
+/* Narrower than the kit's .gk-num so a tree row fits a phone without scrolling. */
+.gk-lending .gk-num.ld-count { width: 4.6em; text-align: center; }
+.gk-lending .gk-num.ld-frac { width: 5.6em; text-align: center; }
+.gk-lending .ld-fields { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.gk-lending .ld-fields label { display: inline-flex; gap: 6px; align-items: center; }
+
+/* === STATE TRANSITION DIAGRAM === */
+.gk-lending .ld-diagram { margin: 8px 0; }
+/* Only the diagram's own svg: nothing else may inherit the full width. */
+.gk-lending .ld-diagram > svg { width: 100%; max-width: 560px; height: auto; display: block; }
+.gk-lending .ld-diagram .d-node circle { fill: var(--surface); stroke: var(--ink-2); stroke-width: 2; }
+.gk-lending .ld-diagram .d-node text { font-size: 20px; font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.gk-lending .ld-diagram .d-edge { fill: none; stroke: var(--ink-2); stroke-width: 2; }
+.gk-lending .ld-diagram .d-edge.hot { stroke: var(--s1); stroke-width: 4; }
+.gk-lending .ld-diagram .d-edge.dim, .gk-lending .ld-diagram .d-lab.dim { opacity: .25; }
+.gk-lending .ld-diagram .d-pill { fill: var(--surface); stroke: var(--border); }
+.gk-lending .ld-diagram .d-lab text { font-size: 15px; font-weight: 600; text-anchor: middle; dominant-baseline: central; fill: var(--ink-2); }
+.gk-lending .ld-diagram .d-lab.hot text { fill: var(--s1); }
+.gk-lending .ld-diagram .d-cap { font-size: 13px; fill: var(--muted); text-anchor: middle; }
+
+@media (max-width: 520px) {
+  .gk-lending .ld-table th, .gk-lending .ld-table td { padding: 4px 5px; }
+  .gk-lending .gk-names select { font-size: .92rem; }
+  /* The diagram shrinks to ~60% on a phone; larger SVG text keeps it readable. */
+  .gk-lending .ld-diagram .d-lab text { font-size: 19px; }
+  .gk-lending .ld-diagram .d-node text { font-size: 24px; }
+  .gk-lending .ld-diagram .d-cap { font-size: 17px; }
+}

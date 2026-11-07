@@ -1,0 +1,73 @@
+/* Week 13 guided activity "support" (assets/guided-support.js): only what the
+   shared assets/guided-kit.css does not cover — the state diagram, the charts,
+   the ticket path, the log tables, the stat tiles and the arrow selects.
+   Every rule is scoped under .gk-support; own classes use the gs- prefix
+   (SVG parts: d- for the diagram, c- for the charts). */
+
+/* Long fractions and equations wrap instead of widening the page on a phone. */
+.gk-support .gk-fb, .gk-support .gk-model, .gk-support .gk-formula { overflow-wrap: anywhere; }
+/* The name labels are long sentences: cap their column so the select keeps its room. */
+.gk-support .gk-names { grid-template-columns: minmax(0, 14em) minmax(0, 1fr) auto; }
+.gk-support .gk-table tr.gs-hit td { background: var(--region-fill); font-weight: 700; }
+
+/* --- ticket path and status pills --- */
+.gk-support .gs-path { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 8px 0; font-variant-numeric: tabular-nums; }
+.gk-support .gs-st { display: inline-block; min-width: 2em; text-align: center; border-radius: 999px; padding: 1px 8px; font-weight: 700; border: 2px solid var(--axis); background: var(--surface); }
+.gk-support .gs-st.R { border-color: var(--s2); color: var(--s2); }
+.gk-support .gs-st.A { border-color: var(--critical); color: var(--critical); }
+.gk-support .gs-st.E { border-color: var(--s5); color: var(--s5); }
+.gk-support .gs-arrow { color: var(--muted); font-size: .8rem; text-align: center; line-height: 1.1; }
+
+/* --- log tables (tickets, groups, comparisons) --- */
+.gk-support .gs-log { width: 100%; border-collapse: collapse; margin: 8px 0; font-variant-numeric: tabular-nums; }
+.gk-support .gs-log th, .gk-support .gs-log td { padding: 4px 6px; border-bottom: 1px dashed var(--grid); text-align: left; vertical-align: top; }
+.gk-support .gs-log td.num, .gk-support .gs-log th.num { text-align: right; }
+
+/* --- equations and stat tiles --- */
+.gk-support .gs-eq { font-size: 1.05rem; background: var(--surface); border: 1px dashed var(--axis); border-radius: 8px; padding: 6px 10px; margin: 8px 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.gk-support .gs-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; }
+.gk-support .gs-stat { border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; background: var(--surface); }
+.gk-support .gs-stat b { display: block; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.gk-support .gs-stat span { font-size: .8rem; color: var(--ink-2); }
+
+/* --- the four arrow selects of N (step 3) --- */
+.gk-support .gs-arrows { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; }
+
+/* --- charts and diagram: only their own svg, so .gk-legend icons keep the kit size --- */
+.gk-support .gs-chart > svg, .gk-support .gs-diagram > svg { width: 100%; height: auto; display: block; }
+.gk-support .gs-chart { max-width: 600px; margin: 8px 0; }
+.gk-support .gs-diagram { max-width: 620px; margin: 8px 0; }
+.gk-support .c-grid { stroke: var(--grid); stroke-width: 1; }
+.gk-support .c-axis { stroke: var(--axis); stroke-width: 1.5; }
+.gk-support .c-text { font-size: 13px; fill: var(--ink-2); }
+.gk-support .c-line { fill: none; stroke: var(--s1); stroke-width: 2.5; }
+.gk-support .c-guess { stroke: var(--s5); stroke-width: 2; stroke-dasharray: 6 5; }
+.gk-support .c-exact { stroke: var(--s2); stroke-width: 2; stroke-dasharray: 2 4; }
+.gk-support .c-bar { fill: var(--s1); opacity: .8; }
+.gk-support .d-arc { fill: none; stroke: var(--axis); stroke-width: 2.2; }
+.gk-support .d-arc.hot { stroke: var(--s1); stroke-width: 3.5; }
+.gk-support .d-arc.dim { opacity: .3; }
+.gk-support .d-pill { fill: var(--surface); stroke: var(--border); }
+.gk-support .d-lab { font-size: 15px; font-weight: 600; text-anchor: middle; dominant-baseline: central; fill: var(--ink-2); }
+.gk-support .d-lab.hot { fill: var(--s1); }
+.gk-support .d-node circle { fill: var(--surface); stroke: var(--axis); stroke-width: 2.5; }
+.gk-support .d-node.R circle { stroke: var(--s2); }
+.gk-support .d-node.A circle { stroke: var(--critical); }
+.gk-support .d-node.active circle { stroke: var(--ink); stroke-width: 4.5; }
+.gk-support .d-node text { font-size: 20px; font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.gk-support .d-name { font-size: 13px; text-anchor: middle; fill: var(--muted); }
+.gk-support .d-chip rect { fill: var(--region-fill); stroke: none; }
+.gk-support .d-chip text { font-size: 14px; font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+
+@media (max-width: 520px) {
+  /* Repeats the kit's phone layout for .gk-names, which the rule above outranks. */
+  .gk-support .gk-names { grid-template-columns: minmax(0, 1fr) auto; }
+  .gk-support .gs-arrows { grid-template-columns: minmax(0, 1fr) auto; }
+  .gk-support .gs-arrows .lab { grid-column: 1 / -1; margin-bottom: -6px; }
+  /* The SVGs shrink to ~55% on a phone; larger SVG text keeps them readable. */
+  .gk-support .d-lab { font-size: 21px; }
+  .gk-support .d-node text { font-size: 26px; }
+  .gk-support .d-name { font-size: 18px; }
+  .gk-support .d-chip text { font-size: 19px; }
+  .gk-support .c-text { font-size: 19px; }
+}

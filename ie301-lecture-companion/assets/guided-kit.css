@@ -1,0 +1,93 @@
+/* Shared look of the guided activities (assets/guided-kit.js).
+   Every rule is scoped under .gk and every class carries the gk- prefix, so
+   nothing leaks into or out of style.css / learning.css. An activity's own
+   rules live in assets/guided-<id>.css, scoped under .gk-<id>.
+   Colors come from the theme tokens in style.css (light, dark, projector). */
+.learning-shell.gk-wide { max-width: 1120px; }
+.gk h2 { margin: 0 0 8px; }
+.gk h3 { margin: 22px 0 6px; font-size: 1.05rem; }
+.gk sub, .gk sup { font-size: 70%; }
+.gk-head { margin: 0 0 14px; }
+.gk-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+.gk .gk-tab { min-height: 40px; border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 5px 12px; font-size: .9rem; }
+.gk .gk-tab[aria-current="step"] { background: var(--ink); color: var(--page); border-color: var(--ink); }
+.gk-mark { margin-left: 4px; }
+.gk-layout { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 20px; align-items: start; }
+.gk-main { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+.gk-data { position: sticky; top: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; font-size: .88rem; }
+.gk-data h3 { margin: 0 0 6px; font-size: .95rem; }
+.gk-data p { margin: 6px 0; }
+.gk-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.gk-table th, .gk-table td { border-bottom: 1px solid var(--grid); padding: 3px 4px; text-align: center; }
+.gk-table th:first-child, .gk-table td:first-child { text-align: left; white-space: nowrap; }
+.gk-strip { margin: 6px 0 8px; padding-left: 22px; }
+.gk-strip li { margin: 2px 0; }
+.gk-small { font-size: .85rem; color: var(--ink-2); }
+.gk-muted { color: var(--muted); }
+.gk .gk-btn { min-height: 44px; }
+.gk .gk-btn.big { font-size: 1.05rem; padding: 9px 22px; }
+.gk .gk-btn.picked { outline: 3px solid var(--s1); outline-offset: 1px; }
+.gk-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+.gk-fb { margin: 10px 0; padding: 8px 12px; border-radius: 8px; border-left: 4px solid var(--axis); background: var(--page); }
+.gk-fb.ok { border-left-color: var(--good); }
+.gk-fb.no { border-left-color: var(--critical); }
+.gk-fb.shown { border-left-color: var(--s5); }
+.gk-fb.info { border-left-color: var(--s1); }
+.gk-fb b.gk-tag { display: inline-block; margin-right: 6px; }
+.gk-fb.ok b.gk-tag { color: var(--good); }
+.gk-fb.no b.gk-tag { color: var(--critical); }
+.gk-fb.shown b.gk-tag { color: var(--s5); }
+.gk-receipt { width: 100%; border-collapse: collapse; margin: 10px 0; font-variant-numeric: tabular-nums; }
+.gk-receipt td { padding: 4px 6px; border-bottom: 1px dashed var(--grid); vertical-align: top; }
+.gk-receipt td.amt { text-align: right; white-space: nowrap; width: 4.5em; }
+.gk-receipt td.best { color: var(--s2); font-weight: 700; }
+.gk-receipt tr.sub td { font-size: .82rem; color: var(--ink-2); border-bottom: none; padding-top: 0; }
+.gk-receipt tr.total td { font-weight: 700; border-bottom: none; border-top: 2px solid var(--ink-2); }
+.gk-now { font-size: 1.1rem; font-weight: 600; margin: 6px 0; }
+.gk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gk-chip { border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px; font-size: .9rem; background: var(--page); font-variant-numeric: tabular-nums; }
+.gk-chip.best { border-color: var(--s2); color: var(--s2); font-weight: 700; }
+.gk-twins { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gk-twin { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; background: var(--page); }
+.gk-twin h4 { margin: 0 0 4px; }
+.gk-twin p { margin: 4px 0; }
+.gk-panel { border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; background: var(--page); margin: 10px 0; }
+.gk-panel p { margin: 6px 0; }
+.gk-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; color: var(--ink-2); margin: 4px 0; }
+.gk-legend svg { width: 34px; height: 10px; vertical-align: middle; margin-right: 4px; }
+.gk-calc { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; font-variant-numeric: tabular-nums; }
+.gk-calc .who { font-weight: 700; }
+.gk .gk-num { width: 6em; text-align: right; }
+.gk .gk-num.ok { border-color: var(--good); }
+.gk .gk-num.no { border-color: var(--critical); }
+.gk-names { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; }
+.gk-formula { font-size: 1.1rem; line-height: 2.5; }
+.gk-slot { display: inline-block; min-width: 4.5em; padding: 0 8px; margin: 0 2px; border: 2px dashed var(--axis); border-radius: 8px; text-align: center; line-height: 1.7; background: var(--page); cursor: pointer; }
+.gk-slot.sel { border-color: var(--s1); border-style: solid; }
+.gk-slot.ok { border-color: var(--good); border-style: solid; }
+.gk-slot.no { border-color: var(--critical); border-style: solid; }
+.gk-cap { font-size: .75rem; color: var(--muted); }
+.gk-bank { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.gk .gk-tile { border-color: var(--ink-2); background: var(--surface); font-size: 1rem; padding: 4px 12px; }
+.gk .gk-tile:disabled { opacity: .3; }
+.gk-model { background: var(--page); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.gk-model p { margin: 4px 0; }
+.gk-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 22px; border-top: 1px solid var(--grid); padding-top: 12px; }
+@media (max-width: 900px) {
+  .gk-layout { grid-template-columns: minmax(0, 1fr); }
+  .gk-data { position: static; order: -1; }
+}
+@media (max-width: 520px) {
+  .gk-main { padding: 12px; }
+  .gk-twins { grid-template-columns: 1fr; }
+  .gk-calc { grid-template-columns: auto minmax(0, 1fr); }
+  .gk-calc .eq { grid-column: 1 / -1; }
+  .gk-formula { font-size: 1rem; }
+  .gk-names { grid-template-columns: minmax(0, 1fr) auto; }
+  .gk-names b { grid-column: 1 / -1; margin-bottom: -6px; }
+}
+@media print {
+  .gk-tabs, .gk-nav { display: none !important; }
+  .gk-layout { grid-template-columns: minmax(0, 1fr); }
+  .gk-data { position: static; }
+}

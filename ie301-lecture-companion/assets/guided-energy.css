@@ -1,0 +1,77 @@
+/* Week 8 guided activity "energy" (assets/guided-energy.js): only what the
+   shared assets/guided-kit.css does not cover — the option cards and budget bar
+   of step 1, the building-budget map, the last-building grid and the
+   lecture-style table of step 4. Every rule is scoped under .gk-energy; own
+   classes use the ge- prefix (map parts m-, as in guided-machine.css). */
+
+/* Data card: cost / saving in each cell; inputs a little narrower than the kit default. */
+.gk-energy .gk-table td .ge-c { color: var(--ink-2); }
+.gk-energy .gk-table td .ge-p { font-weight: 700; }
+.gk-energy .gk-num { width: 5em; }
+
+/* Step 1: option cards, budget bar, receipt headers */
+.gk-energy .ge-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.gk-energy .gk-btn.ge-opt { min-height: 64px; text-align: left; padding: 8px 10px; line-height: 1.3; }
+.gk-energy .ge-opt b { display: block; font-size: 1.02rem; }
+.gk-energy .ge-opt span { font-size: .85rem; color: var(--ink-2); }
+.gk-energy .gk-btn.ge-opt.dear { border-style: dashed; }
+.gk-energy .ge-bar { display: flex; gap: 4px; margin: 8px 0; flex-wrap: wrap; align-items: center; }
+.gk-energy .ge-cell { width: 34px; height: 30px; border: 1px solid var(--axis); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; background: var(--surface); color: var(--muted); }
+.gk-energy .ge-cell.spent { background: var(--region-fill); color: var(--ink); border-color: var(--s1); }
+.gk-energy .gk-receipt th { text-align: left; font-size: .82rem; color: var(--ink-2); font-weight: 600; padding: 2px 6px; }
+.gk-energy .gk-receipt th.amt { text-align: right; white-space: nowrap; }
+
+/* Map (SVG). Font sizes are set inline by the script so that label placement matches.
+   Only the map itself: the legend's small icons keep the kit's .gk-legend size. */
+.gk-energy .ge-map { margin: 10px 0; }
+.gk-energy .ge-map > svg { width: 100%; max-width: 660px; height: auto; display: block; }
+.gk-energy .m-col { font-weight: 700; fill: var(--ink-2); text-anchor: middle; }
+.gk-energy .m-row { fill: var(--muted); }
+.gk-energy .m-row.empty { opacity: .55; }
+.gk-energy .m-guide { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 2 4; }
+.gk-energy .m-arc { fill: none; stroke-width: 2; }
+.gk-energy .m-arc.o0 { stroke: var(--axis); stroke-width: 2.5; }
+.gk-energy .m-arc.o1 { stroke: var(--s1); }
+.gk-energy .m-arc.o2 { stroke: var(--s5); stroke-dasharray: 7 5; }
+.gk-energy .m-arc.hot { stroke-width: 4; }
+.gk-energy .m-arc.best { stroke: var(--s2); stroke-width: 5; stroke-dasharray: none; }
+.gk-energy .m-arc.path { stroke: var(--s2); stroke-width: 6; stroke-dasharray: none; opacity: .85; }
+.gk-energy .m-arc.dim { opacity: .3; }
+.gk-energy .m-pill { fill: var(--surface); stroke: var(--border); }
+.gk-energy .m-lab { font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: var(--ink-2); }
+.gk-energy .m-lab.o1 { fill: var(--s1); }
+.gk-energy .m-lab.o2 { fill: var(--s5); }
+.gk-energy .m-node circle { fill: var(--surface); stroke: var(--axis); stroke-width: 2; }
+.gk-energy .m-node text { font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.gk-energy .m-node text.unknown { fill: var(--muted); font-weight: 400; }
+.gk-energy .m-node.end circle { stroke-dasharray: 3 3; }
+.gk-energy .m-node.active circle { stroke: var(--ink); stroke-width: 4; }
+.gk-energy .m-node.target circle { fill: var(--region-fill); }
+.gk-energy .m-node.ring circle { stroke: var(--s5); stroke-width: 5; }
+.gk-energy .m-node.click { cursor: pointer; }
+.gk-energy .m-node.click:hover circle { stroke: var(--ink-2); stroke-width: 3; }
+.gk-energy .m-node.locked { opacity: .55; }
+.gk-energy .m-start { fill: var(--muted); text-anchor: middle; }
+
+/* Step 4: last-building panel and the lecture-style table */
+.gk-energy .ge-lastgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 14px; margin: 8px 0; }
+.gk-energy .ge-lastgrid label { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.gk-energy .ge-dp { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin: 8px 0; }
+.gk-energy .ge-dp th { font-size: .82rem; color: var(--ink-2); font-weight: 600; text-align: left; padding: 3px 6px; border-bottom: 2px solid var(--grid); }
+.gk-energy .ge-dp td { padding: 5px 6px; border-bottom: 1px solid var(--grid); }
+.gk-energy .ge-dp tr.off td { color: var(--muted); }
+.gk-energy .ge-dp .ge-who0 { font-weight: 700; }
+.gk-energy .ge-dp .ge-who1 { color: var(--s1); font-weight: 700; }
+.gk-energy .ge-dp .ge-who2 { color: var(--s5); font-weight: 700; }
+
+@media (max-width: 520px) {
+  .gk-energy .ge-opts { grid-template-columns: 1fr; }
+  .gk-energy .gk-btn.ge-opt { min-height: 48px; }
+  /* The lecture-style table becomes one card per option on a phone. */
+  .gk-energy .ge-dp thead { display: none; }
+  .gk-energy .ge-dp, .gk-energy .ge-dp tbody, .gk-energy .ge-dp tr, .gk-energy .ge-dp td { display: block; width: 100%; }
+  .gk-energy .ge-dp tr { border: 1px solid var(--grid); border-radius: 8px; padding: 4px 8px; margin: 0 0 8px; }
+  .gk-energy .ge-dp td { border: none; padding: 2px 0; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .gk-energy .ge-dp td::before { content: attr(data-label); color: var(--ink-2); font-size: .82rem; }
+  .gk-energy .ge-dp td.first::before { content: none; }
+}

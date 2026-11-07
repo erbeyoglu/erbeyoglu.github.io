@@ -1,0 +1,80 @@
+/* Week 9 guided activity "reservations" (assets/guided-reservations.js): only what
+   the shared assets/guided-kit.css does not cover — the day-places map, the request
+   badge, the two branches of step 2, the formula choices of step 5, the policy table
+   and the small/large colors. Every rule is scoped under .gk-reservations; own
+   classes carry the gr- prefix, the map's SVG classes the r- prefix. */
+.gk-reservations .gk-receipt th { text-align: left; font-size: .85rem; color: var(--ink-2); font-weight: 600; padding: 2px 6px; }
+.gk-reservations .gk-receipt th.amt { text-align: right; }
+.gk-reservations .gk-calc .who.s { color: var(--s1); }
+.gk-reservations .gk-calc .who.l { color: var(--s5); }
+.gk-reservations .gk-num { width: 6.5em; }
+.gk-reservations .gk-formula { line-height: 2.6; overflow-wrap: anywhere; }
+
+/* Step 1: today's request */
+.gk-reservations .gr-request { display: inline-block; border: 2px solid var(--s1); border-radius: 10px; padding: 6px 12px; margin: 4px 0; background: var(--surface); font-weight: 600; }
+.gk-reservations .gr-request.L { border-color: var(--s5); }
+
+/* Step 2: accept-now and wait branches */
+.gk-reservations .gr-branches { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gk-reservations .gr-branch { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; background: var(--page); min-width: 0; }
+.gk-reservations .gr-branch h4 { margin: 0 0 4px; }
+.gk-reservations .gr-branch ul { margin: 4px 0 8px; padding-left: 0; list-style: none; border-left: 3px solid var(--axis); }
+.gk-reservations .gr-branch li { padding: 2px 0 2px 10px; position: relative; }
+.gk-reservations .gr-branch li::before { content: ""; position: absolute; left: 0; top: .8em; width: 7px; border-top: 3px solid var(--axis); }
+.gk-reservations .gr-tablewrap { overflow-x: auto; max-width: 100%; }
+
+/* Step 4: the policy table */
+.gk-reservations .gr-policy { border-collapse: collapse; margin: 8px 0; font-variant-numeric: tabular-nums; width: 100%; }
+.gk-reservations .gr-policy th, .gk-reservations .gr-policy td { border-bottom: 1px solid var(--grid); padding: 4px 6px; text-align: left; }
+.gk-reservations .gr-policy td.wait { color: var(--s2); font-weight: 700; }
+
+/* Step 5: where does the max go? */
+.gk-reservations .gr-skel { display: grid; gap: 8px; margin: 8px 0; }
+.gk-reservations .gr-skel .gk-btn { text-align: left; line-height: 1.6; }
+.gk-reservations .gr-skel .cap { display: block; font-size: .85rem; color: var(--ink-2); }
+
+/* The day-places map. Only the map itself: the legend's small icons keep the kit's .gk-legend size. */
+.gk-reservations .gr-map { margin: 10px 0; }
+.gk-reservations .gr-map > svg { width: 100%; max-width: 660px; height: auto; display: block; }
+.gk-reservations .r-col { font-size: 15px; font-weight: 700; fill: var(--ink-2); text-anchor: middle; }
+.gk-reservations .r-row { font-size: 14px; fill: var(--muted); }
+.gk-reservations .r-arc { fill: none; stroke-width: 2; }
+.gk-reservations .r-arc.w { stroke: var(--muted); }
+.gk-reservations .r-arc.s { stroke: var(--s1); }
+.gk-reservations .r-arc.l { stroke: var(--s5); stroke-dasharray: 7 5; }
+.gk-reservations .r-arc.hot { stroke-width: 4; }
+.gk-reservations .r-arc.best { stroke: var(--s2); stroke-width: 5; stroke-dasharray: none; }
+.gk-reservations .r-arc.path { stroke: var(--s2); stroke-width: 6; stroke-dasharray: none; opacity: .85; }
+.gk-reservations .r-arc.dim { opacity: .3; }
+.gk-reservations .r-pill { fill: var(--surface); stroke: var(--border); }
+.gk-reservations .r-lab { font-size: 13.5px; font-weight: 600; text-anchor: middle; dominant-baseline: central; fill: var(--ink-2); }
+.gk-reservations .r-lab.s { fill: var(--s1); }
+.gk-reservations .r-lab.l { fill: var(--s5); }
+.gk-reservations .r-node circle { fill: var(--surface); stroke: var(--axis); stroke-width: 2; }
+.gk-reservations .r-node text { font-size: 14px; font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.gk-reservations .r-node text.unknown { fill: var(--muted); font-weight: 400; }
+.gk-reservations .r-node text.long { font-size: 11.5px; }
+.gk-reservations .r-node.end circle { stroke-dasharray: 3 3; }
+.gk-reservations .r-node.active circle { stroke: var(--ink); stroke-width: 4; }
+.gk-reservations .r-node.target circle { fill: var(--region-fill); }
+.gk-reservations .r-node.marked circle { fill: var(--region-fill); stroke: var(--s1); stroke-width: 3; }
+.gk-reservations .r-node.changed circle { stroke: var(--s5); stroke-width: 5; }
+.gk-reservations .r-node.click { cursor: pointer; }
+.gk-reservations .r-node.click:hover circle { stroke: var(--ink-2); stroke-width: 3; }
+.gk-reservations .r-node.locked { opacity: .55; }
+.gk-reservations .r-start { font-size: 12px; fill: var(--muted); text-anchor: middle; }
+
+@media (max-width: 520px) {
+  .gk-reservations .gr-branches { grid-template-columns: 1fr; }
+  /* Step 4 on a phone: the label on its own line, then the expression next to its box. */
+  .gk-reservations .gk-calc { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; }
+  .gk-reservations .gk-calc .who { grid-column: 1 / -1; margin-top: 6px; }
+  .gk-reservations .gk-calc .eq { grid-column: auto; }
+  .gk-reservations .gk-formula { font-size: .98rem; }
+  /* The map shrinks to ~55% on a phone; larger SVG text keeps it readable. */
+  .gk-reservations .r-lab { font-size: 17px; }
+  .gk-reservations .r-node text { font-size: 19px; }
+  .gk-reservations .r-node text.long { font-size: 14px; }
+  .gk-reservations .r-col { font-size: 18px; }
+  .gk-reservations .r-row { font-size: 16px; }
+}

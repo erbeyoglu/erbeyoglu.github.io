@@ -1,12 +1,14 @@
 /* Week 7 guided activity "machine": its own interactive flow instead of the
    generic step engine. Order: play with numbers → same age, same future (the
    state) → the stage-age map → solve it backward → name the parts and build the
-   recursion → twist. guided.js mounts it through window.GUIDED_CUSTOM.machine;
-   the step ids and titles live in assets/guided-data.js (the instructor
-   analytics count them as the activity's components). The story is invented
-   for practice and says so on the page. Rationale: docs/GUIDED_MODELING_REDESIGN_PLAN.md. */
+   recursion → twist. The frame (tabs, data card, progress, usage counts) is
+   assets/guided-kit.js; guided.js loads this file and calls
+   window.GUIDED_CUSTOM.machine. The step ids and titles live in
+   assets/guided-data.js. The story is invented for practice and says so on the
+   page. Rationale: docs/GUIDED_MODELING_REDESIGN_PLAN.md. */
 (() => {
   'use strict';
+  const { fb, btn, escapeHtml: escapeAttr, parseNumber: parseNum } = window.GUIDED_KIT;
 
   // === MODEL ===
   // All numbers below come from the story; every value the page shows is computed from them.
@@ -71,16 +73,6 @@
   const ACT = { K: 'Keep', R: 'Replace' };
   const planText = p => p.join(' → ');
   const lineSum = l => l.parts.reduce((x, p) => x + p[1], 0);
-  const parseNum = s => {
-    const clean = String(s).replace(/[−–]/g, '-').replace(',', '.').replace(/\s+/g, '');
-    return clean === '' || !/^-?\d+(\.\d+)?$/.test(clean) ? NaN : Number(clean);
-  };
-  const escapeAttr = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const fb = (kind, html) => {
-    const tag = { ok: '✓ Right.', no: '✗ Not yet.', shown: 'Shown:' }[kind] || '';
-    return '<div class="gm-fb ' + kind + '">' + (tag ? '<b class="gm-tag">' + tag + '</b>' : '') + html + '</div>';
-  };
-  const btn = (attrs, text, extra = '') => '<button class="gm-btn' + extra + '" ' + attrs + '>' + text + '</button>';
 
   // === MAP (SVG) ===
   // The stage-age network, drawn like Joe's NYC-LA map: columns = years, rows = machine age.
@@ -134,7 +126,7 @@
       '<defs>' + head('k', '--s1') + head('r', '--s5') + head('best', '--s2') + '</defs>' +
       cols + rows + lines + labels + nodes +
       '<text class="m-start" x="' + MX[1] + '" y="' + (MY(1) + R_NODE + 16) + '">start</text></svg>' +
-      '<div class="gm-legend"><span><svg viewBox="0 0 34 10"><line x1="0" y1="5" x2="34" y2="5" style="stroke:var(--s1);stroke-width:2"/></svg>K = Keep</span>' +
+      '<div class="gk-legend"><span><svg viewBox="0 0 34 10"><line x1="0" y1="5" x2="34" y2="5" style="stroke:var(--s1);stroke-width:2"/></svg>K = Keep</span>' +
       '<span><svg viewBox="0 0 34 10"><line x1="0" y1="5" x2="34" y2="5" style="stroke:var(--s5);stroke-width:2;stroke-dasharray:7 5"/></svg>R = Replace</span>' +
       (opt.best || opt.path.length ? '<span><svg viewBox="0 0 34 10"><line x1="0" y1="5" x2="34" y2="5" style="stroke:var(--s2);stroke-width:5"/></svg>best choice</span>' : '') +
       '<span>number on an arrow = this year\'s cost · number in a circle = f, the least cost from there to the end</span></div></div>';
@@ -218,34 +210,21 @@
   ];
   const bestText = (sol, k) => (sol.best[k] === 'KR' ? 'a tie' : ACT[sol.best[k]]) + ' (Keep ' + sol.totals[k].K + ', Replace ' + sol.totals[k].R + ')';
 
-  // === MOUNT ===
-  function mount(app, { activity, track }) {
-    const STORE_KEY = 'ie301-guided-v2:' + activity.id;
-    const fresh = () => ({
-      stage: 0, status: {}, helped: {},
-      play: [], plays: [], showAll: false,
-      twin: { predict: null, checked: false, remember: null },
-      arcs: { keep: { v: '', ok: false, msg: null, wrong: 0 }, replace: { v: '', ok: false, msg: null, wrong: 0 }, end: { v: '', ok: false, msg: null, wrong: 0 } },
-      fill: {}, active: null, solveNote: null, lockMsg: null,
-      names: {}, namesChecked: false,
-      slots: {}, slotSel: 'k1', slotsChecked: false,
-      twist: { piece: null, marks: [], checked: false }
-    });
-    let storageWorks = true, assembledCounted = false;
-    let S = fresh();
-    try { const raw = localStorage.getItem(STORE_KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); } catch (e) { storageWorks = false; }
-    S.stage = Math.max(0, Math.min(activity.steps.length - 1, Number(S.stage) || 0));
-    function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { storageWorks = false; } }
+  // === STATE ===
+  const fresh = () => ({
+    play: [], plays: [], showAll: false,
+    twin: { predict: null, checked: false, remember: null },
+    arcs: { keep: { v: '', ok: false, msg: null, wrong: 0 }, replace: { v: '', ok: false, msg: null, wrong: 0 }, end: { v: '', ok: false, msg: null, wrong: 0 } },
+    fill: {}, active: null, solveNote: null, lockMsg: null,
+    names: {}, namesChecked: false,
+    slots: {}, slotSel: 'k1', slotsChecked: false,
+    twist: { piece: null, marks: [], checked: false }
+  });
 
+  // === STEPS (built once per page with the kit's ctx) ===
+  function build(ctx) {
+    const { S, activity, track, finish, showMe } = ctx;
     const stepIds = activity.steps.map(s => s.id);
-    const stagesDone = () => stepIds.filter(id => S.status[id]).length;
-    // A step finished without "Show me" counts as correct for the instructor's counts.
-    function finish(id) {
-      if (S.status[id]) return;
-      S.status[id] = S.helped[id] ? 'helped' : 'done';
-      if (!S.helped[id]) track('correct', stagesDone());
-    }
-    function showMe(id) { S.helped[id] = true; }
 
     // --- Step 1: play it ---
     function renderPlay() {
@@ -266,40 +245,40 @@
             ? fb('ok', 'You beat ' + benchmark + ' with <b>' + run.total + '</b>. Can you go even lower?')
             : fb('no', 'This plan costs <b>' + run.total + '</b>. Try another one: can you get below ' + benchmark + '?');
       }
-      const chips = S.plays.map(p => { const tot = runPlan(p).total; return '<span class="gm-chip' + (tot === BEST_TOTAL ? ' best' : '') + '">' + planText(p) + ': ' + tot + '</span>'; }).join('');
-      const all = !S.showAll ? '' : '<table class="gm-receipt"><tr><td><b>All plans</b></td><td class="amt"><b>Total</b></td></tr>' +
+      const chips = S.plays.map(p => { const tot = runPlan(p).total; return '<span class="gk-chip' + (tot === BEST_TOTAL ? ' best' : '') + '">' + planText(p) + ': ' + tot + '</span>'; }).join('');
+      const all = !S.showAll ? '' : '<table class="gk-receipt"><tr><td><b>All plans</b></td><td class="amt"><b>Total</b></td></tr>' +
         ALL_PLANS.map(p => { const tot = runPlan(p).total; return '<tr><td>' + planText(p) + '</td><td class="amt' + (tot === BEST_TOTAL ? ' best' : '') + '">' + tot + '</td></tr>'; }).join('') + '</table>' +
-        '<p class="gm-small">8 plans are easy to list. With 20 years there are 2<sup>20</sup> = 1,048,576 plans. DP will need far fewer sums.</p>';
+        '<p class="gk-small">8 plans are easy to list. With 20 years there are 2<sup>20</sup> = 1,048,576 plans. DP will need far fewer sums.</p>';
       return '<h2>' + activity.steps[0].title + '</h2>' +
         '<p>You run a laboratory machine for 3 years. At the start of each year you <b>keep</b> it or <b>replace</b> it. Older machines need more maintenance and sell for less. Use the data in the box.</p>' +
         '<p><b>Goal:</b> replacing every year costs <b>' + benchmark + '</b> in total. Find a cheaper plan.</p>' +
-        '<div class="gm-panel">' +
-        (run.finished ? '<div class="gm-now">All 3 years played.</div>' : '<div class="gm-now">Start of year ' + (S.play.length + 1) + ' · your machine is age ' + run.age + '</div>') +
-        '<div class="gm-row">' +
+        '<div class="gk-panel">' +
+        (run.finished ? '<div class="gk-now">All 3 years played.</div>' : '<div class="gk-now">Start of year ' + (S.play.length + 1) + ' · your machine is age ' + run.age + '</div>') +
+        '<div class="gk-row">' +
         (run.finished ? btn('data-do="newPlay"', 'Play a new plan', ' primary')
           : btn('data-do="act" data-act="K"', 'Keep', ' big') + btn('data-do="act" data-act="R"', 'Replace', ' big')) +
         (S.play.length && !run.finished ? btn('data-do="undo"', 'Undo last year') : '') +
-        '</div>' + (S.play.length ? '<table class="gm-receipt">' + rows + '</table>' : '<p class="gm-small gm-muted">Your receipt appears here.</p>') + '</div>' +
+        '</div>' + (S.play.length ? '<table class="gk-receipt">' + rows + '</table>' : '<p class="gk-small gk-muted">Your receipt appears here.</p>') + '</div>' +
         msg +
-        (S.plays.length ? '<h3>Your plans</h3><div class="gm-chips">' + chips + '</div>' : '') +
-        (S.plays.length >= 2 && !S.showAll ? '<div class="gm-row">' + btn('data-do="showAll"', 'Show all 8 plans') + '</div>' : '') + all;
+        (S.plays.length ? '<h3>Your plans</h3><div class="gk-chips">' + chips + '</div>' : '') +
+        (S.plays.length >= 2 && !S.showAll ? '<div class="gk-row">' + btn('data-do="showAll"', 'Show all 8 plans') + '</div>' : '') + all;
     }
 
     // --- Step 2: same age, same future? ---
     function renderTwin() {
       const a = runPlan(LAB_A), b = runPlan(LAB_B), tw = S.twin;
-      const card = (name, plan, run) => '<div class="gm-twin"><h4>' + name + '</h4><p>Year 1: ' + ACT[plan[0]] + ' · Year 2: ' + ACT[plan[1]] + '</p>' +
+      const card = (name, plan, run) => '<div class="gk-twin"><h4>' + name + '</h4><p>Year 1: ' + ACT[plan[0]] + ' · Year 2: ' + ACT[plan[1]] + '</p>' +
         '<p>Paid so far: <b>' + run.total + '</b></p><p>Now: start of year 3, machine <b>age ' + run.age + '</b></p></div>';
       const pBtn = (id, text) => btn('data-do="predict" data-v="' + id + '"' + (tw.predict ? ' disabled' : ''), text, tw.predict === id ? ' picked' : '');
       let out = '<h2>' + activity.steps[1].title + '</h2>' +
         '<p>Two labs played the first two years differently. Both now start year 3.</p>' +
-        '<div class="gm-twins">' + card('Lab A', LAB_A, a) + card('Lab B', LAB_B, b) + '</div>' +
+        '<div class="gk-twins">' + card('Lab A', LAB_A, a) + card('Lab B', LAB_B, b) + '</div>' +
         '<h3>Predict first</h3><p>From now on (year 3 and the final sale), what is the <b>least</b> each lab can still pay?</p>' +
-        '<div class="gm-row">' + pBtn('A', 'Lab A can pay less') + pBtn('B', 'Lab B can pay less') + pBtn('same', 'The same for both') + '</div>';
+        '<div class="gk-row">' + pBtn('A', 'Lab A can pay less') + pBtn('B', 'Lab B can pay less') + pBtn('same', 'The same for both') + '</div>';
       if (!tw.predict) return out;
-      if (!tw.checked) return out + '<div class="gm-row">' + btn('data-do="twinCheck"', 'Check by working out year 3', ' primary') + '</div>';
+      if (!tw.checked) return out + '<div class="gk-row">' + btn('data-do="twinCheck"', 'Check by working out year 3', ' primary') + '</div>';
       const age = a.age, keepRest = keepCost(age) - SALE[age + 1], repRest = replaceCost(age) - SALE[1];
-      out += '<div class="gm-panel"><p><b>Year 3 with an age-' + age + ' machine</b> (the same for both labs):</p>' +
+      out += '<div class="gk-panel"><p><b>Year 3 with an age-' + age + ' machine</b> (the same for both labs):</p>' +
         '<p>Keep: maintenance M(' + age + ') = ' + keepCost(age) + ', then sell the age-' + (age + 1) + ' machine: ' + num(-SALE[age + 1]) + ' → <b>' + keepRest + '</b></p>' +
         '<p>Replace: 13 − ' + SALE[age] + ' + 1 = ' + replaceCost(age) + ', then sell the age-1 machine: ' + num(-SALE[1]) + ' → <b>' + repRest + '</b></p>' +
         '<p>Least from here: <b>' + Math.min(keepRest, repRest) + '</b> for <b>both</b> labs.</p></div>';
@@ -308,7 +287,7 @@
         : fb('no', 'Lab ' + tw.predict + ' paid ' + (tw.predict === 'A' ? 'less' : 'more') + ' so far, but that money is already gone. It does not change any future cost. From here both labs face the same situation: year 3 with an age-' + age + ' machine.');
       const rBtn = (id, text) => btn('data-do="remember" data-v="' + id + '"', text, tw.remember === id ? ' picked' : '');
       out += '<h3>So what must we remember?</h3><p>To plan the rest of the years, which information is enough?</p>' +
-        '<div class="gm-row">' + rBtn('money', 'The money spent so far') + rBtn('state', 'The year and the machine age') + rBtn('history', 'The full list of past decisions') + '</div>';
+        '<div class="gk-row">' + rBtn('money', 'The money spent so far') + rBtn('state', 'The year and the machine age') + rBtn('history', 'The full list of past decisions') + '</div>';
       const why = {
         money: fb('no', 'The two labs spent different amounts but have the same best future. Money already spent changes nothing ahead.'),
         history: fb('no', 'That would work, but it is more than needed: K → R and R → R are different lists that lead to the same future. Keep only what changes the future.'),
@@ -327,13 +306,13 @@
       const pp = done && mine ? planPath(mine) : { path: [], acts: {} };
       let out = '<h2>' + activity.steps[2].title + '</h2>' +
         '<p>Remember Joe\'s trip from NYC to LA (slide 8): cities were circles, roads were arrows with miles. Here a circle is a <b>(year, machine age)</b> pair, an arrow is a decision with <b>this year\'s cost</b>, and End is the final sale. The cheapest plan is the cheapest route from start to End.</p>' +
-        '<p class="gm-small">Keep: one year older (age a → a+1). Replace: the new machine runs this year at age 0, so next year it is age 1.</p>' +
+        '<p class="gk-small">Keep: one year older (age a → a+1). Replace: the new machine runs this year at age 0, so next year it is age 1.</p>' +
         mapSVG({ values, hidden, active: done ? null : ASK_NODE, path: pp.path, pathActs: pp.acts });
       if (!done) {
         const q = ARC_QUESTIONS.find(x => !S.arcs[x.id].ok), st = S.arcs[q.id];
-        out += '<div class="gm-panel"><p>' + q.prompt + '</p><div class="gm-row"><input class="gm-num" type="text" inputmode="text" autocomplete="off" data-arc="' + q.id + '" value="' + escapeAttr(st.v) + '" aria-label="Your answer" data-enter="arcCheck">' +
+        out += '<div class="gk-panel"><p>' + q.prompt + '</p><div class="gk-row"><input class="gk-num" type="text" inputmode="text" autocomplete="off" data-arc="' + q.id + '" value="' + escapeAttr(st.v) + '" aria-label="Your answer" data-enter="arcCheck">' +
           btn('data-do="arcCheck"', 'Check', ' primary') + (st.wrong ? btn('data-do="arcShow"', 'Show me') : '') + '</div>' + (st.msg || '') + '</div>' +
-          '<p class="gm-small gm-muted">Question ' + (ARC_QUESTIONS.indexOf(q) + 1) + ' of ' + ARC_QUESTIONS.length + '. The other arrow costs appear when these are done.</p>';
+          '<p class="gk-small gk-muted">Question ' + (ARC_QUESTIONS.indexOf(q) + 1) + ' of ' + ARC_QUESTIONS.length + '. The other arrow costs appear when these are done.</p>';
         return out;
       }
       out += ARC_QUESTIONS.map(q => S.arcs[q.id].msg || '').join('');
@@ -387,12 +366,12 @@
     }
     function nodePanel(k) {
       const [t, a] = parseKey(k), F = fillOf(k), ex = exprs(k, F.level);
-      const field = (side, ok) => '<input class="gm-num' + (ok ? ' ok' : F.tried ? ' no' : '') + '" type="text" inputmode="text" autocomplete="off" data-fill="' + k + '" data-side="' + side + '" value="' + escapeAttr(F[side]) + '"' + (ok ? ' disabled' : '') + ' aria-label="' + ACT[side] + ' total" data-enter="fillCheck">';
-      let out = '<div class="gm-panel"><p><b>Year ' + t + ', age ' + a + ':</b> ' + fH(t, a) + ' = the smaller of</p><div class="gm-calc">' +
+      const field = (side, ok) => '<input class="gk-num' + (ok ? ' ok' : F.tried ? ' no' : '') + '" type="text" inputmode="text" autocomplete="off" data-fill="' + k + '" data-side="' + side + '" value="' + escapeAttr(F[side]) + '"' + (ok ? ' disabled' : '') + ' aria-label="' + ACT[side] + ' total" data-enter="fillCheck">';
+      let out = '<div class="gk-panel"><p><b>Year ' + t + ', age ' + a + ':</b> ' + fH(t, a) + ' = the smaller of</p><div class="gk-calc">' +
         '<span class="who k">Keep</span><span class="eq">' + ex.K + '</span>' + field('K', F.okK) +
         '<span class="who r">Replace</span><span class="eq">' + ex.R + '</span>' + field('R', F.okR) + '</div>';
-      if (!(F.okK && F.okR)) out += '<div class="gm-row">' + btn('data-do="fillCheck"', 'Check', ' primary') + (F.wrong ? btn('data-do="fillShow"', 'Show me') : '') + '</div>';
-      else out += '<p>Which is best? (We minimize cost.)</p><div class="gm-row">' +
+      if (!(F.okK && F.okR)) out += '<div class="gk-row">' + btn('data-do="fillCheck"', 'Check', ' primary') + (F.wrong ? btn('data-do="fillShow"', 'Show me') : '') + '</div>';
+      else out += '<p>Which is best? (We minimize cost.)</p><div class="gk-row">' +
         btn('data-do="pick" data-v="K"', 'Keep') + btn('data-do="pick" data-v="R"', 'Replace') + btn('data-do="pick" data-v="KR"', 'Tie: both') + '</div>';
       return out + (F.msg || '') + '</div>';
     }
@@ -409,13 +388,13 @@
       if (S.lockMsg) { out += fb('no', S.lockMsg); S.lockMsg = null; }
       if (S.solveNote && !allDone) out += fb('ok', S.solveNote);
       if (!allDone && S.active) out += nodePanel(S.active);
-      out += '<p class="gm-small gm-muted">' + doneCount() + ' of ' + DECISION_NODES.length + ' circles done. The help gets lighter as you go.</p>';
+      out += '<p class="gk-small gk-muted">' + doneCount() + ' of ' + DECISION_NODES.length + ' circles done. The help gets lighter as you go.</p>';
       if (!allDone) return out;
       const tieNodes = DECISION_NODES.filter(k => SOLD.best[k] === 'KR');
       const circles20 = 20 * 21 / 2;
       return out + fb('ok', fH(1, 1) + ' = <b>' + SOLD.f[key(1, 1)] + '</b>. Follow the green arrows forward from the start: ' + describeRoute(SOLD.best) + '. That is the cheapest plan — found without listing all 8 plans.') +
         (tieNodes.length ? '<p>' + tieNodes.map(k => { const [t, a] = parseKey(k); return 'At year ' + t + ' with an age-' + a + ' machine both options cost ' + SOLD.totals[k].K + ': a tie, so both are best.'; }).join(' ') + ' That circle is not on the best route from the start, but DP still knows what to do there.</p>' : '') +
-        '<p class="gm-small">Count: ' + DECISION_NODES.length + ' circles × 2 sums = ' + 2 * DECISION_NODES.length + ' sums. For 20 years: ' + circles20 + ' circles, ' + 2 * circles20 + ' sums — against 1,048,576 plans.</p>';
+        '<p class="gk-small">Count: ' + DECISION_NODES.length + ' circles × 2 sums = ' + 2 * DECISION_NODES.length + ' sums. For 20 years: ' + circles20 + ' circles, ' + 2 * circles20 + ' sums — against 1,048,576 plans.</p>';
     }
 
     // --- Step 5: name the parts ---
@@ -429,7 +408,7 @@
       }).join('');
       const namesOk = NAME_ROWS.every(r => S.names[r.id] === r.answer);
       let out = '<h2>' + activity.steps[4].title + '</h2><p>You have already used every part of a DP model. Now give each one its name.</p>' +
-        '<div class="gm-names">' + nameRows + '</div><div class="gm-row">' + btn('data-do="namesCheck"', 'Check names', ' primary') + '</div>';
+        '<div class="gk-names">' + nameRows + '</div><div class="gk-row">' + btn('data-do="namesCheck"', 'Check names', ' primary') + '</div>';
       if (S.namesChecked) {
         const wrong = NAME_ROWS.filter(r => S.names[r.id] && S.names[r.id] !== r.answer), empty = NAME_ROWS.filter(r => !S.names[r.id]);
         out += namesOk ? fb('ok', 'Each piece of your map now has its DP name.')
@@ -439,15 +418,15 @@
       if (!namesOk) return out;
       const slot = id => {
         const v = S.slots[id], state = S.slotsChecked && v ? (v === SLOT_ANSWER[id] ? ' ok' : ' no') : '';
-        return '<span class="gm-slot' + (S.slotSel === id ? ' sel' : '') + state + '" data-do="slot" data-slot="' + id + '" role="button" tabindex="0" title="' + SLOT_ROLE[id] + '">' + (v ? tileLabel(v) : '&nbsp;') + '</span>';
+        return '<span class="gk-slot' + (S.slotSel === id ? ' sel' : '') + state + '" data-do="slot" data-slot="' + id + '" role="button" tabindex="0" title="' + SLOT_ROLE[id] + '">' + (v ? tileLabel(v) : '&nbsp;') + '</span>';
       };
       const used = new Set(Object.values(S.slots));
       out += '<h3>Build the recursion</h3><p>Click a box, then a tile. Click a filled box to empty it. Some tiles are traps.</p>' +
-        '<div class="gm-formula">f<sub>t</sub>(a) = min { ' + slot('k1') + ' + ' + slot('k2') + ' <span class="gm-cap">(Keep)</span> , ' + slot('r1') + ' + ' + slot('r2') + ' <span class="gm-cap">(Replace)</span> }<br>' +
-        'f<sub>4</sub>(a) = ' + slot('b') + ' <span class="gm-cap">(End: the sale)</span></div>' +
-        '<p class="gm-small">Selected box: ' + SLOT_ROLE[S.slotSel] + '</p>' +
-        '<div class="gm-bank">' + TILES.map(x => '<button class="gm-tile" data-do="tile" data-tile="' + x[0] + '"' + (used.has(x[0]) ? ' disabled' : '') + '>' + x[1] + '</button>').join('') + '</div>' +
-        '<div class="gm-row">' + btn('data-do="slotsCheck"', 'Check the recursion', ' primary') + (S.slotsChecked && !slotsOk() ? btn('data-do="slotsShow"', 'Show me') : '') + '</div>';
+        '<div class="gk-formula">f<sub>t</sub>(a) = min { ' + slot('k1') + ' + ' + slot('k2') + ' <span class="gk-cap">(Keep)</span> , ' + slot('r1') + ' + ' + slot('r2') + ' <span class="gk-cap">(Replace)</span> }<br>' +
+        'f<sub>4</sub>(a) = ' + slot('b') + ' <span class="gk-cap">(End: the sale)</span></div>' +
+        '<p class="gk-small">Selected box: ' + SLOT_ROLE[S.slotSel] + '</p>' +
+        '<div class="gk-bank">' + TILES.map(x => '<button class="gk-tile" data-do="tile" data-tile="' + x[0] + '"' + (used.has(x[0]) ? ' disabled' : '') + '>' + x[1] + '</button>').join('') + '</div>' +
+        '<div class="gk-row">' + btn('data-do="slotsCheck"', 'Check the recursion', ' primary') + (S.slotsChecked && !slotsOk() ? btn('data-do="slotsShow"', 'Show me') : '') + '</div>';
       if (!S.slotsChecked) return out;
       if (slotsOk()) {
         const k = key(3, 2);
@@ -464,7 +443,7 @@
       const tw = S.twist;
       let out = '<h2>' + activity.steps[5].title + '</h2>' +
         '<p>New rule: at the end of year 3 the lab must <b>give its machine to a school</b>. No money comes in at the end. Selling the old machine when you replace is still allowed.</p>' +
-        '<h3>Which part of the model changes?</h3><div class="gm-row">' +
+        '<h3>Which part of the model changes?</h3><div class="gk-row">' +
         PIECES.map(p => btn('data-do="piece" data-v="' + p[0] + '"', p[1], tw.piece === p[0] ? ' picked' : '')).join('') + '</div>';
       if (!tw.piece) return out;
       if (tw.piece !== 'end') return out + fb('no', PIECES.find(p => p[0] === tw.piece)[2] + ' Try again.');
@@ -472,10 +451,10 @@
       if (!tw.checked) {
         return out + '<h3>Predict, then check</h3><p>This is your solved map from step 4 (with the sale). With the new End values, at which circles does the <b>best decision change</b>? Click them, then press Check.</p>' +
           mapSVG({ values: SOLD.f, best: SOLD.best, marks: tw.marks, clickable: k => DECISION_NODES.includes(k) }) +
-          '<div class="gm-row">' + btn('data-do="twistCheck"', 'Check: recompute with f<sub>4</sub>(a) = 0', ' primary') + '<span class="gm-small">' + tw.marks.length + ' circle(s) marked</span></div>';
+          '<div class="gk-row">' + btn('data-do="twistCheck"', 'Check: recompute with f<sub>4</sub>(a) = 0', ' primary') + '<span class="gk-small">' + tw.marks.length + ' circle(s) marked</span></div>';
       }
       out += '<h3>The map after the change</h3>' + mapSVG({ values: DONATED.f, best: DONATED.best, marks: tw.marks, changed: CHANGED_BY_DONATION, endLabel: 'End: donate' }) +
-        '<p class="gm-small">Thick purple ring = the decision changed. Blue fill = you marked it.</p>';
+        '<p class="gk-small">Thick purple ring = the decision changed. Blue fill = you marked it.</p>';
       const hits = CHANGED_BY_DONATION.filter(k => tw.marks.includes(k));
       const extra = tw.marks.filter(k => !CHANGED_BY_DONATION.includes(k));
       const lines = CHANGED_BY_DONATION.map(k => (tw.marks.includes(k) ? '✓ ' : '• ') + '<b>' + nodeName(k) + '</b>: before ' + bestText(SOLD, k) + ', now ' + bestText(DONATED, k) + '.');
@@ -483,7 +462,7 @@
       out += fb(hits.length === CHANGED_BY_DONATION.length && !extra.length ? 'ok' : 'no', 'You found ' + hits.length + ' of ' + CHANGED_BY_DONATION.length + '.<br>' + lines.join('<br>')) +
         '<p>Why year 3, age 2? With the sale, replacing gave a young age-1 machine that sold for 6 at the end. Without the sale that reason is gone, so keeping is cheaper.</p>' +
         '<p>The best plan from the start is still ' + describeRoute(DONATED.best) + ', now costing <b>' + DONATED.f[key(1, 1)] + '</b> instead of ' + SOLD.f[key(1, 1)] + '. Same route, but other circles changed: DP gives the best decision for <b>every</b> state, not only along one route.</p>';
-      if (!assembledCounted) { assembledCounted = true; track('assembled', stagesDone()); }
+      ctx.assembled();
       return out + summaryCard();
     }
     function modelLines() {
@@ -497,23 +476,18 @@
     }
     function summaryCard() {
       const helpedSteps = activity.steps.filter(s => S.status[s.id] === 'helped').map(s => s.title);
-      return '<h3>Your model</h3><div class="gm-model">' +
+      return '<h3>Your model</h3><div class="gk-model">' +
         '<p><b>Stage:</b> year t = 1, 2, 3. <b>State:</b> machine age a at the start of year t. <b>Decision:</b> x<sub>t</sub>(a) ∈ {K, R}.</p>' +
         '<p><b>Cost during the stage:</b> Keep M(a); Replace 13 − S(a) + M(0). <b>Next state:</b> Keep a+1; Replace 1.</p>' +
         '<p>f<sub>t</sub>(a) = min{ M(a) + f<sub>t+1</sub>(a+1), 13 − S(a) + M(0) + f<sub>t+1</sub>(1) }, t = 3, 2, 1.</p>' +
         '<p>f<sub>4</sub>(a) = −S(a) (sell) · f<sub>4</sub>(a) = 0 (donate).</p>' +
         '<p><b>Answer:</b> ' + fH(1, 1) + ' = ' + SOLD.f[key(1, 1)] + ' with the sale, ' + DONATED.f[key(1, 1)] + ' with the donation; plan K → R → K in both.</p></div>' +
-        (helpedSteps.length ? '<p class="gm-small">Steps where you used "Show me": ' + helpedSteps.join(', ') + '. Try those again later without help.</p>' : '<p class="gm-small">You did every step without "Show me".</p>') +
-        '<div class="gm-row">' + btn('id="guided-download" data-do="download"', 'Download my model') + '</div>';
+        (helpedSteps.length ? '<p class="gk-small">Steps where you used "Show me": ' + helpedSteps.join(', ') + '. Try those again later without help.</p>' : '<p class="gk-small">You did every step without "Show me".</p>') +
+        '<div class="gk-row">' + btn('id="guided-download" data-do="download"', 'Download my model') + '</div>';
     }
-    function download() {
-      const parts = [activity.title, activity.family, '',
-        ...activity.steps.map(s => s.title + ': ' + (S.status[s.id] === 'done' ? 'done' : S.status[s.id] === 'helped' ? 'done with Show me' : 'not finished')),
-        '', 'Plans I played: ' + (S.plays.map(p => planText(p) + ' = ' + runPlan(p).total).join('; ') || 'none'), '', 'MODEL', ...modelLines()];
-      const url = URL.createObjectURL(new Blob([parts.join('\n')], { type: 'text/plain;charset=utf-8' }));
-      const a = document.createElement('a'); a.href = url; a.download = 'ie301-' + activity.id + '-my-model.txt'; a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
+    const downloadLines = () => [activity.title, activity.family, '',
+      ...activity.steps.map(s => s.title + ': ' + (S.status[s.id] === 'done' ? 'done' : S.status[s.id] === 'helped' ? 'done with Show me' : 'not finished')),
+      '', 'Plans I played: ' + (S.plays.map(p => planText(p) + ' = ' + runPlan(p).total).join('; ') || 'none'), '', 'MODEL', ...modelLines()];
 
     // --- Actions ---
     const ACTIONS = {
@@ -543,7 +517,6 @@
         const st = S.arcs[q.id]; st.ok = true; st.v = num(q.answer); showMe('map');
         st.msg = fb('shown', q.right);
         if (mapReady()) finish('map');
-        track('worked', stagesDone());
       },
       node(el) {
         const k = el.dataset.node, id = stepIds[S.stage];
@@ -579,7 +552,6 @@
         const k = S.active, F = fillOf(k), want = SOLD.totals[k], ex = exprs(k, 0);
         F.K = String(want.K); F.R = String(want.R); F.okK = F.okR = true; showMe('solve');
         F.msg = fb('shown', 'Keep: ' + ex.K + ' ' + want.K + '. Replace: ' + ex.R + ' ' + want.R + '.');
-        track('worked', stagesDone());
       },
       pick(el) {
         const k = S.active, F = fillOf(k), want = SOLD.totals[k], best = SOLD.best[k], p = el.dataset.v;
@@ -599,79 +571,37 @@
         S.slotSel = Object.keys(SLOT_ANSWER).find(s => !S.slots[s]) || target;
       },
       slotsCheck() { S.slotsChecked = true; track('check'); if (slotsOk()) finish('name'); },
-      slotsShow() { S.slots = Object.assign({}, SLOT_ANSWER); showMe('name'); S.slotsChecked = true; finish('name'); track('worked', stagesDone()); },
+      slotsShow() { S.slots = Object.assign({}, SLOT_ANSWER); showMe('name'); S.slotsChecked = true; finish('name'); },
       piece(el) { S.twist.piece = el.dataset.v; track('check'); },
       twistCheck() { S.twist.checked = true; finish('twist'); track('twist'); },
-      download() { track('download'); download(); },
-      go(el) { S.stage = Number(el.dataset.stage); app.scrollIntoView({ block: 'start' }); },
-      reset() { if (confirm('Clear this activity’s saved progress on this browser?')) { S = fresh(); assembledCounted = false; app.scrollIntoView({ block: 'start' }); } }
+      download() { ctx.download(downloadLines()); return false; }
     };
 
-    // --- Layout and rendering ---
-    const RENDER = { play: renderPlay, twin: renderTwin, map: renderMap, solve: renderSolve, name: renderName, twist: renderTwist };
-    // WHY: steps 4 and 6 read the arrow costs and End values that step 3 establishes.
-    const NEEDS_MAP = ['solve', 'twist'];
-    app.classList.add('gm-wide');
-    app.innerHTML = '<div class="gm"><section class="widget gm-head"><div class="learning-eyebrow">Week ' + Number(activity.week.slice(4)) + ' · ' + escapeAttr(activity.family) + '</div>' +
-      '<h2>' + escapeAttr(activity.title) + '</h2><p class="learning-context">' + escapeAttr(activity.intro) + '</p>' +
-      '<p id="storage-note" class="learning-muted"></p><nav class="gm-tabs" id="gm-tabs" aria-label="Steps"></nav></section>' +
-      '<div class="gm-layout"><div class="gm-main" id="gm-stage" aria-live="polite"></div>' +
-      '<aside class="gm-data" aria-label="Data"><h3>The data (always here)</h3><table class="gm-table">' +
-      '<tr><th>Machine age a</th>' + MAINT.map((_, a) => '<th>' + a + '</th>').join('') + '</tr>' +
-      '<tr><td>Maintenance M(a)</td>' + MAINT.map(v => '<td>' + v + '</td>').join('') + '</tr>' +
-      '<tr><td>Sale value S(a)</td>' + SALE.map(v => '<td>' + v + '</td>').join('') + '</tr></table>' +
-      '<p>A new machine costs <b>' + PRICE + '</b>. Year 1 starts with an <b>age-' + START_AGE + '</b> machine. At the end of year ' + YEARS + ' the machine is <b>sold</b>.</p>' +
-      '<p><b>One year:</b></p><ol class="gm-strip"><li>decide: Keep or Replace</li><li>pay this year\'s cost</li><li>the machine runs one year</li><li>it is one year older</li></ol>' +
-      '<p class="gm-small"><b>Replace</b> = sell the old machine (money in: S(a)), buy a new one (' + PRICE + '). The new machine runs this year at age 0.</p>' +
-      '<p class="gm-small gm-muted">This story is made up for practice. The lecture\'s own examples are the match puzzle, Joe\'s trip and the inventory problem.</p></aside></div></div>';
-    const tabsEl = app.querySelector('#gm-tabs'), stageEl = app.querySelector('#gm-stage'), noteEl = app.querySelector('#storage-note');
-
-    function render() {
-      tabsEl.innerHTML = activity.steps.map((s, i) => {
-        const st = S.status[s.id];
-        const mark = st === 'done' ? '<span class="gm-mark" title="done">✓</span>' : st === 'helped' ? '<span class="gm-mark" title="done with Show me">◐</span>' : '';
-        return '<button class="gm-tab" data-do="go" data-stage="' + i + '"' + (i === S.stage ? ' aria-current="step"' : '') + '>' + s.title + mark + '</button>';
-      }).join('');
-      const id = stepIds[S.stage];
-      let body = NEEDS_MAP.includes(id) && !mapReady()
-        ? '<h2>' + activity.steps[S.stage].title + '</h2>' + fb('no', 'This step uses the arrow costs and End values from step 3. Please finish step 3 first.') +
-          '<div class="gm-row">' + btn('data-do="go" data-stage="' + stepIds.indexOf('map') + '"', 'Go to step 3', ' primary') + '</div>'
-        : RENDER[id]();
-      const last = activity.steps.length - 1;
-      body += '<div class="gm-nav">' + (S.stage > 0 ? btn('data-do="go" data-stage="' + (S.stage - 1) + '"', '← Back') : '<span></span>') +
-        btn('data-do="reset" id="guided-restart"', 'Start over') +
-        (S.stage < last ? btn('data-do="go" data-stage="' + (S.stage + 1) + '"', 'Next →', ' primary') : '<span></span>') + '</div>';
-      stageEl.innerHTML = body;
-      save();
-      noteEl.textContent = storageWorks
-        ? 'Your progress is saved in this browser. Nothing you type is sent anywhere; the site only counts, anonymously, how far students get.'
-        : 'Browser storage is unavailable. Your progress will be lost when you leave this page.';
-    }
-
-    app.addEventListener('click', e => {
-      const node = e.target.closest('[data-node]');
-      if (node) { ACTIONS.node(node); render(); return; }
-      const el = e.target.closest('[data-do]');
-      if (!el || el.disabled || !ACTIONS[el.dataset.do]) return;
-      ACTIONS[el.dataset.do](el);
-      if (el.dataset.do !== 'download') render();
-    });
-    app.addEventListener('keydown', e => {
-      const t = e.target;
-      if (e.key === 'Enter' && t.dataset && t.dataset.enter) { e.preventDefault(); ACTIONS[t.dataset.enter](t); render(); return; }
-      if ((e.key === 'Enter' || e.key === ' ') && t.matches && t.matches('[role="button"]')) { e.preventDefault(); t.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
-    });
-    app.addEventListener('input', e => {
-      const t = e.target;
-      if (t.dataset.arc) S.arcs[t.dataset.arc].v = t.value;
-      if (t.dataset.fill) fillOf(t.dataset.fill)[t.dataset.side] = t.value;
-      save();
-    });
-    app.addEventListener('change', e => {
-      if (e.target.dataset.name) { S.names[e.target.dataset.name] = e.target.value; S.namesChecked = false; render(); }
-    });
-    render();
+    // --- What the kit shows ---
+    return {
+      dataCard: '<h3>The data (always here)</h3><table class="gk-table">' +
+        '<tr><th>Machine age a</th>' + MAINT.map((_, a) => '<th>' + a + '</th>').join('') + '</tr>' +
+        '<tr><td>Maintenance M(a)</td>' + MAINT.map(v => '<td>' + v + '</td>').join('') + '</tr>' +
+        '<tr><td>Sale value S(a)</td>' + SALE.map(v => '<td>' + v + '</td>').join('') + '</tr></table>' +
+        '<p>A new machine costs <b>' + PRICE + '</b>. Year 1 starts with an <b>age-' + START_AGE + '</b> machine. At the end of year ' + YEARS + ' the machine is <b>sold</b>.</p>' +
+        '<p><b>One year:</b></p><ol class="gk-strip"><li>decide: Keep or Replace</li><li>pay this year\'s cost</li><li>the machine runs one year</li><li>it is one year older</li></ol>' +
+        '<p class="gk-small"><b>Replace</b> = sell the old machine (money in: S(a)), buy a new one (' + PRICE + '). The new machine runs this year at age 0.</p>' +
+        '<p class="gk-small gk-muted">This story is made up for practice. The lecture\'s own examples are the match puzzle, Joe\'s trip and the inventory problem.</p>',
+      steps: { play: renderPlay, twin: renderTwin, map: renderMap, solve: renderSolve, name: renderName, twist: renderTwist },
+      actions: ACTIONS,
+      // WHY: steps 4 and 6 read the arrow costs and End values that step 3 establishes.
+      gate: Object.fromEntries(['solve', 'twist'].map(id => [id, { ready: mapReady, step: 'map', text: 'This step uses the arrow costs and End values from step 3. Please finish step 3 first.' }])),
+      onInput(t) {
+        if (t.dataset.arc) S.arcs[t.dataset.arc].v = t.value;
+        if (t.dataset.fill) fillOf(t.dataset.fill)[t.dataset.side] = t.value;
+      },
+      onChange(t) {
+        if (!t.dataset.name) return false;
+        S.names[t.dataset.name] = t.value; S.namesChecked = false;
+        return true;
+      }
+    };
   }
 
-  window.GUIDED_CUSTOM = Object.assign(window.GUIDED_CUSTOM || {}, { machine: mount });
+  window.GUIDED_CUSTOM.machine = (app, opts) => window.GUIDED_KIT.mount(app, opts, { fresh, build });
 })();
