@@ -21,6 +21,8 @@
   // Anonymous progress counts for the instructor (assets/usage.js): which step
   // actions happened and how far a student got, never what they wrote.
   const track=(action,max)=>document.dispatchEvent(new CustomEvent('ie301:usage',{detail:{event:'guided:'+activity.id+':'+action,max}}));
+  // An activity with its own interactive flow (e.g. assets/guided-machine.js) replaces this step engine.
+  if(activity.custom){window.GUIDED_CUSTOM[activity.id](app,{activity,track});return;}
   let assembledCounted=false;
   const key='ie301-guided-v1:'+activity.id;
   let state={index:0,draft:'',steps:{},twist:'',twistAttempted:false,twistRevealed:false},storageWorks=true;

@@ -4,42 +4,19 @@ window.GUIDED = (() => {
   const numeric = (id,title,prompt,fields,hint,model,cols=1) => ({id,title,prompt,fields,hint,model,cols});
   const table = (headers,rows) => '<div class="learning-table-wrap"><table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   const items=[];
-  items.push({id:'machine',week:'week07',title:'Keep it or replace it?',family:'Deterministic DP · foundations',support:'guided',
-    intro:'Build a three-year machine-replacement model. Focus on what the state remembers and when each cost is paid.',
-    story:'<p>A laboratory begins year 1 with a machine of age 1. At the start of each of three years, it can keep its machine or sell it and buy a new one for 13 cost units. A new machine starts at age 0. It then operates for the year, incurs maintenance at its operating age, and ages by one year. At the end of year 3, sell the remaining machine at its new age. Minimize total maintenance and purchases minus all sale proceeds. There is no discounting or uncertainty.</p>'+table(['Age a','0','1','2','3','4'],[['Maintenance M(a)','1','4','9','16','25'],['Sale value S(a)','8','6','3','1','0']]),
+  // The machine activity has its own interactive flow (assets/guided-machine.js,
+  // mounted by guided.js through window.GUIDED_CUSTOM). Its steps here only name
+  // the components; the instructor analytics count them.
+  items.push({id:'machine',week:'week07',title:'Keep it or replace it?',family:'Deterministic DP · foundations',support:'guided',custom:true,
+    intro:'Play a three-year keep-or-replace game, draw it as a map, solve it backward, then name the DP parts and change one rule.',
     steps:[
-      choice('understand','1 · What is chosen?','Which is the actual decision sequence?',
-        ['Choose keep or replace at the start of each year','Choose next year’s maintenance cost','Choose the age after observing the total three-year cost'],0,
-        ['The action changes both this year’s cost and the machine carried into the next year.','Maintenance costs are fixed data, indexed by operating age.','Age follows from the keep/replace actions. Future total cost is not observed in advance.'],
-        'List what the laboratory controls before operating the machine.', 'Stages: years t=1,2,3. Decision: keep (K) or replace (R) before operating in year t.'),
-      choice('state','2 · Carry enough information','Given the year t, which listed state is sufficient and simplest?',
-        ['Total cost already paid','The machine’s age a before the decision','Every previous keep/replace action'],1,
-        ['Sunk total cost does not tell us the current machine’s maintenance or resale value.','Current age determines relevant costs and the consequences of either action.','The history can determine age, but it retains unnecessary information.'],
-        'Compare two histories with the same machine age. Can future choices or costs distinguish them?', 'State a: machine age at the start of year t, before keep/replace. Historical expenditure is sunk.'),
-      choice('transition','3 · Fix the event order','Which pair gives next year’s age after keep and replace?',
-        ['Keep: a+1; replace: 0','Keep: a; replace: 1','Keep: a+1; replace: 1'],2,
-        ['A replacement operates for a year before the next decision, so it is no longer age 0 then.','A kept machine also ages during its year of operation.','The kept machine ages by one; a new age-0 machine becomes age 1.'],
-        'Follow the story through one complete year, including operation.', 'Transitions: K → a+1; R → 1. Keep costs M(a). Replace costs 13−S(a)+M(0).'),
-      choice('meaning','4 · Define the function in words','What should fₜ(a) mean before writing a recursion?',
-        ['Minimum future net cost from year t through the final sale, given starting age a','Total cost of the machine’s whole life, including costs already paid','Only the maintenance cost in year t'],0,
-        ['This states the horizon, optimization direction, initial condition and terminal sale.','The recursion should value the future from the current state, not add sunk history.','A one-year cost leaves out the consequences for later years.'],
-        'Include “from when”, “given what”, and the terminal sale.', 'fₜ(a): minimum net net cost from the start of year t through the final sale, given age a.'),
-      choice('recursion','5 · Link today to tomorrow','Which recursion uses the costs and transitions consistently?',
-        ['fₜ(a)=min{M(a)+fₜ₊₁(a+1), 13−S(a)+1+fₜ₊₁(1)}','fₜ(a)=min{M(a),13−S(a)+1}','fₜ(a)=M(a)+13−S(a)+1+fₜ₊₁(a+1)'],0,
-        ['Each alternative contains exactly its immediate net cost and the future value of its next state.','This drops all consequences after the current year.','Keep and replace are alternatives; this pays for both and uses only the keep transition.'],
-        'Write the cost-if-keep and cost-if-replace separately before taking their minimum.', 'fₜ(a)=min{M(a)+fₜ₊₁(a+1), 13−S(a)+1+fₜ₊₁(1)}, t=1,2,3.'),
-      choice('boundary','6 · Close the horizon','No operating years remain at t=4. What is f₄(a)?',
-        ['0','−S(a)','S(a)'],1,
-        ['The final sale is still part of the stated objective.','Selling brings income, which reduces net cost.','A positive sign would charge the sale proceeds as a cost.'],
-        'Use the same cost-minimization sign convention as the recursion.', 'Boundary: f₄(a)=−S(a). The original answer is f₁(1); retrieve the minimizing action along the resulting path.'),
-      numeric('check','7 · Test one small case','At t=3 with age 2, compute the net cost of each action, including the final sale.',
-        [{label:'Keep: net cost',value:8},{label:'Replace: net cost',value:5}],
-        'Keep pays M(2) then sells at age 3. Replacement sells the old machine, buys for 13, operates at age 0, then sells at age 1.',
-        'Keep: 9−1=8. Replace: 13−3+1−6=5. Thus f₃(2)=5, with replacement. The complete model gives f₁(1)=16 and the path keep → replace → keep.')
-    ],
-    model:'Stages t=1,2,3. State a is age before the yearly decision. Actions K or R.\nK: cost M(a), next age a+1. R: cost 13−S(a)+1, next age 1.\nfₜ(a) is minimum future net cost through the final sale given age a.\nfₜ(a)=min{M(a)+fₜ₊₁(a+1),13−S(a)+1+fₜ₊₁(1)}.\nf₄(a)=−S(a). Answer: f₁(1)=16; keep, replace, keep.\nTrace: year 1 maintenance 4; year 2 replacement net operating cost 13−3+1=11; year 3 maintenance 4; final sale at age 2 brings 3. Total 4+11+4−3=16.',
-    twist:'The laboratory must donate its final machine and receives no money at the end of year 3. Sales when replacing a machine are still allowed. Write exactly which part of your model changes.',
-    twistAnswer:'The boundary becomes f₄(a)=0. Replacement-year sale proceeds remain in 13−S(a)+1. The state and transitions need not change. Recompute the policy; do not assume the old optimum still applies.'});
+      {id:'play',title:'1 · Play it'},
+      {id:'twin',title:'2 · Same age, same future?'},
+      {id:'map',title:'3 · Draw it as a map'},
+      {id:'solve',title:'4 · Solve it backward'},
+      {id:'name',title:'5 · Name the parts'},
+      {id:'twist',title:'6 · Twist'}
+    ]});
   items.push({id:'energy',week:'week08',title:'Spend a limited upgrade budget',family:'Deterministic DP · resource allocation',support:'draft',
     intro:'Move beyond calendar-time stages. Draft the model first, then use checkpoints where you need them.',
     story:'<p>The university has a budget of 6 units for energy upgrades in three buildings. Choose exactly one listed option per building, including “none”. Options have known costs and annual energy savings; savings from different buildings add. Budget may be left unused and unused money has no additional reward. Maximize total savings.</p>'+table(['Building','None: cost / saving','Option 1: cost / saving','Option 2: cost / saving'],[['A','0 / 0','2 / 5','4 / 8'],['B','0 / 0','3 / 8','5 / 11'],['C','0 / 0','2 / 4','3 / 7']]),

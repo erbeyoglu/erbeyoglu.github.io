@@ -1,0 +1,125 @@
+/* Week 7 guided activity "machine" (assets/guided-machine.js).
+   Every rule is scoped under .gm and every class carries the gm- prefix (the
+   map's SVG classes the m- prefix), so nothing leaks into or out of the shared
+   style.css / learning.css. Colors come from the theme tokens in style.css. */
+.learning-shell.gm-wide { max-width: 1120px; }
+.gm h2 { margin: 0 0 8px; }
+.gm h3 { margin: 22px 0 6px; font-size: 1.05rem; }
+.gm sub { font-size: 70%; }
+.gm-head { margin: 0 0 14px; }
+.gm-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+.gm .gm-tab { min-height: 40px; border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 5px 12px; font-size: .9rem; }
+.gm .gm-tab[aria-current="step"] { background: var(--ink); color: var(--page); border-color: var(--ink); }
+.gm-mark { margin-left: 4px; }
+.gm-layout { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 20px; align-items: start; }
+.gm-main { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+.gm-data { position: sticky; top: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; font-size: .88rem; }
+.gm-data h3 { margin: 0 0 6px; font-size: .95rem; }
+.gm-data p { margin: 6px 0; }
+.gm-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.gm-table th, .gm-table td { border-bottom: 1px solid var(--grid); padding: 3px 4px; text-align: center; }
+.gm-table th:first-child, .gm-table td:first-child { text-align: left; white-space: nowrap; }
+.gm-strip { margin: 6px 0 8px; padding-left: 22px; }
+.gm-strip li { margin: 2px 0; }
+.gm-small { font-size: .85rem; color: var(--ink-2); }
+.gm-muted { color: var(--muted); }
+.gm .gm-btn { min-height: 44px; }
+.gm .gm-btn.big { font-size: 1.05rem; padding: 9px 22px; }
+.gm .gm-btn.picked { outline: 3px solid var(--s1); outline-offset: 1px; }
+.gm-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+.gm-fb { margin: 10px 0; padding: 8px 12px; border-radius: 8px; border-left: 4px solid var(--axis); background: var(--page); }
+.gm-fb.ok { border-left-color: var(--good); }
+.gm-fb.no { border-left-color: var(--critical); }
+.gm-fb.shown { border-left-color: var(--s5); }
+.gm-fb b.gm-tag { display: inline-block; margin-right: 6px; }
+.gm-fb.ok b.gm-tag { color: var(--good); }
+.gm-fb.no b.gm-tag { color: var(--critical); }
+.gm-fb.shown b.gm-tag { color: var(--s5); }
+.gm-receipt { width: 100%; border-collapse: collapse; margin: 10px 0; font-variant-numeric: tabular-nums; }
+.gm-receipt td { padding: 4px 6px; border-bottom: 1px dashed var(--grid); vertical-align: top; }
+.gm-receipt td.amt { text-align: right; white-space: nowrap; width: 4.5em; }
+.gm-receipt td.best { color: var(--s2); font-weight: 700; }
+.gm-receipt tr.sub td { font-size: .82rem; color: var(--ink-2); border-bottom: none; padding-top: 0; }
+.gm-receipt tr.total td { font-weight: 700; border-bottom: none; border-top: 2px solid var(--ink-2); }
+.gm-now { font-size: 1.1rem; font-weight: 600; margin: 6px 0; }
+.gm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gm-chip { border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px; font-size: .9rem; background: var(--page); font-variant-numeric: tabular-nums; }
+.gm-chip.best { border-color: var(--s2); color: var(--s2); font-weight: 700; }
+.gm-twins { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gm-twin { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; background: var(--page); }
+.gm-twin h4 { margin: 0 0 4px; }
+.gm-twin p { margin: 4px 0; }
+.gm-panel { border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; background: var(--page); margin: 10px 0; }
+.gm-panel p { margin: 6px 0; }
+.gm-map { margin: 10px 0; }
+.gm-map svg { width: 100%; max-width: 640px; height: auto; display: block; }
+.gm .m-col { font-size: 15px; font-weight: 700; fill: var(--ink-2); text-anchor: middle; }
+.gm .m-row { font-size: 14px; fill: var(--muted); }
+.gm .m-arc { fill: none; stroke-width: 2; }
+.gm .m-arc.k { stroke: var(--s1); }
+.gm .m-arc.r { stroke: var(--s5); stroke-dasharray: 7 5; }
+.gm .m-arc.hot { stroke-width: 4; }
+.gm .m-arc.best { stroke: var(--s2); stroke-width: 5; stroke-dasharray: none; }
+.gm .m-arc.path { stroke: var(--s2); stroke-width: 6; stroke-dasharray: none; opacity: .85; }
+.gm .m-arc.dim { opacity: .35; }
+.gm .m-pill { fill: var(--surface); stroke: var(--border); }
+.gm .m-lab { font-size: 13.5px; font-weight: 600; text-anchor: middle; dominant-baseline: central; fill: var(--ink-2); }
+.gm .m-lab.k { fill: var(--s1); }
+.gm .m-lab.r { fill: var(--s5); }
+.gm .m-node circle { fill: var(--surface); stroke: var(--axis); stroke-width: 2; }
+.gm .m-node text { font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.gm .m-node text.unknown { fill: var(--muted); font-weight: 400; }
+.gm .m-node.end circle { stroke-dasharray: 3 3; }
+.gm .m-node.active circle { stroke: var(--ink); stroke-width: 4; }
+.gm .m-node.target circle { fill: var(--region-fill); }
+.gm .m-node.marked circle { fill: var(--region-fill); stroke: var(--s1); stroke-width: 3; }
+.gm .m-node.changed circle { stroke: var(--s5); stroke-width: 5; }
+.gm .m-node.click { cursor: pointer; }
+.gm .m-node.click:hover circle { stroke: var(--ink-2); stroke-width: 3; }
+.gm .m-node.locked { opacity: .55; }
+.gm .m-start { font-size: 12px; fill: var(--muted); text-anchor: middle; }
+.gm-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; color: var(--ink-2); margin: 4px 0; }
+.gm-legend svg { width: 34px; height: 10px; vertical-align: middle; margin-right: 4px; }
+.gm-calc { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; font-variant-numeric: tabular-nums; }
+.gm-calc .who { font-weight: 700; }
+.gm-calc .who.k { color: var(--s1); }
+.gm-calc .who.r { color: var(--s5); }
+.gm input.gm-num { width: 6em; text-align: right; }
+.gm input.gm-num.ok { border-color: var(--good); }
+.gm input.gm-num.no { border-color: var(--critical); }
+.gm-names { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; }
+.gm-formula { font-size: 1.1rem; line-height: 2.5; }
+.gm-slot { display: inline-block; min-width: 4.5em; padding: 0 8px; margin: 0 2px; border: 2px dashed var(--axis); border-radius: 8px; text-align: center; line-height: 1.7; background: var(--page); cursor: pointer; }
+.gm-slot.sel { border-color: var(--s1); border-style: solid; }
+.gm-slot.ok { border-color: var(--good); border-style: solid; }
+.gm-slot.no { border-color: var(--critical); border-style: solid; }
+.gm-cap { font-size: .75rem; color: var(--muted); }
+.gm-bank { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.gm .gm-tile { border-color: var(--ink-2); background: var(--surface); font-size: 1rem; padding: 4px 12px; }
+.gm .gm-tile:disabled { opacity: .3; }
+.gm-model { background: var(--page); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.gm-model p { margin: 4px 0; }
+.gm-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 22px; border-top: 1px solid var(--grid); padding-top: 12px; }
+@media (max-width: 900px) {
+  .gm-layout { grid-template-columns: minmax(0, 1fr); }
+  .gm-data { position: static; order: -1; }
+}
+@media (max-width: 520px) {
+  .gm-main { padding: 12px; }
+  .gm-twins { grid-template-columns: 1fr; }
+  .gm-calc { grid-template-columns: auto minmax(0, 1fr); }
+  .gm-calc .eq { grid-column: 1 / -1; }
+  .gm-formula { font-size: 1rem; }
+  .gm-names { grid-template-columns: minmax(0, 1fr) auto; }
+  .gm-names b { grid-column: 1 / -1; margin-bottom: -6px; }
+  /* The map shrinks to ~60% on a phone; larger SVG text keeps it readable. */
+  .gm .m-lab { font-size: 17px; }
+  .gm .m-node text { font-size: 19px; }
+  .gm .m-col { font-size: 18px; }
+  .gm .m-row { font-size: 16px; }
+}
+@media print {
+  .gm-tabs, .gm-nav { display: none !important; }
+  .gm-layout { grid-template-columns: minmax(0, 1fr); }
+  .gm-data { position: static; }
+}
