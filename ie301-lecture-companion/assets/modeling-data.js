@@ -86,7 +86,7 @@ window.MODELING = (() => {
     'Which set contains exactly the feasible production quantities?',
     ['{0,1,2,3,4,5}','{1,2,3,4,5}','{0,1}'],2,
     ['Production above 1 leaves more than 4 in storage.','Starting stock already covers demand; production need not be positive, and storage still limits it.','End stock is 3+x, so 0≤x≤1. Both choices meet demand and both capacities.']);
-  add('08','stage','teams',14,'A stage need not be a date',
+  add('08','stage','teams',15,'A stage need not be a date',
     'Five medical teams must be allocated among three countries. Each country has its own benefit table for the number assigned.',
     'Which stage/state pair supports a resource-allocation DP?',
     ['Stage = country; state = teams remaining','Stage = team count; state = calendar day','Stage = country; state = country name only'],0,
@@ -109,7 +109,7 @@ window.MODELING = (() => {
   add('09','expectation','pinv',17,'Place the expectation',
     'Choose production x before demand D is observed. For a feasible x, total cost is C(x,D)+f(next state).',
     'Which expression respects that information order?',
-    ['Eᴅ[minₓ {C(x,D)+f(next state)}]','minₓ Eᴅ[C(x,D)+f(next state)]','minₓ {C(x,E[D])+f(state computed using E[D])}'],1,
+    ['E[minₓ {C(x,D)+f(next state)}]','minₓ E[C(x,D)+f(next state)]','minₓ {C(x,E[D])+f(state computed using E[D])}'],1,
     ['This can choose a different x after seeing each D: it grants advance information.','One feasible decision is evaluated over all possible demand outcomes, then the best is chosen.','Replacing random demand by its mean generally changes nonlinear costs and future values.']);
   add('09','terminal','pinv',21,'The boundary is part of the model',
     'Minimize net cost over periods 1–3. Period-3 holding cost is already charged in that period. Remaining inventory i is then sold for $2 per unit.',
