@@ -22,8 +22,11 @@
   <div class="theme-switch" id="theme-switch"></div>
   <nav class="widgets">
     <a href="#bayes">1 · The disease test</a>
-    <a href="#race">2 · Race of exponentials</a>
-    <a href="#poisson">3 · Poisson process</a>
+    <a href="#covariance">2 · Covariance</a>
+    <a href="#meanrules">3 · Rules for the mean</a>
+    <a href="#varrules">4 · Rules for the variance</a>
+    <a href="#race">5 · Race of exponentials</a>
+    <a href="#poisson">6 · Poisson process</a>
   </nav>
 </header>
 
@@ -63,7 +66,87 @@
   </p>
 </section>
 
-<!-- ================= WIDGET 2 : RACE OF EXPONENTIALS ================= -->
+<!-- ================= WIDGET 2 : COVARIANCE ================= -->
+<section class="widget" id="covariance">
+  <h2>How do X and Y change together? <span class="chip">Slide 23</span></h2>
+  <p class="howto">
+    Each dot is one observation of (X, Y). The dashed lines are E(X) and E(Y) (here: the average of the 40 dots).
+    Every dot gives the product [X − E(X)][Y − E(Y)], drawn as a rectangle from the cross to the dot.
+    <b>Move the slider</b> and watch which rectangles win.
+  </p>
+  <div class="controls">
+    <div class="group">
+      <label for="cv-r">Y goes</label>
+      <span style="color:var(--ink-2)">opposite to X</span>
+      <input type="range" id="cv-r" min="-10" max="10" step="1" value="7" style="width:200px">
+      <span style="color:var(--ink-2)">with X</span>
+    </div>
+    <span class="readout">cov(X, Y) = <b id="cv-cov">—</b></span>
+    <span class="readout"><span style="border-bottom:3px solid var(--s1)">product &gt; 0</span>: <b id="cv-pos">—</b> dots</span>
+    <span class="readout"><span style="border-bottom:3px solid #eda100">product &lt; 0</span>: <b id="cv-neg">—</b> dots</span>
+  </div>
+  <canvas class="viz short" id="c-cv"></canvas>
+  <p class="status info" id="cv-status"></p>
+  <p class="note">
+    Slide 23: cov(X, Y) = E{[X − E(X)][Y − E(Y)]}, the average of these products. Top-right and bottom-left
+    dots give positive products; top-left and bottom-right dots give negative ones.
+  </p>
+</section>
+
+<!-- ================= WIDGET 3 : RULES FOR THE MEAN ================= -->
+<section class="widget" id="meanrules">
+  <h2>Rules for the mean: where does E land? <span class="chip">Slide 24</span></h2>
+  <p class="howto">
+    Each dot is one of 40 observations. The thick line on a row is its mean E (the average of its 40 dots);
+    thin lines follow each observation from X₁ to the new random variable. <b>Pick a new random variable.</b>
+  </p>
+  <div class="controls">
+    <button class="meanrules-mode primary" data-mode="scale">cX₁</button>
+    <button class="meanrules-mode" data-mode="shift">X₁ + c</button>
+    <button class="meanrules-mode" data-mode="sum">X₁ + X₂</button>
+    <div class="group" id="meanrules-cgroup">
+      <label for="meanrules-c">c</label>
+      <input type="range" id="meanrules-c" min="-2" max="3" step="0.5" value="2" style="width:160px">
+      <span class="readout"><b id="meanrules-cv">2.0</b></span>
+    </div>
+  </div>
+  <canvas class="viz short" id="c-meanrules" style="height:300px"></canvas>
+  <p class="readout" id="meanrules-rule" style="display:block;font-size:1.05rem;line-height:1.8"></p>
+  <p class="note">Slide 24: E(cX₁) = cE(X₁), E(X₁ + c) = E(X₁) + c, E(X₁ + X₂) = E(X₁) + E(X₂).</p>
+</section>
+
+<!-- ================= WIDGET 4 : RULES FOR THE VARIANCE ================= -->
+<section class="widget" id="varrules">
+  <h2>Rules for the variance: how wide is the spread? <span class="chip">Slide 25</span></h2>
+  <p class="howto">
+    Same 40 observations. Under each row, the bracket spans E ± one standard deviation and shows the variance.
+    <b>Pick a new random variable</b>; for X₁ + X₂, move the second slider.
+  </p>
+  <div class="controls">
+    <button class="varrules-mode primary" data-mode="scale">cX₁</button>
+    <button class="varrules-mode" data-mode="shift">X₁ + c</button>
+    <button class="varrules-mode" data-mode="sum">X₁ + X₂</button>
+    <div class="group" id="varrules-cgroup">
+      <label for="varrules-c">c</label>
+      <input type="range" id="varrules-c" min="-2" max="3" step="0.5" value="2" style="width:160px">
+      <span class="readout"><b id="varrules-cv">2.0</b></span>
+    </div>
+    <div class="group" id="varrules-followgroup" style="display:none">
+      <label for="varrules-follow">X₂ goes</label>
+      <span style="color:var(--ink-2)">opposite to X₁</span>
+      <input type="range" id="varrules-follow" min="-10" max="10" step="1" value="0" style="width:180px">
+      <span style="color:var(--ink-2)">with X₁</span>
+    </div>
+  </div>
+  <canvas class="viz short" id="c-varrules" style="height:340px"></canvas>
+  <p class="readout" id="varrules-rule" style="display:block;font-size:1.05rem;line-height:1.8"></p>
+  <p class="note">
+    Slide 25: var(cX₁) = c²var(X₁), var(X₁ + c) = var(X₁); if X₁ and X₂ are independent,
+    var(X₁ + X₂) = var(X₁) + var(X₂); in general var(X₁ + X₂) = var(X₁) + var(X₂) + 2cov(X₁, X₂).
+  </p>
+</section>
+
+<!-- ================= WIDGET 5 : RACE OF EXPONENTIALS ================= -->
 <section class="widget" id="race">
   <h2>Norm vs Nat: who finishes first? <span class="chip">Slides 30–36</span></h2>
   <p class="howto">
@@ -98,7 +181,7 @@
   </details></div>
 </section>
 
-<!-- ================= WIDGET 3 : POISSON PROCESS ================= -->
+<!-- ================= WIDGET 6 : POISSON PROCESS ================= -->
 <section class="widget" id="poisson">
   <h2>Poisson arrivals, live <span class="chip">Slides 39–49</span></h2>
   <p class="howto">
@@ -144,6 +227,131 @@
 <script>
 const el = id => document.getElementById(id);
 const fmt = (v, d = 2) => Number(v).toFixed(d);
+
+/* ============================================================
+   SHARED — fixed samples and dot rows (widgets 2, 3 and 4, slides 23-25)
+   E(...), var(...) and cov(...) are computed over the 40 values shown, so the
+   slide's rules hold exactly on screen, not just approximately.
+   ============================================================ */
+const SAMPLE_SIZE = 40;
+const mean = values => values.reduce((a, b) => a + b, 0) / values.length;
+const variance = values => { const m = mean(values); return mean(values.map(v => (v - m) ** 2)); };
+const covariance = (a, b) => { const ma = mean(a), mb = mean(b); return mean(a.map((v, i) => (v - ma) * (b[i] - mb))); };
+
+// WHY a fixed seed: every projector and phone shows the same dots.
+function seededNormals(seed, count) {
+  let s = seed >>> 0;
+  const uniform = () => {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return (((t ^ (t >>> 14)) >>> 0) + 1) / 4294967297;
+  };
+  return Array.from({ length: count }, () =>
+    Math.sqrt(-2 * Math.log(uniform())) * Math.cos(2 * Math.PI * uniform()));
+}
+
+// Two samples with mean 0, variance 1 and covariance exactly 0, so that
+// "Y follows X with strength r" gives cov = r exactly and r = 0 is truly "no pattern".
+const STANDARD_PAIR = (() => {
+  const standardize = v => { const m = mean(v), sd = Math.sqrt(variance(v)); return v.map(x => (x - m) / sd); };
+  const z1 = standardize(seededNormals(23, SAMPLE_SIZE));
+  const raw = seededNormals(230, SAMPLE_SIZE);
+  const slope = covariance(raw, z1);                       // var(z1) = 1
+  return [z1, standardize(raw.map((v, i) => v - slope * z1[i]))];
+})();
+
+// Draws rows of dots on one shared number line. Each row: { name, values, color }.
+// Every row marks its mean; with spread: true it also shows mean ± one standard
+// deviation and the variance. A faint line joins each dot of row 0 to the same
+// observation in the last row, so a transformation can be followed dot by dot.
+function drawDotRows(canvas, view, rows, spread) {
+  const { ctx, w, h } = VIZ.setup(canvas);
+  const t = VIZ.theme();
+  ctx.clearRect(0, 0, w, h);
+  const narrow = w < 640;
+  const fontScale = parseFloat(VIZ.cssv('--viz-font-scale')) || 1;   // the projector theme enlarges canvas text
+  const px = (size, weight = '') => weight + Math.round(size * fontScale) + 'px system-ui, sans-serif';
+  const padL = narrow ? 62 : 92, padR = 16, padB = 34;
+  const X = x => padL + (x - view[0]) / (view[1] - view[0]) * (w - padL - padR);
+  const rowGap = (h - padB - 10) / rows.length;
+  const rowY = i => 10 + rowGap * (i + 0.55);
+
+  // axis with ticks
+  const step = (view[1] - view[0]) > 24 ? 5 : 2;
+  ctx.save();
+  ctx.strokeStyle = t.axis;
+  ctx.fillStyle = t.muted;
+  ctx.font = px(12);
+  ctx.textAlign = 'center';
+  ctx.beginPath();
+  ctx.moveTo(X(view[0]), h - padB);
+  ctx.lineTo(X(view[1]), h - padB);
+  ctx.stroke();
+  for (let v = Math.ceil(view[0] / step) * step; v <= view[1]; v += step) {
+    ctx.fillText(String(v), X(v), h - padB + 16);
+    ctx.strokeStyle = t.grid;
+    ctx.beginPath();
+    ctx.moveTo(X(v), 6);
+    ctx.lineTo(X(v), h - padB);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // dot-by-dot links from the first row to the last
+  const first = rows[0], last = rows[rows.length - 1];
+  ctx.save();
+  ctx.strokeStyle = t.axis;
+  ctx.globalAlpha = 0.35;
+  first.values.forEach((v, i) => {
+    ctx.beginPath();
+    ctx.moveTo(X(v), rowY(0));
+    ctx.lineTo(X(last.values[i]), rowY(rows.length - 1));
+    ctx.stroke();
+  });
+  ctx.restore();
+
+  rows.forEach((row, r) => {
+    const y = rowY(r), m = mean(row.values), sd = Math.sqrt(variance(row.values));
+    ctx.save();
+    ctx.fillStyle = t.ink;
+    ctx.font = px(14, '600 ');
+    ctx.textAlign = 'right';
+    ctx.fillText(row.name, padL - 10, y + 5);
+    row.values.forEach(v => {
+      ctx.beginPath();
+      ctx.arc(X(v), y, 4.5, 0, Math.PI * 2);
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = row.color;
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    // mean marker
+    ctx.strokeStyle = t.ink;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(X(m), y - 16);
+    ctx.lineTo(X(m), y + 16);
+    ctx.stroke();
+    ctx.fillStyle = t.ink;
+    ctx.font = px(13, '600 ');
+    ctx.textAlign = 'center';
+    ctx.fillText('E = ' + fmt(m, 2), X(m), y - 21);
+    if (spread) {
+      const by = y + 22;
+      ctx.strokeStyle = t.ink2;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(X(m - sd), by - 5); ctx.lineTo(X(m - sd), by);
+      ctx.lineTo(X(m + sd), by); ctx.lineTo(X(m + sd), by - 5);
+      ctx.stroke();
+      ctx.fillStyle = t.ink2;
+      ctx.font = px(13);
+      ctx.fillText('var = ' + fmt(variance(row.values), 2), X(m), by + 15);
+    }
+    ctx.restore();
+  });
+}
 
 /* ============================================================
    WIDGET 1 — Bayes disease test (slide 12): a tree of 1,000,000 people
@@ -334,7 +542,161 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
 })();
 
 /* ============================================================
-   WIDGET 2 — race of exponentials (slides 30-36)
+   WIDGET 2 — covariance (slide 23): one rectangle per dot
+   ============================================================ */
+(() => {
+  const canvas = el('c-cv');
+  const DOTS = SAMPLE_SIZE;
+  const CENTER = 5, SPREAD = 1.5;          // dots sit around (5, 5) on a 0..10 view
+  const NEGATIVE_PRODUCT = '#eda100';      // amber, as for the disease test's second group
+  const RECT_ALPHA = 0.13;
+  const [Z1, Z2] = STANDARD_PAIR;
+
+  // The slider sets how closely Y follows X: -1 = exactly opposite, 0 = no pattern, 1 = exactly with X.
+  function sample(follow) {
+    const free = Math.sqrt(1 - follow * follow);
+    return Z1.map((z, i) => ({ x: CENTER + SPREAD * z, y: CENTER + SPREAD * (follow * z + free * Z2[i]) }));
+  }
+
+  function draw() {
+    const follow = +el('cv-r').value / 10;
+    const dots = sample(follow);
+    const ex = dots.reduce((a, d) => a + d.x, 0) / DOTS;
+    const ey = dots.reduce((a, d) => a + d.y, 0) / DOTS;
+    const products = dots.map(d => (d.x - ex) * (d.y - ey));
+    const cov = products.reduce((a, b) => a + b, 0) / DOTS;
+    const positive = products.filter(v => v > 0).length;
+
+    const p = VIZ.plot(canvas, { x0: 0, x1: 10, y0: 0, y1: 10, padL: 40, padB: 36 });
+    const t = VIZ.theme();
+    const { ctx, X, Y } = p;
+    VIZ.axes(p, t, { xticks: [0, 2, 4, 6, 8], yticks: [0, 2, 4, 6, 8], xlabel: 'X', ylabel: 'Y' });   // no 10: the axis titles sit there
+
+    // rectangles first, so the dots stay on top
+    dots.forEach((d, i) => {
+      const color = products[i] > 0 ? t.s1 : NEGATIVE_PRODUCT;
+      const x = Math.min(X(ex), X(d.x)), y = Math.min(Y(ey), Y(d.y));
+      const w = Math.abs(X(d.x) - X(ex)), h = Math.abs(Y(d.y) - Y(ey));
+      ctx.save();
+      ctx.globalAlpha = RECT_ALPHA;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+      ctx.globalAlpha = 0.45;
+      ctx.strokeStyle = color;
+      ctx.strokeRect(x, y, w, h);
+      ctx.restore();
+    });
+    // the cross at (E(X), E(Y))
+    ctx.save();
+    ctx.setLineDash([6, 5]);
+    ctx.strokeStyle = t.ink2;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(X(ex), Y(0)); ctx.lineTo(X(ex), Y(10));
+    ctx.moveTo(X(0), Y(ey)); ctx.lineTo(X(10), Y(ey));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = t.ink2;
+    ctx.font = '600 13px system-ui, sans-serif';
+    ctx.fillText('E(X)', X(ex) + 5, Y(10) + 14);
+    ctx.textAlign = 'right';
+    ctx.fillText('E(Y)', X(10) - 4, Y(ey) - 6);
+    ctx.restore();
+    dots.forEach((d, i) => VIZ.dot(p, d.x, d.y, products[i] > 0 ? t.s1 : NEGATIVE_PRODUCT, 5, true));
+
+    el('cv-cov').textContent = (cov > 0 ? '+' : '') + fmt(cov, 2);
+    el('cv-pos').textContent = positive;
+    el('cv-neg').textContent = DOTS - positive;
+    const st = el('cv-status');
+    const clear = 0.25 * SPREAD * SPREAD;   // below this, call the covariance "near 0"
+    st.textContent = cov > clear
+      ? 'When X is above E(X), Y is usually above E(Y) too. Most products are positive, so cov(X, Y) > 0.'
+      : cov < -clear
+        ? 'When X is above E(X), Y is usually below E(Y). Most products are negative, so cov(X, Y) < 0.'
+        : 'Positive and negative products roughly cancel: cov(X, Y) is near 0.';
+  }
+
+  el('cv-r').addEventListener('input', draw);
+  VIZ.register(canvas, draw);
+})();
+
+/* ============================================================
+   WIDGETS 3 and 4 — rules for the mean (slide 24) and the variance (slide 25)
+   One builder; the variance widget adds the spread brackets and the
+   "X₂ goes with X₁" slider for var(X₁ + X₂).
+   ============================================================ */
+const X1_MEAN = 4, X1_SD = 1.2, X2_MEAN = 6, X2_SD = 1;
+// Number-line range per random variable, wide enough for every c on the slider (-2 … 3).
+// cX₁ gets the half that its sign needs, so X₁ is not squeezed into a corner.
+const RULE_VIEWS = { scaleUp: [0, 24], scaleDown: [-16, 8], shift: [-2, 12], sum: [0, 16] };
+const ruleView = (mode, c) => RULE_VIEWS[mode === 'scale' ? (c >= 0 ? 'scaleUp' : 'scaleDown') : mode];
+// Shows -0.00 as 0.00 and puts a negative number in parentheses: 2 × (-0.50), (-2.0)².
+const signed = (v, d) => { const s = fmt(Math.abs(v) < 1e-9 ? 0 : v, d); return v < -1e-9 ? '(' + s + ')' : s; };
+
+function rulesWidget(id, spread, ruleText) {
+  const canvas = el('c-' + id);
+  const cInput = el(id + '-c');
+  const followInput = el(id + '-follow');          // only the variance widget has it
+  const buttons = [...document.querySelectorAll('.' + id + '-mode')];
+  let mode = 'scale';
+
+  function draw() {
+    const c = +cInput.value;
+    const follow = followInput ? +followInput.value / 10 : 0;
+    el(id + '-cv').textContent = fmt(c, 1);
+    const [z1, z2] = STANDARD_PAIR;
+    const x1 = z1.map(z => X1_MEAN + X1_SD * z);
+    const x2 = z1.map((z, i) => X2_MEAN + X2_SD * (follow * z + Math.sqrt(1 - follow * follow) * z2[i]));
+    const result = {
+      scale: { name: 'cX₁', values: x1.map(v => c * v) },
+      shift: { name: 'X₁ + c', values: x1.map(v => v + c) },
+      sum: { name: 'X₁ + X₂', values: x1.map((v, i) => v + x2[i]) },
+    }[mode];
+    const t = VIZ.theme();
+    const rows = [{ name: 'X₁', values: x1, color: t.s1 }];
+    if (mode === 'sum') rows.push({ name: 'X₂', values: x2, color: t.s2 });
+    rows.push({ name: result.name, values: result.values, color: t.s5 });
+    drawDotRows(canvas, ruleView(mode, c), rows, spread);
+    el(id + '-rule').innerHTML = ruleText(mode, c, x1, x2, result.values);
+  }
+
+  buttons.forEach(button => button.addEventListener('click', () => {
+    mode = button.dataset.mode;
+    buttons.forEach(b => b.classList.toggle('primary', b === button));
+    // style.display, not [hidden]: `.controls .group { display: flex }` would override [hidden]
+    el(id + '-cgroup').style.display = mode === 'sum' ? 'none' : '';
+    if (followInput) el(id + '-followgroup').style.display = mode === 'sum' ? '' : 'none';
+    draw();
+  }));
+  cInput.addEventListener('input', draw);
+  if (followInput) followInput.addEventListener('input', draw);
+  VIZ.register(canvas, draw);
+}
+
+rulesWidget('meanrules', false, (mode, c, x1, x2, y) => {
+  const e1 = fmt(mean(x1), 2), ey = '<b>' + fmt(mean(y), 2) + '</b>';
+  if (mode === 'scale') return 'E(cX₁) = ' + ey + ' and c · E(X₁) = ' + signed(c, 1) + ' × ' + e1 + ' = <b>' + fmt(c * mean(x1), 2) + '</b>';
+  if (mode === 'shift') return 'E(X₁ + c) = ' + ey + ' and E(X₁) + c = ' + e1 + ' + ' + signed(c, 1) + ' = <b>' + fmt(mean(x1) + c, 2) + '</b>';
+  return 'E(X₁ + X₂) = ' + ey + ' and E(X₁) + E(X₂) = ' + e1 + ' + ' + fmt(mean(x2), 2) + ' = <b>' + fmt(mean(x1) + mean(x2), 2) + '</b>';
+});
+
+rulesWidget('varrules', true, (mode, c, x1, x2, y) => {
+  const v1 = variance(x1), vy = '<b>' + fmt(variance(y), 2) + '</b>';
+  if (mode === 'scale') return 'var(cX₁) = ' + vy + ' and c² · var(X₁) = ' + signed(c, 1) + '² × ' + fmt(v1, 2) +
+    ' = <b>' + fmt(c * c * v1, 2) + '</b>. The distances between dots grow by |c|, so the variance grows by c².';
+  if (mode === 'shift') return 'var(X₁ + c) = ' + vy + ' = var(X₁). Every dot moves by c, so the spread does not change.';
+  const v2 = variance(x2), cov = covariance(x1, x2);
+  const sum = 'var(X₁) + var(X₂) + 2cov(X₁, X₂) = ' + fmt(v1, 2) + ' + ' + fmt(v2, 2) + ' + 2 × ' + signed(cov, 2) + ' = <b>' +
+    fmt(v1 + v2 + 2 * cov, 2) + '</b>';
+  const note = Math.abs(cov) < 1e-9
+    ? ' Here X₂ has no pattern with X₁ (cov = 0), as for independent variables: var(X₁ + X₂) = var(X₁) + var(X₂).'
+    : cov > 0 ? ' X₂ goes with X₁: big values meet big values, so the sum spreads more.'
+      : ' X₂ goes opposite to X₁: they partly cancel, so the sum spreads less.';
+  return 'var(X₁ + X₂) = ' + vy + ' and ' + sum + '.' + note;
+});
+
+/* ============================================================
+   WIDGET 5 — race of exponentials (slides 30-36)
    ============================================================ */
 (() => {
   let races = 0, natWins = 0;
@@ -377,7 +739,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
 })();
 
 /* ============================================================
-   WIDGET 3 — Poisson process (slides 39-49)
+   WIDGET 6 — Poisson process (slides 39-49)
    ============================================================ */
 (() => {
   const canvas = el('c-ps');

@@ -242,6 +242,27 @@ window.LESSON_ACTIVITIES = {
     "title": "You tested positive. How worried should you be?",
     "scored": false
   },
+  "week10:covariance": {
+    "key": "week10:covariance",
+    "week": "week10",
+    "id": "covariance",
+    "title": "How do X and Y change together?",
+    "scored": false
+  },
+  "week10:meanrules": {
+    "key": "week10:meanrules",
+    "week": "week10",
+    "id": "meanrules",
+    "title": "Rules for the mean: where does E land?",
+    "scored": false
+  },
+  "week10:varrules": {
+    "key": "week10:varrules",
+    "week": "week10",
+    "id": "varrules",
+    "title": "Rules for the variance: how wide is the spread?",
+    "scored": false
+  },
   "week10:race": {
     "key": "week10:race",
     "week": "week10",

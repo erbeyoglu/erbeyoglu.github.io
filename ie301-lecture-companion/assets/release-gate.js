@@ -21,7 +21,7 @@
     week07: Object.freeze(['dp-warmup','matches','network','efficiency','inventory']),
     week08: Object.freeze(['ww','teams','glueco','fishery']),
     week09: Object.freeze(['milk','pinv','sally','reject']),
-    week10: Object.freeze(['bayes','race','poisson']),
+    week10: Object.freeze(['bayes','covariance','meanrules','varrules','race','poisson']),
     week11: Object.freeze(['nextword','weather','gambler','diagram','paths','classify','insurance']),
     week13: Object.freeze(['steady','twocounts','premium','camera','accounts','freezco','hth']),
     week14: Object.freeze(['updown','balance','barbersim','salesman'])
