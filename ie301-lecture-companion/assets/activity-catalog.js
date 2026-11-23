@@ -242,20 +242,6 @@ window.LESSON_ACTIVITIES = {
     "title": "You tested positive. How worried should you be?",
     "scored": false
   },
-  "week10:voter": {
-    "key": "week10:voter",
-    "week": "week10",
-    "id": "voter",
-    "title": "Which state does the liberal voter live in?",
-    "scored": false
-  },
-  "week10:memoryless": {
-    "key": "week10:memoryless",
-    "week": "week10",
-    "id": "memoryless",
-    "title": "The 10-year-old radio",
-    "scored": false
-  },
   "week10:race": {
     "key": "week10:race",
     "week": "week10",

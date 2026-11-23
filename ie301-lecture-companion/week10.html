@@ -22,10 +22,8 @@
   <div class="theme-switch" id="theme-switch"></div>
   <nav class="widgets">
     <a href="#bayes">1 · The disease test</a>
-    <a href="#voter">2 · Voter poll</a>
-    <a href="#memoryless">3 · Memorylessness</a>
-    <a href="#race">4 · Race of exponentials</a>
-    <a href="#poisson">5 · Poisson process</a>
+    <a href="#race">2 · Race of exponentials</a>
+    <a href="#poisson">3 · Poisson process</a>
   </nav>
 </header>
 
@@ -34,87 +32,38 @@
 <section class="widget" id="bayes">
   <h2>You tested positive. How worried should you be? <span class="chip">Slide 12</span></h2>
   <p class="howto">
-    Class vote first: with a 99%-accurate test, is P(sick | positive) above 90%, around 50%, or below 10%?
-    Then look at the whole population of 10 000 people below and see who the positives actually are.
+    The test is right 99% of the time, yet slide 12 gives P(sick | positive) = 9.02%. Why so low?
+    Imagine <b>1,000,000 people</b> taking the test, and follow them down the tree.
   </p>
   <div class="controls">
     <div class="group">
-      <label for="by-prev">prevalence</label>
+      <label for="by-prev">P(sick)</label>
       <input type="range" id="by-prev" min="1" max="100" step="1" value="1" style="width:160px">
-      <span class="readout"><b id="by-prevv">0.1</b>%</span>
+      <span class="readout"><b id="by-prevv">0.001</b></span>
     </div>
     <div class="group">
-      <label for="by-sens">sensitivity P(+|sick)</label>
-      <input type="range" id="by-sens" min="80" max="99.9" step="0.1" value="99" style="width:160px">
-      <span class="readout"><b id="by-sensv">99.0</b>%</span>
+      <label for="by-sens">P(positive | sick)</label>
+      <input type="range" id="by-sens" min="800" max="999" step="1" value="990" style="width:160px">
+      <span class="readout"><b id="by-sensv">0.990</b></span>
     </div>
     <div class="group">
-      <label for="by-fp">false positive P(+|healthy)</label>
-      <input type="range" id="by-fp" min="0.1" max="10" step="0.1" value="1" style="width:160px">
-      <span class="readout"><b id="by-fpv">1.0</b>%</span>
+      <label for="by-fp">P(positive | not sick)</label>
+      <input type="range" id="by-fp" min="1" max="100" step="1" value="10" style="width:160px">
+      <span class="readout"><b id="by-fpv">0.010</b></span>
     </div>
-    <span class="readout" style="font-size:1.05rem">P(sick | positive) = <b id="by-post">—</b></span>
+    <button id="by-reset">Slide 12 numbers</button>
   </div>
-  <canvas class="viz short" id="c-by" style="height:300px"></canvas>
+  <canvas class="viz" id="c-by" style="height:440px"></canvas>
+  <p class="readout" id="by-formula" style="display:block;font-size:1.05rem;line-height:1.9"></p>
   <p class="status info" id="by-status"></p>
-  <div class="note">
-    Bayes’ rule (slides 10–12): P(sick | +) = P(+|sick)P(sick) / [P(+|sick)P(sick) + P(+|healthy)P(healthy)].
-    <details class="spoiler"><summary>spoiler — open after the class has answered</summary>At the slide’s numbers it is only 9.02% — the 1% false-positive rate applied to 9 990 healthy people
-    swamps the handful of true positives. Rare condition ⇒ the prior dominates.
-  </details></div>
-</section>
-
-<!-- ================= WIDGET 2 : VOTER POLL ================= -->
-<section class="widget" id="voter">
-  <h2>Which state does the liberal voter live in? <span class="chip">Slide 13</span></h2>
-  <p class="howto">
-    State A: 40% of the population, 50% support. State B: 25%, 60%. State C: 35%, 35%. A random voter
-    supports the liberal candidate — vote first: A, B or C? Then reveal how the areas decide it.
-  </p>
-  <div class="controls">
-    <span style="color:var(--ink-2)">Your vote:</span>
-    <button class="vt-vote" data-s="0">State A</button>
-    <button class="vt-vote" data-s="1">State B</button>
-    <button class="vt-vote" data-s="2">State C</button>
-    <button id="vt-reveal" class="primary">Reveal posteriors</button>
-  </div>
-  <canvas class="viz short" id="c-vt" style="height:280px"></canvas>
-  <p class="status info" id="vt-status"></p>
-  <div class="note">
-    Bar width = population share P(Sᵢ); the filled part = supporters P(support | Sᵢ)·P(Sᵢ). Bayes just asks:
-    what fraction of the total filled area is in each state? <details class="spoiler"><summary>spoiler — open after the class has answered</summary>The answer is A, not B — B has the highest
-    support <em>rate</em>, but A’s bigger population wins: P(A|support) = 0.423, P(B|support) = 0.317.
-  </details></div>
-</section>
-
-<!-- ================= WIDGET 3 : MEMORYLESSNESS ================= -->
-<section class="widget" id="memoryless">
-  <h2>The 10-year-old radio <span class="chip">Slides 27–29, 35</span></h2>
-  <p class="howto">
-    A radio’s lifetime is exponential with mean 10 years. John buys one that is already t years old.
-    <b>Slide its age</b> — what happens to the probability that it survives 10 MORE years? Compare with a
-    lifetime that wears out (uniform on [0, 30]).
-  </p>
-  <div class="controls">
-    <div class="group">
-      <label for="ml-t">current age t</label>
-      <input type="range" id="ml-t" min="0" max="19" step="0.5" value="0" style="width:220px">
-      <span class="readout"><b id="ml-tv">0.0</b> years</span>
-    </div>
-    <span class="readout">exponential: P(10 more) = <b id="ml-exp">—</b></span>
-    <span class="readout">wear-out (uniform): P(10 more) = <b id="ml-uni">—</b></span>
-  </div>
-  <canvas class="viz short" id="c-ml"></canvas>
-  <p class="status info" id="ml-status"></p>
   <p class="note">
-    Memorylessness (slide 28): P(X &gt; t + h | X &gt; t) = P(X &gt; h) — the survival curve beyond t,
-    rescaled, is an exact copy of the original. For the radio, P = e⁻¹ ≈ 0.368 at ANY age. A uniform
-    lifetime has memory: the same 10-year question decays to zero. This one property powers everything
-    in the Markov weeks ahead.
+    Bayes’ rule, as on slide 12: P(sick | positive) = P(positive | sick) · P(sick) /
+    [P(positive | sick) · P(sick) + P(positive | not sick) · P(not sick)].
+    Multiply each term by 1,000,000 and it becomes a head count from the tree.
   </p>
 </section>
 
-<!-- ================= WIDGET 4 : RACE OF EXPONENTIALS ================= -->
+<!-- ================= WIDGET 2 : RACE OF EXPONENTIALS ================= -->
 <section class="widget" id="race">
   <h2>Norm vs Nat: who finishes first? <span class="chip">Slides 30–36</span></h2>
   <p class="howto">
@@ -149,7 +98,7 @@
   </details></div>
 </section>
 
-<!-- ================= WIDGET 5 : POISSON PROCESS ================= -->
+<!-- ================= WIDGET 3 : POISSON PROCESS ================= -->
 <section class="widget" id="poisson">
   <h2>Poisson arrivals, live <span class="chip">Slides 39–49</span></h2>
   <p class="howto">
@@ -197,208 +146,195 @@ const el = id => document.getElementById(id);
 const fmt = (v, d = 2) => Number(v).toFixed(d);
 
 /* ============================================================
-   WIDGET 1 — Bayes disease test (slide 12): 10 000-person icon grid
+   WIDGET 1 — Bayes disease test (slide 12): a tree of 1,000,000 people
+   Uses only the slide's words: sick / not sick, positive / negative.
    ============================================================ */
 (() => {
   const canvas = el('c-by');
+  // WHY 1,000,000: every slider moves in steps of 0.001, so every box in the
+  // tree holds a whole number of people and 990 / (990 + 9,990) is exactly
+  // the slide's 0.090164.
+  const PEOPLE = 1000000;
+  const SLIDE_12 = { 'by-prev': 1, 'by-sens': 990, 'by-fp': 10 };  // slider units of 0.001
+  const NOT_SICK_POSITIVE = '#eda100';   // same amber the page used for these people before
+  const DARK_INK = '#0b0b0b';            // readable on amber in both themes
+  const people = n => n.toLocaleString('en-US');
+  const prob = v => fmt(v, 3);
+
+  function readModel() {
+    const pSick = +el('by-prev').value / 1000;
+    const pPosSick = +el('by-sens').value / 1000;
+    const pPosNotSick = +el('by-fp').value / 1000;
+    const sick = Math.round(PEOPLE * pSick);
+    const notSick = PEOPLE - sick;
+    const sickPositive = Math.round(sick * pPosSick);
+    const notSickPositive = Math.round(notSick * pPosNotSick);
+    return {
+      pSick, pPosSick, pPosNotSick, sick, notSick,
+      sickPositive, sickNegative: sick - sickPositive,
+      notSickPositive, notSickNegative: notSick - notSickPositive,
+    };
+  }
+
+  // Layout for one canvas size. The CSS may shrink the canvas (phones, class
+  // mode), so every height is a share of the real canvas height h, designed at
+  // DESIGN_HEIGHT; text follows the projector's --viz-font-scale.
+  const DESIGN_HEIGHT = 440;
+  const FULL_LABEL_MIN_WIDTH = 760;    // narrower: branch labels shrink to "× 0.001"
+  function layout(w, h) {
+    const k = h / DESIGN_HEIGHT;
+    const narrow = w < 640;
+    const fontScale = (parseFloat(VIZ.cssv('--viz-font-scale')) || 1) * (narrow ? 0.9 : 1);
+    const px = (size, bold) => (bold ? '700 ' : '') + Math.round(size * fontScale) + 'px system-ui, sans-serif';
+    return {
+      k, narrow, px, fullLabels: w >= FULL_LABEL_MIN_WIDTH,
+      Y0: 8 * k, Y1: 128 * k, Y2: 262 * k, BH: 56 * k,
+      // lower branch labels sit near the child boxes, where neighbouring branches are furthest apart
+      lowerLabelAt: 0.7,
+    };
+  }
+
+  function box(ctx, L, cx, y, bw, lines, fill, stroke, ink) {
+    const bh = L.BH;
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(cx - bw / 2, y, bw, bh, 8);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+    ctx.fillStyle = ink;
+    ctx.textAlign = 'center';
+    ctx.font = L.px(13);
+    ctx.fillText(lines[0], cx, y + bh * 0.42);
+    ctx.font = L.px(16, true);
+    ctx.fillText(lines[1], cx, y + bh * 0.84);
+    ctx.restore();
+  }
+
+  // Branch line with its probability; the label sits on a surface patch so the line never crosses it.
+  function branch(ctx, t, L, from, to, labelLines, at) {
+    ctx.save();
+    ctx.strokeStyle = t.axis;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(from[0], from[1]);
+    ctx.lineTo(to[0], to[1]);
+    ctx.stroke();
+    ctx.font = L.px(12);
+    ctx.textAlign = 'center';
+    const lineH = parseInt(L.px(12), 10) + 3;
+    const mx = from[0] + (to[0] - from[0]) * at, my = from[1] + (to[1] - from[1]) * at;
+    const lw = Math.max(...labelLines.map(s => ctx.measureText(s).width)) + 8;
+    const lh = labelLines.length * lineH + 4;
+    ctx.fillStyle = t.surface;
+    ctx.fillRect(mx - lw / 2, my - lh / 2, lw, lh);
+    ctx.fillStyle = t.ink2;
+    labelLines.forEach((s, i) => ctx.fillText(s, mx, my - lh / 2 + lineH + i * lineH - 2));
+    ctx.restore();
+  }
+
+  function drawTree(ctx, t, w, L, m) {
+    const label = (name, v) => L.fullLabels ? [name, '= ' + prob(v)] : ['× ' + prob(v)];
+    const { Y0, Y1, Y2, BH } = L;
+    const x0 = w / 2, x1 = [w * 0.25, w * 0.75], x2 = [w * 0.125, w * 0.375, w * 0.625, w * 0.875];
+    const b0 = Math.min(260, w * 0.6), b1 = Math.min(210, w * 0.42), b2 = Math.min(180, w / 4 - 8);
+    const top = (x, y) => [x, y], bottom = (x, y) => [x, y + BH];
+
+    branch(ctx, t, L, bottom(x0, Y0), top(x1[0], Y1), label('P(sick)', m.pSick), 0.5);
+    branch(ctx, t, L, bottom(x0, Y0), top(x1[1], Y1), label('P(not sick)', 1 - m.pSick), 0.5);
+    branch(ctx, t, L, bottom(x1[0], Y1), top(x2[0], Y2), label('P(positive | sick)', m.pPosSick), L.lowerLabelAt);
+    branch(ctx, t, L, bottom(x1[0], Y1), top(x2[1], Y2), label('P(negative | sick)', 1 - m.pPosSick), L.lowerLabelAt);
+    branch(ctx, t, L, bottom(x1[1], Y1), top(x2[2], Y2), label('P(positive | not sick)', m.pPosNotSick), L.lowerLabelAt);
+    branch(ctx, t, L, bottom(x1[1], Y1), top(x2[3], Y2), label('P(negative | not sick)', 1 - m.pPosNotSick), L.lowerLabelAt);
+
+    box(ctx, L, x0, Y0, b0, ['everyone', people(PEOPLE) + ' people'], t.surface, t.axis, t.ink);
+    box(ctx, L, x1[0], Y1, b1, ['sick', people(m.sick)], t.surface, t.axis, t.ink);
+    box(ctx, L, x1[1], Y1, b1, ['not sick', people(m.notSick)], t.surface, t.axis, t.ink);
+    box(ctx, L, x2[0], Y2, b2, ['positive', people(m.sickPositive)], t.s5, t.s5, t.surface);
+    box(ctx, L, x2[1], Y2, b2, ['negative', people(m.sickNegative)], t.surface, t.grid, t.ink2);
+    box(ctx, L, x2[2], Y2, b2, ['positive', people(m.notSickPositive)], NOT_SICK_POSITIVE, NOT_SICK_POSITIVE, DARK_INK);
+    box(ctx, L, x2[3], Y2, b2, ['negative', people(m.notSickNegative)], t.surface, t.grid, t.ink2);
+    return Y2 + BH;
+  }
+
+  // Everyone who tested positive, as one bar split into sick and not sick.
+  function drawPositives(ctx, t, w, L, m, treeBottom) {
+    const all = m.sickPositive + m.notSickPositive;
+    const k = L.k, x = 10, bw = w - 20, y = treeBottom + 42 * k, bh = 30 * k;
+    const sickW = all ? Math.max(3, bw * m.sickPositive / all) : 0;
+    const keyY = y + bh + 20 * k;
+    ctx.save();
+    ctx.fillStyle = t.ink;
+    ctx.font = L.px(14, true);
+    ctx.fillText((L.narrow ? 'All positives: ' : 'Everyone who tested positive: ') + people(m.sickPositive) + ' + ' +
+      people(m.notSickPositive) + ' = ' + people(all) + (L.narrow ? '' : ' people'), x, treeBottom + 30 * k);
+    ctx.fillStyle = t.s5;
+    ctx.fillRect(x, y, sickW, bh);
+    ctx.fillStyle = NOT_SICK_POSITIVE;
+    ctx.fillRect(x + sickW + 2, y, Math.max(0, bw - sickW - 2), bh);   // 2px surface gap between the parts
+    // key: a colored square beside ink text (text never wears the series color)
+    ctx.font = L.px(13);
+    const sq = 10;
+    ctx.fillStyle = t.s5;
+    ctx.fillRect(x, keyY - sq, sq, sq);
+    ctx.fillStyle = NOT_SICK_POSITIVE;
+    ctx.fillRect(x + bw - sq, keyY - sq, sq, sq);
+    ctx.fillStyle = t.ink2;
+    ctx.fillText('sick: ' + people(m.sickPositive), x + sq + 6, keyY);
+    ctx.textAlign = 'right';
+    ctx.fillText('not sick: ' + people(m.notSickPositive), x + bw - sq - 6, keyY);
+    ctx.restore();
+  }
+
+  // The slide-12 formula with the current numbers, then the same formula as head counts.
+  function writeFormula(m, post) {
+    const mark = (color, s) => '<span style="border-bottom:3px solid ' + color + '">' + s + '</span>';
+    const sickTerm = mark('var(--s5)', prob(m.pPosSick) + ' × ' + prob(m.pSick));
+    const notSickTerm = mark(NOT_SICK_POSITIVE, prob(m.pPosNotSick) + ' × ' + prob(1 - m.pSick));
+    const sickCount = mark('var(--s5)', people(m.sickPositive));
+    const notSickCount = mark(NOT_SICK_POSITIVE, people(m.notSickPositive));
+    el('by-formula').innerHTML =
+      'P(sick | positive) = ' + sickTerm + ' / (' + sickTerm + ' + ' + notSickTerm + ')<br>' +
+      '= ' + sickCount + ' / (' + sickCount + ' + ' + notSickCount + ') = <b>' + fmt(post * 100, 2) + '%</b>';
+  }
 
   function draw() {
-    const prev = +el('by-prev').value / 1000;   // slider in per-mille
-    const sens = +el('by-sens').value / 100;
-    const fp = +el('by-fp').value / 100;
-    el('by-prevv').textContent = fmt(prev * 100, 1);
-    el('by-sensv').textContent = fmt(sens * 100, 1);
-    el('by-fpv').textContent = fmt(fp * 100, 1);
-
-    const post = sens * prev / (sens * prev + fp * (1 - prev));
-    el('by-post').textContent = fmt(post * 100, 2) + '%';
-
-    // deterministic rounded counts on a 10k grid
-    const N = 10000;
-    const sick = Math.max(1, Math.round(N * prev));
-    const tp = Math.round(sick * sens);
-    const fpN = Math.round((N - sick) * fp);
+    const m = readModel();
+    el('by-prevv').textContent = prob(m.pSick);
+    el('by-sensv').textContent = prob(m.pPosSick);
+    el('by-fpv').textContent = prob(m.pPosNotSick);
+    const all = m.sickPositive + m.notSickPositive;
+    const post = all ? m.sickPositive / all : 0;
 
     const { ctx, w, h } = VIZ.setup(canvas);
     const t = VIZ.theme();
     ctx.clearRect(0, 0, w, h);
-    const narrow = w < 640; // phones: legend moves below the grid
-    const cols = 125, rows = 80;
-    const cw = (w - (narrow ? 20 : 220)) / cols, ch = (h - (narrow ? 96 : 20)) / rows;
-    // cell categories laid out contiguously: sick-TP, sick-FN, healthy-FP, healthy-TN
-    // color semantics: violet = sick & caught, red/yellow = the TEST'S errors
-    for (let i = 0; i < N; i++) {
-      const col = i % cols, row = Math.floor(i / cols);
-      let color, alpha = 1;
-      if (i < tp) color = t.s5;                        // true positive (sick, caught)
-      else if (i < sick) color = t.bad;                // false negative (sick, MISSED)
-      else if (i < sick + fpN) color = '#eda100';      // false positive (healthy, flagged)
-      else { color = t.grid; alpha = 0.8; }            // healthy, negative
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = color;
-      ctx.fillRect(10 + col * cw, 10 + row * ch, Math.max(1, cw - 1), Math.max(1, ch - 1));
-      ctx.restore();
-    }
-    // legend: right column on wide screens, two rows below the grid on phones
-    const items = [
-      [t.s5, 'sick & positive: ' + tp],
-      [t.bad, 'sick & MISSED: ' + (sick - tp)],
-      ['#eda100', 'healthy & positive: ' + fpN],
-      [t.grid, 'healthy & negative'],
-    ];
-    ctx.save();
-    ctx.font = '600 12px system-ui, sans-serif';
-    items.forEach(([c, txt], i) => {
-      const lx = narrow ? 12 + (i % 2) * (w / 2 - 6) : w - 195;
-      const ly = narrow ? h - 62 + Math.floor(i / 2) * 24 : 24 + i * 26;
-      ctx.fillStyle = c;
-      ctx.fillRect(lx, ly, 13, 13);
-      ctx.fillStyle = t.ink2;
-      ctx.fillText(txt, lx + 20, ly + 11);
-    });
-    ctx.restore();
+    const L = layout(w, h);
+    drawPositives(ctx, t, w, L, m, drawTree(ctx, t, w, L, m));
+    writeFormula(m, post);
 
     const st = el('by-status');
     st.className = post < 0.5 ? 'status bad' : 'status ok';
-    st.textContent = 'Among ALL positives (' + (tp + fpN) + ' people), only ' + tp + ' are actually sick → ' + fmt(post * 100, 1) + '%.' +
-      (post < 0.2 ? ' The healthy false positives dominate — this is why screening rare diseases is hard.' : '');
+    st.textContent = 'Of the ' + people(all) + ' people who test positive, only ' + people(m.sickPositive) +
+      ' are sick: ' + fmt(post * 100, 2) + '%.' + (m.notSickPositive > m.sickPositive
+        ? ' The test is wrong for only ' + prob(m.pPosNotSick) + ' of the ' + people(m.notSick) +
+          ' people who are not sick, but that is ' + people(m.notSickPositive) + ' people, more than the ' +
+          people(m.sickPositive) + ' sick people it finds.'
+        : '');
   }
 
   ['by-prev', 'by-sens', 'by-fp'].forEach(id => el(id).addEventListener('input', draw));
-  VIZ.register(canvas, draw);
-})();
-
-/* ============================================================
-   WIDGET 2 — voter poll (slide 13)
-   ============================================================ */
-(() => {
-  const canvas = el('c-vt');
-  const STATES = [
-    { name: 'A', pop: 0.40, sup: 0.50 },
-    { name: 'B', pop: 0.25, sup: 0.60 },
-    { name: 'C', pop: 0.35, sup: 0.35 },
-  ];
-  const joint = STATES.map(s => s.pop * s.sup);
-  const totalSup = joint.reduce((a, b) => a + b, 0);
-  let revealed = false;
-
-  function draw() {
-    const { ctx, w, h } = VIZ.setup(canvas);
-    const t = VIZ.theme();
-    ctx.clearRect(0, 0, w, h);
-    const x0 = 60, y0 = h - 60, maxH = h - 110, totW = w - 140;
-    let x = x0;
-    STATES.forEach((s, i) => {
-      const bw = s.pop * totW;
-      // population bar
-      ctx.save();
-      ctx.strokeStyle = t.axis;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x, y0 - maxH, bw, maxH);
-      // supporters fill
-      ctx.fillStyle = t.s1;
-      ctx.globalAlpha = 0.75;
-      ctx.fillRect(x, y0 - s.sup * maxH, bw, s.sup * maxH);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = t.ink2;
-      ctx.font = '600 14px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('State ' + s.name, x + bw / 2, y0 + 22);
-      ctx.font = '13px system-ui, sans-serif';
-      ctx.fillText('pop ' + (s.pop * 100) + '% · support ' + (s.sup * 100) + '%', x + bw / 2, y0 + 40);
-      if (revealed) {
-        ctx.fillStyle = t.s2;
-        ctx.font = '700 15px system-ui, sans-serif';
-        ctx.fillText('P(' + s.name + '|support) = ' + fmt(joint[i] / totalSup, 3), x + bw / 2, y0 - maxH - 10);
-      }
-      ctx.restore();
-      x += bw + 10;
-    });
-    ctx.save();
-    ctx.fillStyle = t.ink2;
-    ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText('filled area = supporters, P(support|state)·P(state)', x0, 18);
-    ctx.restore();
-  }
-
-  document.querySelectorAll('.vt-vote').forEach(btn => {
-    btn.addEventListener('click', () => {
-      revealed = true;
-      draw();
-      const i = +btn.dataset.s;
-      const st = el('vt-status');
-      const ok = i === 0;
-      st.className = ok ? 'status ok' : 'status bad';
-      st.textContent = (ok ? '✓ Correct: ' : '✗ It is State A. ') +
-        'Posteriors: A ' + fmt(joint[0] / totalSup, 3) + ', B ' + fmt(joint[1] / totalSup, 3) + ', C ' + fmt(joint[2] / totalSup, 3) +
-        '. B’s higher support RATE loses to A’s larger population — the filled AREAS decide.';
-    });
-  });
-  el('vt-reveal').addEventListener('click', () => {
-    revealed = true;
+  el('by-reset').addEventListener('click', () => {
+    Object.entries(SLIDE_12).forEach(([id, v]) => { el(id).value = v; });
     draw();
-    const st = el('vt-status');
-    st.className = 'status info';
-    st.textContent = 'P(B|support) = 0.6·0.25 / (0.5·0.4 + 0.6·0.25 + 0.35·0.35) = 0.15/0.4725 = 0.317 (slide 13). State A: 0.423, State C: 0.259.';
   });
   VIZ.register(canvas, draw);
 })();
 
 /* ============================================================
-   WIDGET 3 — memorylessness (slides 27-29, 35)
-   ============================================================ */
-(() => {
-  const canvas = el('c-ml');
-  const MEAN = 10, UMAX = 30;
-  const view = { x0: -1, x1: 40, y0: -0.05, y1: 1.12 };
-
-  function draw() {
-    const tAge = +el('ml-t').value;
-    el('ml-tv').textContent = fmt(tAge, 1);
-    const pExp = Math.exp(-10 / MEAN); // constant!
-    const pUni = tAge + 10 >= UMAX ? 0 : (UMAX - tAge - 10) / (UMAX - tAge);
-    el('ml-exp').textContent = fmt(pExp, 3);
-    el('ml-uni').textContent = fmt(pUni, 3);
-
-    const p = VIZ.plot(canvas, view);
-    const t = VIZ.theme();
-    VIZ.axes(p, t, { xticks: [0, 5, 10, 15, 20, 25, 30, 35, 40], yticks: [0.25, 0.5, 0.75, 1], xlabel: 'years', ylabel: 'P(lifetime > x)' });
-
-    const sExp = x => Math.exp(-x / MEAN);
-    const sUni = x => Math.max(0, (UMAX - x) / UMAX);
-    VIZ.curve(p, sExp, t.s1, 2.5);
-    VIZ.label(p, 'exponential (mean 10)', 16, sExp(16), t.s1, { dx: 8, dy: -6, bold: true });
-    VIZ.curve(p, sUni, t.s5, 2);
-    VIZ.label(p, 'uniform wear-out [0, 30]', 22, sUni(22), t.s5, { dx: 8, dy: 16, bold: true, baseline: 'top' });
-
-    // conditional survival from age t, rescaled: exponential copy overlays the original exactly
-    const { ctx, X, Y } = p;
-    ctx.save();
-    ctx.setLineDash([6, 5]);
-    VIZ.curve(p, x => x < tAge ? NaN : sExp(x) / sExp(tAge), t.s2, 2.5);
-    ctx.restore();
-    VIZ.label(p, 'given: survived to t (rescaled)', Math.min(30, tAge + 9), Math.min(1.06, sExp(tAge + 9) / sExp(tAge) + 0.09), t.s2, { size: 13, bold: true });
-
-    // age marker
-    ctx.save();
-    ctx.strokeStyle = t.axis;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath(); ctx.moveTo(X(tAge), Y(0)); ctx.lineTo(X(tAge), Y(1.05)); ctx.stroke();
-    ctx.restore();
-    VIZ.label(p, 't = ' + fmt(tAge, 1), tAge, 1.08, t.ink2, { size: 13, align: 'center' });
-
-    const st = el('ml-status');
-    st.className = 'status info';
-    st.textContent = 'The dashed green curve (survival GIVEN age t, rescaled) is an exact copy of the blue curve shifted to t — the exponential forgets its age. The violet wear-out curve cannot do that: its 10-more-years chance is now ' + fmt(pUni, 3) + '.';
-  }
-
-  el('ml-t').addEventListener('input', draw);
-  VIZ.register(canvas, draw);
-})();
-
-/* ============================================================
-   WIDGET 4 — race of exponentials (slides 30-36)
+   WIDGET 2 — race of exponentials (slides 30-36)
    ============================================================ */
 (() => {
   let races = 0, natWins = 0;
@@ -441,7 +377,7 @@ const fmt = (v, d = 2) => Number(v).toFixed(d);
 })();
 
 /* ============================================================
-   WIDGET 5 — Poisson process (slides 39-49)
+   WIDGET 3 — Poisson process (slides 39-49)
    ============================================================ */
 (() => {
   const canvas = el('c-ps');
